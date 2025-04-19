@@ -169,7 +169,7 @@ async function fetchAccounts(token) {
 async function fetchPortfolioData(token, accountId) {
   setLoading(true);
   try {
-    // Usa el código de cuenta en la URL
+    // Obtener datos de la cartera
     const portfolioResponse = await fetch(`/api/accounts/${accountId}/portfolio`, {
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -191,24 +191,45 @@ async function fetchPortfolioData(token, accountId) {
     const historyData = await historyResponse.json();
     console.log('Datos históricos:', historyData);
 
-    // Actualizar métricas (ajusta según la estructura real de la respuesta)
-    document.getElementById('total-value').textContent = `€${(portfolioData.total_amount || 0).toFixed(2)}`;
-    document.getElementById('annual-return').textContent = `${(portfolioData.return?.time_return || 0).toFixed(2)}%`;
-    document.getElementById('volatility').textContent = `${(portfolioData.volatility || 0).toFixed(2)}%`;
+    // Usar "daily_valuations" como fuente de datos
+    const dailyValuations = historyData.daily_valuations || [];
+    if (!Array.isArray(dailyValuations)) {
+      throw new Error('daily_valuations no es un array');
+    }
 
-    // Actualizar gráfico
-    const labels = historyData.map(item => item.date || item.timestamp);
-    const values = historyData.map(item => item.value || item.balance);
+    // Preparar datos para el gráfico (usar date y total_amount)
+    const labels = dailyValuations.map(item => item.date);
+    const values = dailyValuations.map(item => item.total_amount);
     createChart(labels, values);
+
+    // Calcular rentabilidad para la tabla
+    const tableData = dailyValuations.map((item, index) => {
+      let returnPercentage = 0;
+      if (index > 0) {
+        const previousValue = dailyValuations[index - 1].total_amount;
+        const currentValue = item.total_amount;
+        returnPercentage = ((currentValue - previousValue) / previousValue) * 100;
+      }
+      return {
+        date: item.date,
+        value: item.total_amount,
+        return: returnPercentage
+      };
+    });
+
+    // Actualizar métricas
+    document.getElementById('total-value').textContent = `€${(portfolioData.total_amount || 0).toFixed(2)}`;
+    document.getElementById('annual-return').textContent = `${((portfolioData.return?.time_return || 0) * 100).toFixed(2)}%`; // Ajustar para porcentaje
+    document.getElementById('volatility').textContent = `${((portfolioData.volatility || 0) * 100).toFixed(2)}%`; // Ajustar para porcentaje
 
     // Actualizar tabla
     const tableBody = document.getElementById('history-table');
     tableBody.innerHTML = '';
-    historyData.forEach(item => {
+    tableData.forEach(item => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-2">${item.date || item.timestamp}</td>
-        <td class="p-2">€${(item.value || item.balance || 0).toFixed(2)}</td>
+        <td class="p-2">${item.date}</td>
+        <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
         <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
       `;
       tableBody.appendChild(row);
