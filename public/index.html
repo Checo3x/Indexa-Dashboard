@@ -150,8 +150,8 @@ async function fetchAccounts(token) {
     select.innerHTML = '<option value="">Selecciona una cuenta</option>';
     accounts.forEach(account => {
       const option = document.createElement('option');
-      option.value = account.id; // Asegúrate de que 'id' sea el campo correcto
-      option.textContent = `Cuenta ${account.id} (${account.type || 'Sin tipo'})`;
+      option.value = account.account_number; // Asegúrate de que 'id' sea el campo correcto
+      option.textContent = `Cuenta ${account.account_number} (${account.type || 'Sin tipo'})`;
       select.appendChild(option);
     });
 
