@@ -2,7 +2,7 @@ const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
   // URL de la API externa que deseas consumir
-  const apiUrl = 'https://api.externa.com/endpoint';
+  const apiUrl = 'https://api.indexacapital.com${req.url.replace('/api', '')}';
   
   try {
     const response = await fetch(apiUrl, {
@@ -10,6 +10,7 @@ module.exports = async (req, res) => {
       headers: {
         // Copia los headers necesarios, si los hay
         'Content-Type': 'application/json',
+        'Authorization': req.headers.authorization,
         // Agrega otras cabeceras si la API lo requiere, como Authorization
       },
       body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
