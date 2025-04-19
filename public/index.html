@@ -191,13 +191,13 @@ async function fetchPortfolioData(token, accountId) {
     const historyData = await historyResponse.json();
     console.log('Datos históricos:', historyData);
 
-    // Usar "daily_valuations" como fuente de datos
+    // Usar "daily_valuations" para el gráfico y la tabla
     const dailyValuations = historyData.daily_valuations || [];
     if (!Array.isArray(dailyValuations)) {
       throw new Error('daily_valuations no es un array');
     }
 
-    // Preparar datos para el gráfico (usar date y total_amount)
+    // Preparar datos para el gráfico
     const labels = dailyValuations.map(item => item.date);
     const values = dailyValuations.map(item => item.total_amount);
     createChart(labels, values);
@@ -219,8 +219,8 @@ async function fetchPortfolioData(token, accountId) {
 
     // Actualizar métricas
     document.getElementById('total-value').textContent = `€${(portfolioData.total_amount || 0).toFixed(2)}`;
-    document.getElementById('annual-return').textContent = `${((portfolioData.return?.time_return || 0) * 100).toFixed(2)}%`; // Ajustar para porcentaje
-    document.getElementById('volatility').textContent = `${((portfolioData.volatility || 0) * 100).toFixed(2)}%`; // Ajustar para porcentaje
+    document.getElementById('annual-return').textContent = `${((portfolioData.return?.time_return || 0) * 100).toFixed(2)}%`;
+    document.getElementById('volatility').textContent = `${((portfolioData.volatility || 0) * 100).toFixed(2)}%`;
 
     // Actualizar tabla
     const tableBody = document.getElementById('history-table');
