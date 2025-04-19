@@ -216,7 +216,7 @@ async function fetchPortfolioData(token, accountId) {
     }
 
     // Obtener additional_cash_needed_to_trade
-      let totalValue = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
+      let additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
     /*let additionalCashNeeded = (portfolioData.extra && portfolioData.extra.length > 0) ? portfolioData.extra[0].additional_cash_needed_to_trade || 0 : 0;*/
     console.log('additionalCashNeeded:', additionalCashNeeded);
 
