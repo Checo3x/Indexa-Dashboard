@@ -1,8 +1,12 @@
 const fetch = require('node-fetch');
+const url = require('url'); // Para parsear la URL y eliminar parámetros de consulta
 
 module.exports = async (req, res) => {
-  // Construye la URL de la API de Indexa Capital
-  const apiUrl = `https://api.indexacapital.com${req.url.replace('/api', '')}`;
+  // Parsear la URL para obtener solo la ruta, sin parámetros de consulta
+  const parsedUrl = url.parse(req.url);
+  const cleanPath = parsedUrl.pathname; // Esto elimina los parámetros de consulta
+  const apiPath = cleanPath.replace('/api', ''); // Elimina "/api" del inicio
+  const apiUrl = `https://api.indexacapital.com${apiPath}`;
   
   // Manejo de solicitudes CORS preflight (OPTIONS)
   if (req.method === 'OPTIONS') {
@@ -24,7 +28,17 @@ module.exports = async (req, res) => {
       body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
     });
 
-    const data = await response.json();
+    // Verificar si la respuesta es JSON
+    const contentType = response.headers.get('content-type');
+    let data;
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      data = await response.text();
+      console.log('Non-JSON response:', data);
+      throw new Error('Expected JSON response, but got: ' + data);
+    }
+
     console.log('Proxy response:', { status: response.status, data });
 
     // Configura encabezados CORS
