@@ -19,12 +19,18 @@ module.exports = async (req, res) => {
   try {
     console.log('Proxy request:', { method: req.method, url: apiUrl, headers: req.headers });
     
+    const authorizationHeader = req.headers.authorization || '';
+    console.log('Authorization header received:', authorizationHeader);
+
     const fetchHeaders = {
       'Content-Type': 'application/json',
-      'Authorization': req.headers.authorization || '',
-      'User-Agent': 'PostmanRuntime/7.42.0', // Imita el User-Agent de Postman
+      'Authorization': authorizationHeader.trim(), // Asegura que no haya espacios adicionales
+      'User-Agent': 'PostmanRuntime/7.42.0',
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate, br',
+      'Host': 'api.indexacapital.com',
+      'Connection': 'keep-alive',
+      'Referer': 'https://indexa-dashboard.vercel.app/',
     };
     console.log('Fetch headers:', fetchHeaders);
 
