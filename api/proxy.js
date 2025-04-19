@@ -6,7 +6,6 @@ module.exports = async (req, res) => {
   const cleanPath = parsedUrl.pathname;
   const apiPath = cleanPath.replace('/api', '');
 
-  // Usa el endpoint base correcto (sin /v1)
   const apiUrl = `https://api.indexacapital.com${apiPath}`;
   
   // Manejo de solicitudes CORS preflight (OPTIONS)
@@ -20,12 +19,18 @@ module.exports = async (req, res) => {
   try {
     console.log('Proxy request:', { method: req.method, url: apiUrl, headers: req.headers });
     
+    const fetchHeaders = {
+      'Content-Type': 'application/json',
+      'Authorization': req.headers.authorization || '',
+      'User-Agent': 'PostmanRuntime/7.42.0', // Imita el User-Agent de Postman
+      'Accept': '*/*',
+      'Accept-Encoding': 'gzip, deflate, br',
+    };
+    console.log('Fetch headers:', fetchHeaders);
+
     const response = await fetch(apiUrl, {
       method: req.method,
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': req.headers.authorization || '',
-      },
+      headers: fetchHeaders,
       body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
     });
 
