@@ -197,8 +197,9 @@ async function fetchPortfolioData(token, accountId) {
 
     // Ajustar métricas
     // Intentar obtener el valor total de portfolioData.portfolio[0].total_amount
-    let totalValue = (portfolioData.portfolio && portfolioData.portfolio.length > 0) ? portfolioData.portfolio[0].total_amount || 0 : 0;
-    console.log('totalValue después de portfolioData:', totalValue);
+      let totalValue = portfolioData.portfolio?.total_amount ?? 0;
+   /* let totalValue = (portfolioData.portfolio && portfolioData.portfolio.length > 0) ? portfolioData.portfolio[0].total_amount || 0 : 0;
+    console.log('totalValue después de portfolioData:', totalValue);*/
 
     // Usar historyData.portfolios como respaldo
     const portfolioHistory = historyData.portfolios || [];
