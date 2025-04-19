@@ -211,12 +211,41 @@ async function fetchPortfolioData(token, accountId) {
       console.log('totalValue después de index.total_amounts:', totalValue, 'última fecha:', lastDate);
     }
 
+    // Obtener additional_cash_needed_to_trade
+    let additionalCashNeeded = (portfolioData.extra && portfolioData.extra.length > 0) ? portfolioData.extra[0].additional_cash_needed_to_trade || 0 : 0;
+    console.log('additionalCashNeeded:', additionalCashNeeded);
+
     const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
     const volatility = (historyData.volatility || 0) * 100;
 
-    document.getElementById('total-value').textContent = `€${totalValue.toFixed(2)}`;
-    document.getElementById('annual-return').textContent = `${annualReturn.toFixed(2)}%`;
-    document.getElementById('volatility').textContent = `${volatility.toFixed(2)}%`;
+    // Actualizar métricas en el frontend
+    const totalValueElement = document.getElementById('total-value');
+    if (totalValueElement) {
+      totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
+    } else {
+      console.error('Elemento con id "total-value" no encontrado en el HTML');
+    }
+
+    const annualReturnElement = document.getElementById('annual-return');
+    if (annualReturnElement) {
+      annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+    } else {
+      console.error('Elemento con id "annual-return" no encontrado en el HTML');
+    }
+
+    const volatilityElement = document.getElementById('volatility');
+    if (volatilityElement) {
+      volatilityElement.textContent = `${volatility.toFixed(2)}%`;
+    } else {
+      console.error('Elemento con id "volatility" no encontrado en el HTML');
+    }
+
+    const additionalCashElement = document.getElementById('additional-cash-needed');
+    if (additionalCashElement) {
+      additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
+    } else {
+      console.error('Elemento con id "additional-cash-needed" no encontrado en el HTML');
+    }
 
     // Usar "index.total_amounts" para el gráfico y la tabla (temporalmente, hasta que tengamos la estructura de "history")
     const historicalData = Object.entries(totalAmounts).map(([date, value]) => ({
@@ -246,25 +275,33 @@ async function fetchPortfolioData(token, accountId) {
 
     // Actualizar tabla
     const tableBody = document.getElementById('history-table');
-    tableBody.innerHTML = '';
-    tableData.forEach(item => {
-      const row = document.createElement('tr');
-      row.innerHTML = `
-        <td class="p-2">${item.date || 'N/A'}</td>
-        <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
-        <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
-      `;
-      tableBody.appendChild(row);
-    });
+    if (tableBody) {
+      tableBody.innerHTML = '';
+      tableData.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="p-2">${item.date || 'N/A'}</td>
+          <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
+          <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+        `;
+        tableBody.appendChild(row);
+      });
+    } else {
+      console.error('Elemento con id "history-table" no encontrado en el HTML');
+    }
 
     document.getElementById('error-message').classList.add('hidden');
   } catch (error) {
     console.error('Error al obtener datos:', error);
     const errorDiv = document.getElementById('error-message');
-    errorDiv.textContent = `Error al obtener datos: ${error.message}`;
-    errorDiv.classList.remove('hidden');
-    errorDiv.classList.add('block');
-    errorDiv.style.display = 'block';
+    if (errorDiv) {
+      errorDiv.textContent = `Error al obtener datos: ${error.message}`;
+      errorDiv.classList.remove('hidden');
+      errorDiv.classList.add('block');
+      errorDiv.style.display = 'block';
+    } else {
+      console.error('Elemento con id "error-message" no encontrado en el HTML');
+    }
   } finally {
     setLoading(false);
   }
