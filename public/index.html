@@ -198,8 +198,7 @@ async function fetchPortfolioData(token, accountId) {
     // Ajustar métricas
     // Intentar obtener el valor total de portfolioData.portfolio[0].total_amount
       let totalValue = portfolioData.portfolio?.total_amount ?? 0;
-   /* let totalValue = (portfolioData.portfolio && portfolioData.portfolio.length > 0) ? portfolioData.portfolio[0].total_amount || 0 : 0;
-    console.log('totalValue después de portfolioData:', totalValue);*/
+      console.log('totalValue:', totalValue);
 
     // Usar historyData.portfolios como respaldo
     const portfolioHistory = historyData.portfolios || [];
@@ -217,7 +216,8 @@ async function fetchPortfolioData(token, accountId) {
     }
 
     // Obtener additional_cash_needed_to_trade
-    let additionalCashNeeded = (portfolioData.extra && portfolioData.extra.length > 0) ? portfolioData.extra[0].additional_cash_needed_to_trade || 0 : 0;
+      let totalValue = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
+    /*let additionalCashNeeded = (portfolioData.extra && portfolioData.extra.length > 0) ? portfolioData.extra[0].additional_cash_needed_to_trade || 0 : 0;*/
     console.log('additionalCashNeeded:', additionalCashNeeded);
 
     const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
