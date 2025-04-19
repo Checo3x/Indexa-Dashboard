@@ -1,11 +1,12 @@
-const fetch = require('node-fetch');
-const url = require('url'); // Para parsear la URL y eliminar parámetros de consulta
+const url = require('url');
 
 module.exports = async (req, res) => {
   // Parsear la URL para obtener solo la ruta, sin parámetros de consulta
   const parsedUrl = url.parse(req.url);
-  const cleanPath = parsedUrl.pathname; // Esto elimina los parámetros de consulta
-  const apiPath = cleanPath.replace('/api', ''); // Elimina "/api" del inicio
+  const cleanPath = parsedUrl.pathname;
+  const apiPath = cleanPath.replace('/api', '');
+
+  // Usa el endpoint base correcto (sin /v1)
   const apiUrl = `https://api.indexacapital.com${apiPath}`;
   
   // Manejo de solicitudes CORS preflight (OPTIONS)
@@ -27,6 +28,15 @@ module.exports = async (req, res) => {
       },
       body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
     });
+
+    console.log('Fetch response status:', response.status, response.statusText);
+
+    // Verificar si la solicitud fue exitosa
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.log('Non-OK response:', { status: response.status, statusText: response.statusText, body: errorText });
+      throw new Error(`API responded with ${response.status}: ${errorText}`);
+    }
 
     // Verificar si la respuesta es JSON
     const contentType = response.headers.get('content-type');
