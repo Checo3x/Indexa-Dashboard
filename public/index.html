@@ -178,7 +178,7 @@ async function fetchPortfolioData(token, accountId) {
       throw new Error(`Error HTTP (portfolio): ${portfolioResponse.status} ${errorData.details || portfolioResponse.statusText}`);
     }
     const portfolioData = await portfolioResponse.json();
-    console.log('Datos de cartera:', portfolioData);
+    console.log('Datos de cartera (portfolioData):', portfolioData);
 
     // Obtener datos históricos
     const historyResponse = await fetch(`/api/accounts/${accountId}/performance`, {
@@ -189,24 +189,30 @@ async function fetchPortfolioData(token, accountId) {
       throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
     }
     const historyData = await historyResponse.json();
-    console.log('Datos históricos:', historyData);
+    console.log('Datos históricos (historyData):', historyData);
 
     // Ajustar métricas
-    // Intentar obtener el valor total del endpoint /portfolio
-    let totalValue = portfolioData.balance || portfolioData.total_amount || 0;
-    const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
-    const volatility = (historyData.volatility || 0) * 100;
+    // Intentar obtener el valor total de portfolioData.portfolio[0].total_amount
+    let totalValue = (portfolioData.portfolio && portfolioData.portfolio.length > 0) ? portfolioData.portfolio[0].total_amount || 0 : 0;
+    console.log('totalValue después de portfolioData:', totalValue);
 
-    // Si totalValue es 0, usar el último valor de portfolios o index.total_amounts como respaldo
+    // Usar historyData.portfolios como respaldo
     const portfolioHistory = historyData.portfolios || [];
-    const totalAmounts = historyData.index?.total_amounts || {};
     if (totalValue === 0 && portfolioHistory.length > 0) {
       totalValue = portfolioHistory[portfolioHistory.length - 1].total_amount || 0;
+      console.log('totalValue después de portfolios:', totalValue);
     }
+
+    // Usar historyData.index.total_amounts como respaldo
+    const totalAmounts = historyData.index?.total_amounts || {};
     if (totalValue === 0 && Object.keys(totalAmounts).length > 0) {
       const lastDate = Object.keys(totalAmounts).sort().pop(); // Última fecha
       totalValue = totalAmounts[lastDate] || 0;
+      console.log('totalValue después de index.total_amounts:', totalValue, 'última fecha:', lastDate);
     }
+
+    const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
+    const volatility = (historyData.volatility || 0) * 100;
 
     document.getElementById('total-value').textContent = `€${totalValue.toFixed(2)}`;
     document.getElementById('annual-return').textContent = `${annualReturn.toFixed(2)}%`;
