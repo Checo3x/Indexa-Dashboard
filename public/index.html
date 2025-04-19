@@ -191,36 +191,52 @@ async function fetchPortfolioData(token, accountId) {
     const historyData = await historyResponse.json();
     console.log('Datos históricos:', historyData);
 
-    // Usar "daily_valuations" para el gráfico y la tabla
-    const dailyValuations = historyData.daily_valuations || [];
-    if (!Array.isArray(dailyValuations)) {
-      throw new Error('daily_valuations no es un array');
+    // Ajustar métricas
+    // Intentar obtener el valor total del endpoint /portfolio
+    let totalValue = portfolioData.balance || portfolioData.total_amount || 0;
+    const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
+    const volatility = (historyData.volatility || 0) * 100;
+
+    // Si totalValue es 0, usar el último valor de portfolios o index.total_amounts como respaldo
+    const portfolioHistory = historyData.portfolios || [];
+    const totalAmounts = historyData.index?.total_amounts || {};
+    if (totalValue === 0 && portfolioHistory.length > 0) {
+      totalValue = portfolioHistory[portfolioHistory.length - 1].total_amount || 0;
+    }
+    if (totalValue === 0 && Object.keys(totalAmounts).length > 0) {
+      const lastDate = Object.keys(totalAmounts).sort().pop(); // Última fecha
+      totalValue = totalAmounts[lastDate] || 0;
     }
 
+    document.getElementById('total-value').textContent = `€${totalValue.toFixed(2)}`;
+    document.getElementById('annual-return').textContent = `${annualReturn.toFixed(2)}%`;
+    document.getElementById('volatility').textContent = `${volatility.toFixed(2)}%`;
+
+    // Usar "index.total_amounts" para el gráfico y la tabla (temporalmente, hasta que tengamos la estructura de "history")
+    const historicalData = Object.entries(totalAmounts).map(([date, value]) => ({
+      date: `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`, // Convertir YYYYMMDD a YYYY-MM-DD
+      value: value
+    }));
+
     // Preparar datos para el gráfico
-    const labels = dailyValuations.map(item => item.date);
-    const values = dailyValuations.map(item => item.total_amount);
+    const labels = historicalData.map(item => item.date);
+    const values = historicalData.map(item => item.value);
     createChart(labels, values);
 
     // Calcular rentabilidad para la tabla
-    const tableData = dailyValuations.map((item, index) => {
+    const tableData = historicalData.map((item, index) => {
       let returnPercentage = 0;
       if (index > 0) {
-        const previousValue = dailyValuations[index - 1].total_amount;
-        const currentValue = item.total_amount;
+        const previousValue = historicalData[index - 1].value;
+        const currentValue = item.value;
         returnPercentage = ((currentValue - previousValue) / previousValue) * 100;
       }
       return {
         date: item.date,
-        value: item.total_amount,
+        value: item.value,
         return: returnPercentage
       };
     });
-
-    // Actualizar métricas
-    document.getElementById('total-value').textContent = `€${(portfolioData.total_amount || 0).toFixed(2)}`;
-    document.getElementById('annual-return').textContent = `${((portfolioData.return?.time_return || 0) * 100).toFixed(2)}%`;
-    document.getElementById('volatility').textContent = `${((portfolioData.volatility || 0) * 100).toFixed(2)}%`;
 
     // Actualizar tabla
     const tableBody = document.getElementById('history-table');
@@ -228,7 +244,7 @@ async function fetchPortfolioData(token, accountId) {
     tableData.forEach(item => {
       const row = document.createElement('tr');
       row.innerHTML = `
-        <td class="p-2">${item.date}</td>
+        <td class="p-2">${item.date || 'N/A'}</td>
         <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
         <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
       `;
@@ -237,8 +253,12 @@ async function fetchPortfolioData(token, accountId) {
 
     document.getElementById('error-message').classList.add('hidden');
   } catch (error) {
-    showError(`Error al obtener datos: ${error.message}`);
-    console.error('Error:', error);
+    console.error('Error al obtener datos:', error);
+    const errorDiv = document.getElementById('error-message');
+    errorDiv.textContent = `Error al obtener datos: ${error.message}`;
+    errorDiv.classList.remove('hidden');
+    errorDiv.classList.add('block');
+    errorDiv.style.display = 'block';
   } finally {
     setLoading(false);
   }
