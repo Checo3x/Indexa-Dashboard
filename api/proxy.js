@@ -22,9 +22,15 @@ module.exports = async (req, res) => {
     const authorizationHeader = req.headers.authorization || '';
     console.log('Authorization header received:', authorizationHeader);
 
+    // Extrae el token del header Authorization (elimina "Bearer " si está presente)
+    const token = authorizationHeader.replace(/^Bearer\s+/i, '').trim();
+    if (!token) {
+      throw new Error('No authentication token provided');
+    }
+
     const fetchHeaders = {
       'Content-Type': 'application/json',
-      'Authorization': authorizationHeader.trim(), // Asegura que no haya espacios adicionales
+      'X-AUTH-TOKEN': token, // Usa el header correcto para la API de Indexa
       'User-Agent': 'PostmanRuntime/7.42.0',
       'Accept': '*/*',
       'Accept-Encoding': 'gzip, deflate, br',
