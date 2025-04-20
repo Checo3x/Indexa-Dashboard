@@ -388,10 +388,11 @@
                 }
 
                 // Calcular los pesos reales de los fondos y depurar nombres
-                const weights = components.map(component => {
+                const weights = components.map((component, index) => {
                     const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-                    const name = component.name || component.identifier_name || component.description || 'Fondo Desconocido';
-                    console.log('Nombre del fondo (componente):', component.name, 'Nombre asignado:', name);
+                    const name = component.instrument?.name || component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
+                    console.log(`Componente ${index}:`, component);
+                    console.log(`Nombre del fondo (componente ${index}):`, component.instrument?.name, 'Nombre asignado:', name);
                     return {
                         name: name,
                         amount: component.amount || 0,
@@ -410,6 +411,7 @@
                         compositionTable.appendChild(row);
                     } else {
                         weights.forEach(fund => {
+                            console.log('Añadiendo fondo a la tabla:', fund.name);
                             const row = document.createElement('tr');
                             row.innerHTML = `
                                 <td class="p-2">${fund.name}</td>
