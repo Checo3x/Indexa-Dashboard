@@ -276,12 +276,27 @@
                 console.log('Datos históricos completos (historyData):', historyData);
                 console.log('historyData.portfolios:', historyData.portfolios);
 
-                // Calcular el valor total de la cartera
-                const components = portfolioData.portfolio?.cash_accounts?.[0]?.instrument_accounts || [];
+                // Intentar obtener los componentes desde instrument_accounts o comparison
+                let components = [];
+                if (portfolioData.portfolio?.cash_accounts?.[0]?.instrument_accounts) {
+                    components = portfolioData.portfolio.cash_accounts[0].instrument_accounts;
+                    console.log('Componentes obtenidos desde instrument_accounts:', components);
+                } else if (portfolioData.comparison) {
+                    components = portfolioData.comparison;
+                    console.log('Componentes obtenidos desde comparison:', components);
+                } else {
+                    console.warn('No se encontraron componentes en instrument_accounts ni en comparison');
+                }
+
                 console.log('Componentes de la cartera:', components);
 
+                // Calcular el valor total de la cartera
                 let totalValue = components.reduce((sum, component) => sum + (component.amount || 0), 0);
-                console.log('totalValue (calculado de componentes):', totalValue);
+                if (totalValue === 0 && portfolioData.portfolio?.total_amount) {
+                    totalValue = portfolioData.portfolio.total_amount;
+                    console.log('Total value obtenido desde portfolio.total_amount:', totalValue);
+                }
+                console.log('totalValue (calculado):', totalValue);
 
                 let additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
                 console.log('additionalCashNeeded:', additionalCashNeeded);
@@ -356,11 +371,14 @@
                 }
 
                 // Calcular los pesos reales de los fondos
-                const weights = components.map(component => ({
-                    name: component.name || 'Fondo Desconocido',
-                    amount: component.amount || 0,
-                    weight: totalValue > 0 ? (component.amount || 0) / totalValue : 0
-                }));
+                const weights = components.map(component => {
+                    const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
+                    return {
+                        name: component.name || 'Fondo Desconocido',
+                        amount: component.amount || 0,
+                        weight: weight
+                    };
+                });
                 console.log('Pesos reales de los fondos:', weights);
 
                 // Preparar datos para el gráfico de componentes
@@ -394,7 +412,7 @@
                     createComponentsChart(labels, datasets);
                 } else {
                     console.warn('No hay suficientes datos de componentes para mostrar en el gráfico');
-                    setError('No hay suficientes datos de componentes para mostrar en el gráfico.');
+                    setError('No hay suficientes datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
                 }
 
                 // Calcular rentabilidad para la tabla
