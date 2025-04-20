@@ -87,31 +87,52 @@
 
 <script defer>
 // Configuración de Chart.js
+// Configuración de Chart.js
 let portfolioChart = null;
-const ctx = document.getElementById('portfolio-chart').getContext('2d');
+const ctx = document.getElementById('portfolio-chart')?.getContext('2d');
+
+if (typeof Chart === 'undefined') {
+    console.error('Chart.js no está cargado');
+    showError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
+}
 
 function createChart(labels, data) {
-    if (portfolioChart) portfolioChart.destroy();
-    portfolioChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Valor Cartera (€)',
-                data: data,
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1,
-                fill: false
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                x: { title: { display: true, text: 'Fecha' } },
-                y: { title: { display: true, text: 'Valor (€)' } }
+    console.log('Datos para el gráfico:', { labels, data });
+    if (!labels.length || !data.length) {
+        console.warn('No hay datos para mostrar en el gráfico');
+        return;
+    }
+    if (!ctx) {
+        console.error('Contexto del canvas no encontrado');
+        return;
+    }
+    try {
+        if (portfolioChart) portfolioChart.destroy();
+        portfolioChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Valor Cartera (€)',
+                    data: data,
+                    borderColor: 'rgb(75, 192, 192)',
+                    tension: 0.1,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: { title: { display: true, text: 'Fecha' } },
+                    y: { title: { display: true, text: 'Valor (€)' } }
+                }
             }
-        }
-    });
+        });
+        portfolioChart.update();
+    } catch (error) {
+        console.error('Error al crear el gráfico:', error);
+        showError('No se pudo renderizar el gráfico. Por favor, revisa la consola para más detalles.');
+    }
 }
 
 // Mostrar/ocultar indicador de carga
@@ -252,16 +273,19 @@ async function fetchPortfolioData(token, accountId) {
       console.error('Elemento con id "additional-cash-needed" no encontrado en el HTML');
     }
 
-    // Usar "index.total_amounts" para el gráfico y la tabla (temporalmente, hasta que tengamos la estructura de "history")
-    const historicalData = Object.entries(totalAmounts).map(([date, value]) => ({
-      date: `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`, // Convertir YYYYMMDD a YYYY-MM-DD
-      value: value
-    }));
+    // En fetchPortfolioData, actualiza la preparación de datos:
+const historicalData = Object.entries(totalAmounts).map(([date, value]) => ({
+    date: `${date.substring(0, 4)}-${date.substring(4, 6)}-${date.substring(6, 8)}`,
+    value: Number(value) // Convertir a número
+}));
 
-    // Preparar datos para el gráfico
-    const labels = historicalData.map(item => item.date);
-    const values = historicalData.map(item => item.value);
-    createChart(labels, values);
+const labels = historicalData.map(item => item.date);
+const values = historicalData.map(item => item.value);
+console.log('Valores para el gráfico:', values);
+if (values.some(isNaN)) {
+    console.error('Algunos valores no son numéricos:', values);
+}
+createChart(labels, values);
 
     // Calcular rentabilidad para la tabla
     const tableData = historicalData.map((item, index) => {
