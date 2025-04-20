@@ -61,6 +61,23 @@
             </div>
         </div>
 
+        <!-- Composición de la Cartera -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-lg font-semibold mb-4">Composición de la Cartera</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2">Nombre del Fondo</th>
+                            <th class="p-2">Valor (€)</th>
+                            <th class="p-2">Peso (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="composition-table"></tbody>
+                </table>
+            </div>
+        </div>
+
         <!-- Gráfico Total -->
         <div class="bg-white p-6 rounded-lg shadow-md mb-6">
             <h2 class="text-lg font-semibold mb-4">Evolución del Valor de la Cartera (Total)</h2>
@@ -120,7 +137,7 @@
                     data: {
                         labels: labels,
                         datasets: [{
-                            label: 'Valor Cartera (€)',
+                            label: 'Total Cartera (€)',
                             data: data,
                             borderColor: 'rgb(75, 192, 192)',
                             tension: 0.1,
@@ -370,16 +387,41 @@
                     createPortfolioChart(labels, values);
                 }
 
-                // Calcular los pesos reales de los fondos
+                // Calcular los pesos reales de los fondos y depurar nombres
                 const weights = components.map(component => {
                     const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
+                    const name = component.name || component.identifier_name || component.description || 'Fondo Desconocido';
+                    console.log('Nombre del fondo (componente):', component.name, 'Nombre asignado:', name);
                     return {
-                        name: component.name || 'Fondo Desconocido',
+                        name: name,
                         amount: component.amount || 0,
                         weight: weight
                     };
                 });
                 console.log('Pesos reales de los fondos:', weights);
+
+                // Llenar la tabla de composición
+                const compositionTable = document.getElementById('composition-table');
+                if (compositionTable) {
+                    compositionTable.innerHTML = '';
+                    if (weights.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+                        compositionTable.appendChild(row);
+                    } else {
+                        weights.forEach(fund => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="p-2">${fund.name}</td>
+                                <td class="p-2">€${fund.amount.toFixed(2)}</td>
+                                <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
+                            `;
+                            compositionTable.appendChild(row);
+                        });
+                    }
+                } else {
+                    console.error('Elemento con id "composition-table" no encontrado en el HTML');
+                }
 
                 // Preparar datos para el gráfico de componentes
                 const datasets = [];
@@ -393,10 +435,10 @@
                 });
 
                 // Calcular la evolución de cada fondo
-                weights.forEach(component => {
-                    const weight = component.weight || 0;
-                    const name = component.name;
-                    // Calcular el valor del fondo para cada fecha usando el peso real
+                weights.forEach(fund => {
+                    const weight = fund.weight || 0;
+                    const name = fund.name;
+                    console.log('Creando dataset para fondo:', name, 'con peso:', weight);
                     const componentValues = historicalData.map(item => item.value * weight);
                     datasets.push({
                         label: `${name} (€)`,
