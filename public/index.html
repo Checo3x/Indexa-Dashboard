@@ -32,6 +32,12 @@
             <button id="fetch-data" type="button" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">Obtener Datos</button>
         </div>
 
+        <!-- Número de Cuenta Seleccionada -->
+        <div id="account-info" class="hidden mb-6 bg-white p-4 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold">Cuenta Seleccionada</h2>
+            <p id="selected-account" class="text-gray-600"></p>
+        </div>
+
         <!-- Mensaje de Error -->
         <div id="error-message" class="hidden bg-red-100 text-red-700 p-4 rounded-md mb-6" aria-live="polite"></div>
 
@@ -270,6 +276,14 @@
         async function fetchPortfolioData(token, accountId) {
             setLoading(true);
             try {
+                // Mostrar el número de cuenta seleccionada
+                const accountInfo = document.getElementById('account-info');
+                const selectedAccount = document.getElementById('selected-account');
+                if (accountInfo && selectedAccount) {
+                    selectedAccount.textContent = `Cuenta ${accountId}`;
+                    accountInfo.classList.remove('hidden');
+                }
+
                 // Obtener datos de la cartera
                 const portfolioResponse = await fetch(`/api/accounts/${accountId}/portfolio`, {
                     headers: { Authorization: `Bearer ${token}` }
