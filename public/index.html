@@ -221,20 +221,31 @@ async function fetchPortfolioData(token, accountId) {
       let totalValue = portfolioData.portfolio?.total_amount ?? 0;
       console.log('totalValue:', totalValue);
 
-    // Usar historyData.portfolios como respaldo
-    const portfolioHistory = historyData.portfolios || [];
-    if (totalValue === 0 && portfolioHistory.length > 0) {
-      totalValue = portfolioHistory[portfolioHistory.length - 1].total_amount || 0;
-      console.log('totalValue después de portfolios:', totalValue);
-    }
+    // Usar "history.net_amounts" para el gráfico y la tabla
+const totalAmounts = historyData.history?.net_amounts || [];
+console.log('totalAmounts (net_amounts):', totalAmounts); // Depuración
 
-    // Usar historyData.index.total_amounts como respaldo
-    const totalAmounts = historyData.index?.total_amounts || {};
-    if (totalValue === 0 && Object.keys(totalAmounts).length > 0) {
-      const lastDate = Object.keys(totalAmounts).sort().pop(); // Última fecha
-      totalValue = totalAmounts[lastDate] || 0;
-      console.log('totalValue después de index.total_amounts:', totalValue, 'última fecha:', lastDate);
+let historicalData = [];
+if (totalAmounts.length > 0) {
+    historicalData = totalAmounts.map(([date, value]) => {
+        // Convertir fecha de YYYYMMDD a YYYY-MM-DD
+        const formattedDate = `${date.toString().substring(0, 4)}-${date.toString().substring(4, 6)}-${date.toString().substring(6, 8)}`;
+        return {
+            date: formattedDate,
+            value: Number(value) // Asegurar que el valor sea un número
+        };
+    });
+} else {
+    // Intentar usar historyData.history.portfolios como respaldo (opcional)
+    const portfolioHistory = historyData.history?.portfolios || [];
+    console.log('portfolioHistory:', portfolioHistory); // Depuración
+    if (portfolioHistory.length > 0) {
+        historicalData = portfolioHistory.map(item => ({
+            date: item.date || item.created_at || 'N/A',
+            value: Number(item.total_amount || item.amount || 0)
+        }));
     }
+}
 
     // Obtener additional_cash_needed_to_trade
       let additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
@@ -279,46 +290,55 @@ const historicalData = Object.entries(totalAmounts).map(([date, value]) => ({
     value: Number(value) // Convertir a número
 }));
 
+// Preparar datos para el gráfico
 const labels = historicalData.map(item => item.date);
 const values = historicalData.map(item => item.value);
 console.log('Valores para el gráfico:', values);
-if (values.some(isNaN)) {
-    console.error('Algunos valores no son numéricos:', values);
-}
-createChart(labels, values);
 
-    // Calcular rentabilidad para la tabla
-    const tableData = historicalData.map((item, index) => {
-      let returnPercentage = 0;
-      if (index > 0) {
+if (labels.length === 0 || values.length === 0) {
+    console.warn('No hay datos históricos disponibles para el gráfico');
+    showError('No hay datos históricos disponibles para mostrar en el gráfico.');
+} else {
+    createChart(labels, values);
+}
+
+   // Calcular rentabilidad para la tabla
+const tableData = historicalData.map((item, index) => {
+    let returnPercentage = 0;
+    if (index > 0) {
         const previousValue = historicalData[index - 1].value;
         const currentValue = item.value;
         returnPercentage = ((currentValue - previousValue) / previousValue) * 100;
-      }
-      return {
+    }
+    return {
         date: item.date,
         value: item.value,
         return: returnPercentage
-      };
-    });
+    };
+});
 
-    // Actualizar tabla
-    const tableBody = document.getElementById('history-table');
-    if (tableBody) {
-      tableBody.innerHTML = '';
-      tableData.forEach(item => {
+// Actualizar tabla
+const tableBody = document.getElementById('history-table');
+if (tableBody) {
+    tableBody.innerHTML = '';
+    if (tableData.length === 0) {
         const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="p-2">${item.date || 'N/A'}</td>
-          <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
-          <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
-        `;
+        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
         tableBody.appendChild(row);
-      });
     } else {
-      console.error('Elemento con id "history-table" no encontrado en el HTML');
+        tableData.forEach(item => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="p-2">${item.date || 'N/A'}</td>
+                <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
+                <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+            `;
+            tableBody.appendChild(row);
+        });
     }
-
+} else {
+    console.error('Elemento con id "history-table" no encontrado en el HTML');
+}
     document.getElementById('error-message').classList.add('hidden');
   } catch (error) {
     console.error('Error al obtener datos:', error);
