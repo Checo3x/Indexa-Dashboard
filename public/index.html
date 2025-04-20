@@ -49,4 +49,333 @@
             </div>
             <div class="bg-white p-4 rounded-lg shadow-md">
                 <h2 class="text-lg font-semibold">Rentabilidad Anualizada</h2>
-                <p id="annual-return" class="text-2xl font-bold text-blue-600">--
+                <p id="annual-return" class="text-2xl font-bold text-blue-600">--</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold">Volatilidad</h2>
+                <p id="volatility" class="text-2xl font-bold text-purple-600">--</p>
+            </div>
+            <div class="bg-white p-4 rounded-lg shadow-md">
+                <h2 class="text-lg font-semibold">Efectivo Adicional Necesario para Operar</h2>
+                <p id="additional-cash-needed" class="text-2xl font-bold text-purple-600">--</p>
+            </div>
+        </div>
+
+        <!-- Gráfico -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 class="text-lg font-semibold mb-4">Evolución del Valor de la Cartera</h2>
+            <canvas id="portfolio-chart"></canvas>
+        </div>
+
+        <!-- Tabla Histórica -->
+        <div class="bg-white p-6 rounded-lg shadow-md">
+            <h2 class="text-lg font-semibold mb-4">Datos Históricos</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2">Fecha</th>
+                            <th class="p-2">Valor Cartera (€)</th>
+                            <th class="p-2">Rentabilidad (%)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script defer>
+        // Configuración de Chart.js
+        let portfolioChart = null;
+        const ctx = document.getElementById('portfolio-chart')?.getContext('2d');
+
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js no está cargado');
+            showError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
+        }
+
+        function createChart(labels, data) {
+            console.log('Datos para el gráfico:', { labels, data });
+            if (!labels.length || !data.length) {
+                console.warn('No hay datos para mostrar en el gráfico');
+                return;
+            }
+            if (!ctx) {
+                console.error('Contexto del canvas no encontrado');
+                return;
+            }
+            try {
+                if (portfolioChart) portfolioChart.destroy();
+                portfolioChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Valor Cartera (€)',
+                            data: data,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1,
+                            fill: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Fecha' },
+                                ticks: {
+                                    maxTicksLimit: 10 // Limitar el número de etiquetas en el eje X
+                                }
+                            },
+                            y: { title: { display: true, text: 'Valor (€)' } }
+                        }
+                    }
+                });
+                portfolioChart.update();
+            } catch (error) {
+                console.error('Error al crear el gráfico:', error);
+                showError('No se pudo renderizar el gráfico. Por favor, revisa la consola para más detalles.');
+            }
+        }
+
+        // Mostrar/ocultar indicador de carga
+        function setLoading(isLoading) {
+            document.getElementById('loading-indicator').classList.toggle('hidden', !isLoading);
+            document.getElementById('fetch-accounts').disabled = isLoading;
+            document.getElementById('fetch-data').disabled = isLoading;
+        }
+
+        // Mostrar mensaje de error
+        function showError(message) {
+            const errorDiv = document.getElementById('error-message');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Obtener lista de cuentas
+        async function fetchAccounts(token) {
+            setLoading(true);
+            try {
+                const response = await fetch('/api/users/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`Error HTTP: ${response.status} ${errorData.details || response.statusText}`);
+                }
+                const userData = await response.json();
+                console.log('Datos del usuario:', userData);
+
+                const accounts = userData.accounts || [];
+                if (!Array.isArray(accounts)) {
+                    throw new Error('La respuesta no contiene una lista de cuentas válida');
+                }
+
+                const select = document.getElementById('account-select');
+                select.innerHTML = '<option value="">Selecciona una cuenta</option>';
+                accounts.forEach(account => {
+                    const option = document.createElement('option');
+                    option.value = account.account_number;
+                    option.textContent = `Cuenta ${account.account_number} (${account.type || 'Sin tipo'})`;
+                    select.appendChild(option);
+                });
+
+                document.getElementById('account-selector').classList.remove('hidden');
+                document.getElementById('error-message').classList.add('hidden');
+            } catch (error) {
+                showError(`Error al cargar cuentas: ${error.message}`);
+                console.error('Error:', error);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Obtener datos de la cartera
+        async function fetchPortfolioData(token, accountId) {
+            setLoading(true);
+            try {
+                // Obtener datos de la cartera
+                const portfolioResponse = await fetch(`/api/accounts/${accountId}/portfolio`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!portfolioResponse.ok) {
+                    const errorData = await portfolioResponse.json();
+                    throw new Error(`Error HTTP (portfolio): ${portfolioResponse.status} ${errorData.details || portfolioResponse.statusText}`);
+                }
+                const portfolioData = await portfolioResponse.json();
+                console.log('Datos de cartera (portfolioData):', portfolioData);
+
+                // Obtener datos históricos
+                const historyResponse = await fetch(`/api/accounts/${accountId}/performance`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!historyResponse.ok) {
+                    const errorData = await historyResponse.json();
+                    throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
+                }
+                const historyData = await historyResponse.json();
+                console.log('Datos históricos (historyData):', historyData);
+
+                // Ajustar métricas
+                let totalValue = portfolioData.portfolio?.total_amount ?? 0;
+                console.log('totalValue:', totalValue);
+
+                let additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
+                console.log('additionalCashNeeded:', additionalCashNeeded);
+
+                const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
+                const volatility = (historyData.history?.volatility || 0) * 100;
+
+                // Actualizar métricas en el frontend
+                const totalValueElement = document.getElementById('total-value');
+                if (totalValueElement) {
+                    totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
+                } else {
+                    console.error('Elemento con id "total-value" no encontrado en el HTML');
+                }
+
+                const annualReturnElement = document.getElementById('annual-return');
+                if (annualReturnElement) {
+                    annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+                } else {
+                    console.error('Elemento con id "annual-return" no encontrado en el HTML');
+                }
+
+                const volatilityElement = document.getElementById('volatility');
+                if (volatilityElement) {
+                    volatilityElement.textContent = `${volatility.toFixed(2)}%`;
+                } else {
+                    console.error('Elemento con id "volatility" no encontrado en el HTML');
+                }
+
+                const additionalCashElement = document.getElementById('additional-cash-needed');
+                if (additionalCashElement) {
+                    additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
+                } else {
+                    console.error('Elemento con id "additional-cash-needed" no encontrado en el HTML');
+                }
+
+                // Usar "history.net_amounts" para el gráfico y la tabla
+                const totalAmounts = historyData.history?.net_amounts || [];
+                console.log('totalAmounts (net_amounts):', totalAmounts); // Depuración
+
+                let historicalData = [];
+                if (totalAmounts.length > 0) {
+                    historicalData = totalAmounts.map(([date, value]) => {
+                        // Convertir fecha de YYYYMMDD a YYYY-MM-DD
+                        const formattedDate = `${date.toString().substring(0, 4)}-${date.toString().substring(4, 6)}-${date.toString().substring(6, 8)}`;
+                        return {
+                            date: formattedDate,
+                            value: Number(value) // Asegurar que el valor sea un número
+                        };
+                    });
+                } else {
+                    // Intentar usar historyData.history.portfolios como respaldo (opcional)
+                    const portfolioHistory = historyData.history?.portfolios || [];
+                    console.log('portfolioHistory:', portfolioHistory); // Depuración
+                    if (portfolioHistory.length > 0) {
+                        historicalData = portfolioHistory.map(item => ({
+                            date: item.date || item.created_at || 'N/A',
+                            value: Number(item.total_amount || item.amount || 0)
+                        }));
+                    }
+                }
+
+                // Filtrar datos con valor 0 (opcional, si no quieres mostrar días con valor 0)
+                historicalData = historicalData.filter(item => item.value > 0);
+                console.log('historicalData (filtrado):', historicalData);
+
+                // Ordenar datos por fecha
+                historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                // Preparar datos para el gráfico
+                const labels = historicalData.map(item => item.date);
+                const values = historicalData.map(item => item.value);
+                console.log('Valores para el gráfico:', values);
+
+                if (labels.length === 0 || values.length === 0) {
+                    console.warn('No hay datos históricos disponibles para el gráfico');
+                    showError('No hay datos históricos disponibles para mostrar en el gráfico.');
+                } else {
+                    createChart(labels, values);
+                }
+
+                // Calcular rentabilidad para la tabla
+                const tableData = historicalData.map((item, index) => {
+                    let returnPercentage = 0;
+                    if (index > 0) {
+                        const previousValue = historicalData[index - 1].value;
+                        const currentValue = item.value;
+                        returnPercentage = ((currentValue - previousValue) / previousValue) * 100;
+                    }
+                    return {
+                        date: item.date,
+                        value: item.value,
+                        return: returnPercentage
+                    };
+                });
+
+                // Actualizar tabla
+                const tableBody = document.getElementById('history-table');
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                    if (tableData.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
+                        tableBody.appendChild(row);
+                    } else {
+                        tableData.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="p-2">${item.date || 'N/A'}</td>
+                                <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
+                                <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+                } else {
+                    console.error('Elemento con id "history-table" no encontrado en el HTML');
+                }
+
+                document.getElementById('error-message').classList.add('hidden');
+            } catch (error) {
+                console.error('Error al obtener datos:', error);
+                const errorDiv = document.getElementById('error-message');
+                if (errorDiv) {
+                    errorDiv.textContent = `Error al obtener datos: ${error.message}`;
+                    errorDiv.classList.remove('hidden');
+                    errorDiv.classList.add('block');
+                    errorDiv.style.display = 'block';
+                } else {
+                    console.error('Elemento con id "error-message" no encontrado en el HTML');
+                }
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Evento para cargar cuentas
+        document.getElementById('fetch-accounts').addEventListener('click', () => {
+            const token = document.getElementById('api-token').value.trim();
+            if (!token) {
+                showError('Por favor, introduce un token de API válido.');
+                return;
+            }
+            fetchAccounts(token);
+        });
+
+        // Evento para obtener datos de la cartera
+        document.getElementById('fetch-data').addEventListener('click', () => {
+            const token = document.getElementById('api-token').value.trim();
+            const accountId = document.getElementById('account-select').value;
+            if (!accountId) {
+                showError('Por favor, selecciona una cuenta.');
+                return;
+            }
+            fetchPortfolioData(token, accountId);
+        });
+    </script>
+</body>
+</html>
