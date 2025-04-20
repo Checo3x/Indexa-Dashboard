@@ -74,6 +74,7 @@
                 <table class="w-full text-left">
                     <thead>
                         <tr class="bg-gray-200">
+                            <th class="p-2 w-8"></th> <!-- Columna para el color -->
                             <th class="p-2">Nombre del Fondo</th>
                             <th class="p-2">Valor (€)</th>
                             <th class="p-2">Peso (%)</th>
@@ -125,6 +126,20 @@
             console.error('Chart.js no está cargado');
             setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
         }
+
+        // Paleta de colores predefinida para los fondos
+        const colorPalette = [
+            '#FF6B6B', // Coral
+            '#4ECDC4', // Turquesa
+            '#45B7D1', // Azul claro
+            '#96CEB4', // Verde claro
+            '#FFEEAD', // Amarillo claro
+            '#D4A5A5', // Rosa suave
+            '#9B59B6', // Púrpura
+            '#3498DB', // Azul
+            '#E74C3C', // Rojo
+            '#2ECC71'  // Verde
+        ];
 
         function createPortfolioChart(labels, data) {
             console.log('Datos para el gráfico total:', { labels, data });
@@ -208,16 +223,6 @@
                 console.error('Error al crear el gráfico de componentes:', error);
                 setError('No se pudo renderizar el gráfico de componentes. Por favor, revisa la consola para más detalles.');
             }
-        }
-
-        // Generar un color aleatorio para las líneas del gráfico
-        function getRandomColor() {
-            const letters = '0123456789ABCDEF';
-            let color = '#';
-            for (let i = 0; i < 6; i++) {
-                color += letters[Math.floor(Math.random() * 16)];
-            }
-            return color;
         }
 
         // Mostrar/ocultar indicador de carga
@@ -401,33 +406,36 @@
                     createPortfolioChart(labels, values);
                 }
 
-                // Calcular los pesos reales de los fondos y depurar nombres
+                // Calcular los pesos reales de los fondos y asignar colores
                 const weights = components.map((component, index) => {
                     const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
                     const name = component.instrument?.name || component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
+                    const color = colorPalette[index % colorPalette.length]; // Asignar un color de la paleta
                     console.log(`Componente ${index}:`, component);
                     console.log(`Nombre del fondo (componente ${index}):`, component.instrument?.name, 'Nombre asignado:', name);
                     return {
                         name: name,
                         amount: component.amount || 0,
-                        weight: weight
+                        weight: weight,
+                        color: color
                     };
                 });
                 console.log('Pesos reales de los fondos:', weights);
 
-                // Llenar la tabla de composición
+                // Llenar la tabla de composición con colores
                 const compositionTable = document.getElementById('composition-table');
                 if (compositionTable) {
                     compositionTable.innerHTML = '';
                     if (weights.length === 0) {
                         const row = document.createElement('tr');
-                        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+                        row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
                         compositionTable.appendChild(row);
                     } else {
                         weights.forEach(fund => {
-                            console.log('Añadiendo fondo a la tabla:', fund.name);
+                            console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
                             const row = document.createElement('tr');
                             row.innerHTML = `
+                                <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
                                 <td class="p-2">${fund.name}</td>
                                 <td class="p-2">€${fund.amount.toFixed(2)}</td>
                                 <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
@@ -450,16 +458,17 @@
                     fill: false
                 });
 
-                // Calcular la evolución de cada fondo
+                // Calcular la evolución de cada fondo con su color asignado
                 weights.forEach(fund => {
                     const weight = fund.weight || 0;
                     const name = fund.name;
-                    console.log('Creando dataset para fondo:', name, 'con peso:', weight);
+                    const color = fund.color;
+                    console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
                     const componentValues = historicalData.map(item => item.value * weight);
                     datasets.push({
                         label: `${name} (€)`,
                         data: componentValues,
-                        borderColor: getRandomColor(),
+                        borderColor: color,
                         tension: 0.1,
                         fill: false
                     });
