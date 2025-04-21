@@ -247,9 +247,13 @@ async function fetchPortfolioData(token, accountId) {
         let expectedValues = [];
         let bestValues = [];
         let worstValues = [];
-        const currentDate = new Date('2025-04-21');
-        const minDate = new Date('2025-03-01'); // Datos comienzan en marzo 2025
-        const maxDate = new Date('2025-09-30'); // 5 meses después de abril 2025
+        const currentDate = new Date(); // Fecha actual
+        const earliestDataDate = new Date('2025-03-01'); // Fecha más temprana de los datos históricos
+        const minDate = earliestDataDate; // Fecha de inicio: la más temprana de los datos
+        // Calcular maxDate: 5 meses después de la fecha actual
+        const maxDate = new Date(currentDate);
+        maxDate.setMonth(maxDate.getMonth() + 5);
+        maxDate.setDate(0); // Ajustar al último día del mes
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
             let realData = historyData.performance.real || [];
@@ -331,10 +335,10 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 realValues = filteredRealValues;
 
-                // Encontrar el último índice con datos reales (abril 2025, índice 2)
-                const lastRealIndex = periodIndices.indexOf(2); // Abril 2025
+                // Encontrar el último índice con datos reales
+                const lastRealIndex = validIndices[validIndices.length - 1];
                 const lastRealValue = realValues[lastRealIndex] || totalValue;
-                const projectionStartIndex = periodIndices.indexOf(2); // Comenzar proyecciones desde abril 2025
+                const lastRealPeriodIndex = periodIndices[lastRealIndex];
 
                 let cumulativeExpectedFactor = 1;
                 let cumulativeBestFactor = 1;
@@ -344,16 +348,17 @@ async function fetchPortfolioData(token, accountId) {
                 bestValues = new Array(labels.length).fill(null);
                 worstValues = new Array(labels.length).fill(null);
 
-                // Copiar valores reales hasta abril 2025
+                // Copiar valores reales hasta el último dato real
                 for (let i = 0; i <= lastRealIndex; i++) {
                     expectedValues[i] = realValues[i];
                     bestValues[i] = realValues[i];
                     worstValues[i] = realValues[i];
                 }
 
-                // Calcular proyecciones a partir de abril 2025
-                for (let i = projectionStartIndex + 1; i < labels.length; i++) {
+                // Calcular proyecciones desde el mes siguiente al último dato real
+                for (let i = lastRealIndex + 1; i < labels.length; i++) {
                     const index = periodIndices[i];
+                    const relativeIndex = index - lastRealPeriodIndex; // Número de meses desde el último dato real
                     const entryExpected = expectedData[index];
                     if (entryExpected !== undefined) {
                         const factor = entryExpected / 100;
