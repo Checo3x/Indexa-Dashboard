@@ -15,7 +15,7 @@
         <!-- Input para el token -->
         <div class="mb-4">
             <label for="api-token" class="block text-sm font-medium text-gray-700">Token de API:</label>
-            <input type="text" id="api-token" class="mt-1 p-2 border rounded w-full" placeholder="Introduce tu token de API">
+            <input type="password" id="api-token" class="mt-1 p-2 border rounded w-full" placeholder="Introduce tu token de API">
         </div>
 
         <!-- Botón para cargar cuentas -->
@@ -49,22 +49,28 @@
             <p><strong>Rentabilidad Anual:</strong> <span id="annual-return">0.00%</span></p>
             <p><strong>Volatilidad:</strong> <span id="volatility">0.00%</span></p>
             <p><strong>Dinero Adicional Necesario:</strong> <span id="additional-cash-needed">€0.00</span></p>
+            <!-- Botones para expandir secciones -->
+            <div class="mt-4 space-x-2">
+                <button id="toggle-charts" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Gráficos</button>
+                <button id="toggle-composition" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Composición</button>
+                <button id="toggle-history" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Histórico</button>
+            </div>
         </div>
 
         <!-- Gráfico Total -->
-        <div class="mt-6">
+        <div id="portfolio-chart-section" class="hidden mt-6">
             <h2 class="text-lg font-semibold">Evolución Total de la Cartera</h2>
             <canvas id="portfolio-chart" class="w-full h-64"></canvas>
         </div>
 
         <!-- Gráfico de Componentes -->
-        <div class="mt-6">
+        <div id="components-chart-section" class="hidden mt-6">
             <h2 class="text-lg font-semibold">Evolución de Componentes</h2>
             <canvas id="components-chart" class="w-full h-64"></canvas>
         </div>
 
         <!-- Tabla de Composición -->
-        <div class="mt-6">
+        <div id="composition-section" class="hidden mt-6">
             <h2 class="text-lg font-semibold">Composición de la Cartera</h2>
             <table class="min-w-full bg-white border">
                 <thead>
@@ -84,7 +90,7 @@
         </div>
 
         <!-- Tabla Histórica -->
-        <div class="mt-6">
+        <div id="history-section" class="hidden mt-6">
             <h2 class="text-lg font-semibold">Histórico de Rentabilidad</h2>
             <table class="min-w-full bg-white border">
                 <thead>
