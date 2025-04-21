@@ -4,6 +4,12 @@ let componentsChart = null;
 const ctxPortfolio = document.getElementById('portfolio-chart')?.getContext('2d');
 const ctxComponents = document.getElementById('components-chart')?.getContext('2d');
 
+// Almacenar datos procesados para renderizarlos bajo demanda
+let portfolioChartData = null;
+let componentsChartData = null;
+let compositionTableData = null;
+let historyTableData = null;
+
 if (typeof Chart === 'undefined') {
     console.error('Chart.js no está cargado');
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
@@ -54,14 +60,14 @@ function createPortfolioChart(labels, datasets) {
         portfolioChart = new Chart(ctxPortfolio, {
             type: 'line',
             data: {
-                labels: labels, // Etiquetas como cadenas (por ejemplo, "Feb 2025")
+                labels: labels,
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        type: 'category', // Usar eje de categorías
+                        type: 'category',
                         title: {
                             display: true,
                             text: 'Fecha'
@@ -124,14 +130,14 @@ function createComponentsChart(labels, datasets) {
         componentsChart = new Chart(ctxComponents, {
             type: 'line',
             data: {
-                labels: labels, // Etiquetas como cadenas (por ejemplo, "Feb 2025")
+                labels: labels,
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        type: 'category', // Usar eje de categorías
+                        type: 'category',
                         title: {
                             display: true,
                             text: 'Fecha'
@@ -376,6 +382,18 @@ async function fetchPortfolioData(token, accountId) {
         let bestValues = [];
         let worstValues = [];
 
+        // Definir el rango de fechas (5 meses atrás y 5 meses a futuro desde 2025-04-21)
+        const currentDate = new Date('2025-04-21');
+        const minDate = new Date(currentDate);
+        minDate.setMonth(currentDate.getMonth() - 5); // 2024-11-21
+        const maxDate = new Date(currentDate);
+        maxDate.setMonth(currentDate.getMonth() + 5); // 2025-09-21
+
+        console.log('Rango de fechas:', {
+            minDate: minDate.toISOString().split('T')[0],
+            maxDate: maxDate.toISOString().split('T')[0]
+        });
+
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
             let realData = historyData.performance.real || [];
@@ -383,7 +401,7 @@ async function fetchPortfolioData(token, accountId) {
             const bestData = historyData.performance.best_return || [];
             const worstData = historyData.performance.worst_return || [];
 
-            console.log('periods:', periods);
+            console.log('periods (antes de filtrar):', periods);
             console.log('realData (antes de procesar):', realData);
             console.log('expectedData:', expectedData);
             console.log('bestData:', bestData);
@@ -395,13 +413,12 @@ async function fetchPortfolioData(token, accountId) {
             if (!Array.isArray(realData)) {
                 console.warn('realData no es un array, se recibió:', realData);
                 if (typeof realData === 'number') {
-                    realData = [[0, realData]]; // Convertimos a un array con el primer índice
+                    realData = [[0, realData]];
                 } else {
-                    realData = []; // Si no es un array ni un número, lo tratamos como vacío
+                    realData = [];
                 }
                 console.log('realData (después de ajustar):', realData);
             } else {
-                // Verificar si los elementos de realData son pares [index, value] o valores numéricos
                 const isPairFormat = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2;
                 if (!isPairFormat) {
                     console.log('realData no está en formato de pares [index, value], convirtiendo a pares...');
@@ -414,7 +431,7 @@ async function fetchPortfolioData(token, accountId) {
             const initialValue = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2 ? realData[0][1] : 100;
             console.log('initialValue:', initialValue);
 
-            const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1; // Evitar división por 0
+            const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1;
             console.log('scalingFactor:', scalingFactor);
 
             // Validar que periods sea un array
@@ -423,31 +440,62 @@ async function fetchPortfolioData(token, accountId) {
                 throw new Error('periods no es un array');
             }
 
-            // Mapear las etiquetas a un formato legible (por ejemplo, "Feb 2025")
+            // Filtrar períodos dentro del rango de fechas
+            const filteredPeriods = [];
+            const periodIndices = [];
             const isPeriodPairFormat = periods.length > 0 && Array.isArray(periods[0]);
             if (isPeriodPairFormat) {
-                // Formato antiguo: [[0, "2025-02-28 00:00:00"], [1, "2025-03-31 00:00:00"], ...]
-                labels = periods.map((periodEntry, idx) => {
+                periods.forEach((periodEntry, idx) => {
                     if (!Array.isArray(periodEntry) || periodEntry.length < 2 || typeof periodEntry[1] !== 'string') {
                         console.warn(`Formato inesperado en periodEntry[${idx}]:`, periodEntry);
+                        return;
+                    }
+                    const dateStr = periodEntry[1].split(' ')[0];
+                    const date = new Date(dateStr);
+                    if (isNaN(date)) return;
+                    if (date >= minDate && date <= maxDate) {
+                        filteredPeriods.push(periodEntry);
+                        periodIndices.push(idx);
+                    }
+                });
+            } else {
+                periods.forEach((dateStr, idx) => {
+                    if (typeof dateStr !== 'string') {
+                        console.warn(`Formato inesperado en periods[${idx}]:`, dateStr);
+                        return;
+                    }
+                    const formattedDate = dateStr.split(' ')[0];
+                    const date = new Date(formattedDate);
+                    if (isNaN(date)) return;
+                    if (date >= minDate && date <= maxDate) {
+                        filteredPeriods.push(dateStr);
+                        periodIndices.push(idx);
+                    }
+                });
+            }
+            console.log('filteredPeriods:', filteredPeriods);
+            console.log('periodIndices:', periodIndices);
+
+            // Mapear etiquetas solo para los períodos filtrados
+            if (isPeriodPairFormat) {
+                labels = filteredPeriods.map((periodEntry, idx) => {
+                    if (!Array.isArray(periodEntry) || periodEntry.length < 2 || typeof periodEntry[1] !== 'string') {
                         return `Unknown-${idx}`;
                     }
                     return formatDateToMonthYear(periodEntry[1]);
                 });
             } else {
-                // Formato nuevo: ["2025-02-28 00:00:00", "2025-03-31 00:00:00", ...]
-                labels = periods.map((dateStr, idx) => {
+                labels = filteredPeriods.map((dateStr, idx) => {
                     if (typeof dateStr !== 'string') {
-                        console.warn(`Formato inesperado en periods[${idx}]:`, dateStr);
                         return `Unknown-${idx}`;
                     }
                     return formatDateToMonthYear(dateStr);
                 });
             }
-            console.log('labels (después de mapear periods):', labels);
+            console.log('labels (después de mapear filteredPeriods):', labels);
 
-            // Mapear los datos reales directamente
-            realValues = new Array(periods.length).fill(null);
+            // Mapear datos reales solo para los índices filtrados
+            realValues = new Array(filteredPeriods.length).fill(null);
             console.log('realData antes de forEach:', realData);
             realData.forEach((entry, i) => {
                 console.log(`Procesando realData[${i}]:`, entry);
@@ -457,8 +505,9 @@ async function fetchPortfolioData(token, accountId) {
                 }
                 const [index, value] = entry;
                 const idx = parseInt(index, 10);
-                if (isNaN(idx) || idx < 0 || idx >= periods.length) {
-                    console.warn(`Índice inválido en realData[${i}]: idx=${idx}, periods.length=${periods.length}`);
+                const filteredIdx = periodIndices.indexOf(idx);
+                if (filteredIdx === -1) {
+                    console.log(`Índice ${idx} no está dentro del rango de fechas, omitiendo...`);
                     return;
                 }
                 const numericValue = Number(value);
@@ -470,7 +519,7 @@ async function fetchPortfolioData(token, accountId) {
                     console.warn(`scalingFactor inválido: ${scalingFactor}`);
                     return;
                 }
-                realValues[idx] = numericValue * scalingFactor;
+                realValues[filteredIdx] = numericValue * scalingFactor;
             });
             console.log('realValues (después de mapear):', realValues);
 
@@ -483,7 +532,7 @@ async function fetchPortfolioData(token, accountId) {
             console.log('validIndices:', validIndices);
 
             if (validIndices.length === 0) {
-                console.warn('No hay datos reales disponibles; usando totalValue como respaldo');
+                console.warn('No hay datos reales disponibles dentro del rango; usando totalValue como respaldo');
                 labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
                 realValues = [totalValue || 0];
                 expectedValues = [totalValue || 0];
@@ -491,19 +540,19 @@ async function fetchPortfolioData(token, accountId) {
                 worstValues = [totalValue || 0];
             } else {
                 // Filtrar SOLO realValues para los índices válidos
-                const filteredRealValues = new Array(periods.length).fill(null);
+                const filteredRealValues = new Array(filteredPeriods.length).fill(null);
                 validIndices.forEach(idx => {
                     filteredRealValues[idx] = realValues[idx];
                 });
                 realValues = filteredRealValues;
                 console.log('realValues (después de filtrar con validIndices):', realValues);
 
-                // Calcular valores esperados, mejores y peores (en euros) para TODOS los períodos
+                // Calcular valores esperados, mejores y peores (en euros) para los períodos filtrados
                 let cumulativeExpected = initialValue;
                 let cumulativeBest = initialValue;
                 let cumulativeWorst = initialValue;
 
-                expectedValues = periods.map((_, index) => {
+                expectedValues = periodIndices.map(index => {
                     const entry = expectedData.find(item => item[0] === index);
                     if (entry) {
                         const returnRate = entry[1];
@@ -513,7 +562,7 @@ async function fetchPortfolioData(token, accountId) {
                     return initialValue * scalingFactor;
                 });
 
-                bestValues = periods.map((_, index) => {
+                bestValues = periodIndices.map(index => {
                     const entry = bestData.find(item => item[0] === index);
                     if (entry) {
                         const returnRate = entry[1];
@@ -523,7 +572,7 @@ async function fetchPortfolioData(token, accountId) {
                     return initialValue * scalingFactor;
                 });
 
-                worstValues = periods.map((_, index) => {
+                worstValues = periodIndices.map(index => {
                     const entry = worstData.find(item => item[0] === index);
                     if (entry) {
                         const returnRate = entry[1];
@@ -533,9 +582,9 @@ async function fetchPortfolioData(token, accountId) {
                     return initialValue * scalingFactor;
                 });
 
-                console.log('expectedValues (sin filtrar):', expectedValues);
-                console.log('bestValues (sin filtrar):', bestValues);
-                console.log('worstValues (sin filtrar):', worstValues);
+                console.log('expectedValues (filtrado):', expectedValues);
+                console.log('bestValues (filtrado):', bestValues);
+                console.log('worstValues (filtrado):', worstValues);
             }
 
             console.log('Datos procesados para el gráfico total:', {
@@ -547,7 +596,6 @@ async function fetchPortfolioData(token, accountId) {
             });
         } else {
             console.warn('historyData.performance no está disponible; intentando con portfolios');
-            // Fallback a portfolios si performance no está disponible
             const portfolioHistory = historyData.portfolios || [];
             console.log('portfolioHistory:', portfolioHistory);
 
@@ -556,9 +604,13 @@ async function fetchPortfolioData(token, accountId) {
                 value: Number(item.total_amount || 0)
             }));
 
-            // Filtrar datos con valor 0
+            // Filtrar datos con valor 0 y fuera del rango
             if (historicalData.length > 0) {
-                historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
+                historicalData = historicalData.filter(item => {
+                    if (item.value <= 0 || item.date === 'N/A') return false;
+                    const date = new Date(item.date);
+                    return date >= minDate && date <= maxDate;
+                });
             }
 
             // Ordenar datos por fecha
@@ -569,9 +621,8 @@ async function fetchPortfolioData(token, accountId) {
             labels = historicalData.map(item => formatDateToMonthYear(item.date));
             realValues = historicalData.map(item => item.value);
 
-            // Si no hay datos históricos, usar totalValue como respaldo
             if (realValues.length === 0) {
-                console.warn('No hay datos históricos en portfolios; usando totalValue como respaldo');
+                console.warn('No hay datos históricos en portfolios dentro del rango; usando totalValue como respaldo');
                 labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
                 realValues = [totalValue || 0];
             }
@@ -579,7 +630,7 @@ async function fetchPortfolioData(token, accountId) {
             console.log('Datos procesados desde portfolios:', { labels, realValues });
         }
 
-        // Crear datasets para el gráfico total
+        // Preparar datasets para el gráfico total (almacenar, no renderizar aún)
         const datasets = [];
         if (realValues.length > 0) {
             datasets.push({
@@ -588,7 +639,7 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.real,
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5, // Aumentar el tamaño de los puntos para mayor visibilidad
+                pointRadius: 5,
                 pointHoverRadius: 7
             });
         }
@@ -629,8 +680,8 @@ async function fetchPortfolioData(token, accountId) {
             });
         }
 
-        // Renderizar el gráfico total incluso con datos mínimos
-        createPortfolioChart(labels, datasets);
+        // Almacenar datos del gráfico total
+        portfolioChartData = { labels, datasets };
 
         // Calcular los pesos reales de los fondos y asignar colores
         const weights = components.map((component, index) => {
@@ -648,30 +699,8 @@ async function fetchPortfolioData(token, accountId) {
         });
         console.log('Pesos reales de los fondos:', weights);
 
-        // Llenar la tabla de composición con colores
-        const compositionTable = document.getElementById('composition-table');
-        if (compositionTable) {
-            compositionTable.innerHTML = '';
-            if (weights.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
-                compositionTable.appendChild(row);
-            } else {
-                weights.forEach(fund => {
-                    console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
-                        <td class="p-2">${fund.name}</td>
-                        <td class="p-2">€${fund.amount.toFixed(2)}</td>
-                        <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
-                    `;
-                    compositionTable.appendChild(row);
-                });
-            }
-        } else {
-            console.error('Elemento con id "composition-table" no encontrado en el HTML');
-        }
+        // Almacenar datos de la tabla de composición
+        compositionTableData = weights;
 
         // Preparar datos para el gráfico de componentes
         const componentDatasets = [];
@@ -687,7 +716,6 @@ async function fetchPortfolioData(token, accountId) {
             });
         }
 
-        // Calcular la evolución de cada fondo con su color asignado
         weights.forEach(fund => {
             const weight = fund.weight || 0;
             const name = fund.name;
@@ -705,13 +733,8 @@ async function fetchPortfolioData(token, accountId) {
             });
         });
 
-        // Renderizar el gráfico de componentes incluso con datos mínimos
-        if (componentDatasets.length > 0) {
-            createComponentsChart(labels, componentDatasets);
-        } else {
-            console.warn('No hay datos de componentes para mostrar en el gráfico');
-            setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
-        }
+        // Almacenar datos del gráfico de componentes
+        componentsChartData = { labels, datasets: componentDatasets };
 
         // Calcular rentabilidad para la tabla histórica
         const tableData = realValues.map((value, index) => {
@@ -727,43 +750,96 @@ async function fetchPortfolioData(token, accountId) {
             };
         });
 
-        // Actualizar tabla para mostrar las últimas 10 entradas
-        const tableBody = document.getElementById('history-table');
-        if (tableBody) {
-            tableBody.innerHTML = '';
-            if (tableData.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
-                tableBody.appendChild(row);
-            } else {
-                const recentData = tableData.slice(-10);
-                recentData.forEach(item => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="p-2">${item.date}</td>
-                        <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
-                        <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-
-                if (tableData.length > 10) {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
-                    tableBody.appendChild(row);
-                }
-            }
-        } else {
-            console.error('Elemento con id "history-table" no encontrado en el HTML');
-        }
+        // Almacenar datos de la tabla histórica
+        historyTableData = tableData;
 
         document.getElementById('error-message').classList.add('hidden');
         document.getElementById('warning-message').classList.add('hidden');
+
+        // Limpiar el campo del token después de usarlo
+        const tokenInput = document.getElementById('api-token');
+        if (tokenInput) {
+            tokenInput.value = '';
+        }
     } catch (error) {
         console.error('Error al obtener datos:', error);
         setError(`Error al obtener datos: ${error.message}`);
     } finally {
         setLoading(false);
+    }
+}
+
+// Funciones para renderizar secciones bajo demanda
+function renderPortfolioChart() {
+    if (portfolioChartData) {
+        createPortfolioChart(portfolioChartData.labels, portfolioChartData.datasets);
+    } else {
+        setWarning('No hay datos disponibles para el gráfico total.');
+    }
+}
+
+function renderComponentsChart() {
+    if (componentsChartData) {
+        createComponentsChart(componentsChartData.labels, componentsChartData.datasets);
+    } else {
+        setWarning('No hay datos disponibles para el gráfico de componentes.');
+    }
+}
+
+function renderCompositionTable() {
+    const compositionTable = document.getElementById('composition-table');
+    if (compositionTable && compositionTableData) {
+        compositionTable.innerHTML = '';
+        if (compositionTableData.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+            compositionTable.appendChild(row);
+        } else {
+            compositionTableData.forEach(fund => {
+                console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
+                    <td class="p-2">${fund.name}</td>
+                    <td class="p-2">€${fund.amount.toFixed(2)}</td>
+                    <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
+                `;
+                compositionTable.appendChild(row);
+            });
+        }
+    } else {
+        console.error('Elemento con id "composition-table" no encontrado en el HTML');
+    }
+}
+
+function renderHistoryTable() {
+    const tableBody = document.getElementById('history-table');
+    if (tableBody && historyTableData) {
+        tableBody.innerHTML = '';
+        if (historyTableData.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
+            tableBody.appendChild(row);
+        } else {
+            const recentData = historyTableData.slice(-10);
+            recentData.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="p-2">${item.date}</td>
+                    <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
+                    <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+
+            if (historyTableData.length > 10) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${historyTableData.length} disponibles</td>`;
+                tableBody.appendChild(row);
+            }
+        }
+    } else {
+        console.error('Elemento con id "history-table" no encontrado en el HTML');
     }
 }
 
@@ -776,7 +852,6 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAccountsButton.addEventListener('click', () => {
             console.log('Botón "Cargar Cuentas" clicado.');
             const token = document.getElementById('api-token').value.trim();
-            console.log('Token ingresado (longitud):', token.length);
             if (!token) {
                 console.log('Token vacío. Mostrando error.');
                 setError('Por favor, introduce un token de API válido.');
@@ -809,5 +884,54 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     } else {
         console.error('Elemento con id "fetch-data" no encontrado en el HTML');
+    }
+
+    // Eventos para los botones de expansión
+    const toggleChartsButton = document.getElementById('toggle-charts');
+    if (toggleChartsButton) {
+        toggleChartsButton.addEventListener('click', () => {
+            const portfolioSection = document.getElementById('portfolio-chart-section');
+            const componentsSection = document.getElementById('components-chart-section');
+            if (portfolioSection && componentsSection) {
+                const isHidden = portfolioSection.classList.contains('hidden');
+                portfolioSection.classList.toggle('hidden', !isHidden);
+                componentsSection.classList.toggle('hidden', !isHidden);
+                toggleChartsButton.textContent = isHidden ? 'Ocultar Gráficos' : 'Mostrar Gráficos';
+                if (isHidden) {
+                    renderPortfolioChart();
+                    renderComponentsChart();
+                }
+            }
+        });
+    }
+
+    const toggleCompositionButton = document.getElementById('toggle-composition');
+    if (toggleCompositionButton) {
+        toggleCompositionButton.addEventListener('click', () => {
+            const compositionSection = document.getElementById('composition-section');
+            if (compositionSection) {
+                const isHidden = compositionSection.classList.contains('hidden');
+                compositionSection.classList.toggle('hidden', !isHidden);
+                toggleCompositionButton.textContent = isHidden ? 'Ocultar Composición' : 'Mostrar Composición';
+                if (isHidden) {
+                    renderCompositionTable();
+                }
+            }
+        });
+    }
+
+    const toggleHistoryButton = document.getElementById('toggle-history');
+    if (toggleHistoryButton) {
+        toggleHistoryButton.addEventListener('click', () => {
+            const historySection = document.getElementById('history-section');
+            if (historySection) {
+                const isHidden = historySection.classList.contains('hidden');
+                historySection.classList.toggle('hidden', !isHidden);
+                toggleHistoryButton.textContent = isHidden ? 'Ocultar Histórico' : 'Mostrar Histórico';
+                if (isHidden) {
+                    renderHistoryTable();
+                }
+            }
+        });
     }
 });
