@@ -439,13 +439,15 @@ async function fetchPortfolioData(token, accountId) {
                 bestValues = [totalValue || 0];
                 worstValues = [totalValue || 0];
             } else {
-                // Filtrar etiquetas y valores para los índices válidos
-                labels = validIndices.map(idx => labels[idx]);
-                console.log('labels (después de filtrar con validIndices):', labels);
+                // Filtrar SOLO realValues para los índices válidos
+                const filteredRealValues = new Array(periods.length).fill(null);
+                validIndices.forEach(idx => {
+                    filteredRealValues[idx] = realValues[idx];
+                });
+                realValues = filteredRealValues;
+                console.log('realValues (después de filtrar con validIndices):', realValues);
 
-                realValues = validIndices.map(idx => realValues[idx]);
-
-                // Calcular valores esperados, mejores y peores (en euros)
+                // Calcular valores esperados, mejores y peores (en euros) para TODOS los períodos
                 let cumulativeExpected = initialValue;
                 let cumulativeBest = initialValue;
                 let cumulativeWorst = initialValue;
@@ -480,10 +482,9 @@ async function fetchPortfolioData(token, accountId) {
                     return initialValue * scalingFactor;
                 });
 
-                // Filtrar para los índices válidos
-                expectedValues = validIndices.map(idx => expectedValues[idx]);
-                bestValues = validIndices.map(idx => bestValues[idx]);
-                worstValues = validIndices.map(idx => worstValues[idx]);
+                console.log('expectedValues (sin filtrar):', expectedValues);
+                console.log('bestValues (sin filtrar):', bestValues);
+                console.log('worstValues (sin filtrar):', worstValues);
             }
 
             console.log('Datos procesados para el gráfico total:', {
@@ -631,7 +632,7 @@ async function fetchPortfolioData(token, accountId) {
             const name = fund.name;
             const color = fund.color;
             console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
-            const componentValues = realValues.map(value => value * weight);
+            const componentValues = realValues.map(value => value !== null ? value * weight : null);
             componentDatasets.push({
                 label: `${name} (€)`,
                 data: componentValues,
@@ -652,7 +653,7 @@ async function fetchPortfolioData(token, accountId) {
         // Calcular rentabilidad para la tabla histórica
         const tableData = realValues.map((value, index) => {
             let returnPercentage = 0;
-            if (index > 0) {
+            if (index > 0 && value !== null && realValues[index - 1] !== null) {
                 const previousValue = realValues[index - 1];
                 returnPercentage = ((value - previousValue) / previousValue) * 100;
             }
@@ -677,8 +678,8 @@ async function fetchPortfolioData(token, accountId) {
                     const row = document.createElement('tr');
                     row.innerHTML = `
                         <td class="p-2">${item.date}</td>
-                        <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
-                        <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+                        <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
+                        <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
                     `;
                     tableBody.appendChild(row);
                 });
