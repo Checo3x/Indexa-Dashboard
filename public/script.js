@@ -47,18 +47,34 @@ function createPortfolioChart(labels, datasets) {
         portfolioChart = new Chart(ctxPortfolio, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: labels, // Ahora labels son objetos Date
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10 }
+                        type: 'time', // Configurar eje X como temporal
+                        time: {
+                            unit: 'month', // Mostrar por meses
+                            displayFormats: {
+                                month: 'MMM yyyy' // Formato: "Feb 2025"
+                            },
+                            tooltipFormat: 'dd MMM yyyy' // Formato en tooltip: "28 Feb 2025"
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fecha'
+                        },
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
                     },
                     y: {
-                        title: { display: true, text: 'Valor (€)' },
+                        title: {
+                            display: true,
+                            text: 'Valor (€)'
+                        },
                         beginAtZero: false
                     }
                 },
@@ -93,18 +109,34 @@ function createComponentsChart(labels, datasets) {
         componentsChart = new Chart(ctxComponents, {
             type: 'line',
             data: {
-                labels: labels,
+                labels: labels, // Ahora labels son objetos Date
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10 }
+                        type: 'time', // Configurar eje X como temporal
+                        time: {
+                            unit: 'month', // Mostrar por meses
+                            displayFormats: {
+                                month: 'MMM yyyy' // Formato: "Feb 2025"
+                            },
+                            tooltipFormat: 'dd MMM yyyy' // Formato en tooltip: "28 Feb 2025"
+                        },
+                        title: {
+                            display: true,
+                            text: 'Fecha'
+                        },
+                        ticks: {
+                            maxTicksLimit: 10
+                        }
                     },
                     y: {
-                        title: { display: true, text: 'Valor (€)' },
+                        title: {
+                            display: true,
+                            text: 'Valor (€)'
+                        },
                         beginAtZero: false
                     }
                 },
@@ -368,29 +400,29 @@ async function fetchPortfolioData(token, accountId) {
                 throw new Error('periods no es un array');
             }
 
-            // Determinar el formato de periods y mapear las etiquetas
+            // Determinar el formato de periods y mapear las etiquetas a objetos Date
             const isPeriodPairFormat = periods.length > 0 && Array.isArray(periods[0]);
             if (isPeriodPairFormat) {
                 // Formato antiguo: [[0, "2025-02-28 00:00:00"], [1, "2025-03-31 00:00:00"], ...]
                 labels = periods.map((periodEntry, idx) => {
                     if (!Array.isArray(periodEntry) || periodEntry.length < 2 || typeof periodEntry[1] !== 'string') {
                         console.warn(`Formato inesperado en periodEntry[${idx}]:`, periodEntry);
-                        return `Unknown-${idx}`;
+                        return new Date(`2000-01-01`); // Fecha por defecto para errores
                     }
-                    const dateStr = periodEntry[1].split(' ')[0] || 'Unknown';
+                    const dateStr = periodEntry[1].split(' ')[0] || '2000-01-01';
                     const date = new Date(dateStr);
-                    return isNaN(date) ? `Unknown-${idx}` : dateStr;
+                    return isNaN(date) ? new Date(`2000-01-01`) : date;
                 });
             } else {
                 // Formato nuevo: ["2025-02-28 00:00:00", "2025-03-31 00:00:00", ...]
                 labels = periods.map((dateStr, idx) => {
                     if (typeof dateStr !== 'string') {
                         console.warn(`Formato inesperado en periods[${idx}]:`, dateStr);
-                        return `Unknown-${idx}`;
+                        return new Date(`2000-01-01`);
                     }
-                    const formattedDate = dateStr.split(' ')[0] || 'Unknown';
+                    const formattedDate = dateStr.split(' ')[0] || '2000-01-01';
                     const date = new Date(formattedDate);
-                    return isNaN(date) ? `Unknown-${idx}` : formattedDate;
+                    return isNaN(date) ? new Date(`2000-01-01`) : date;
                 });
             }
             console.log('labels (después de mapear periods):', labels);
@@ -433,7 +465,7 @@ async function fetchPortfolioData(token, accountId) {
 
             if (validIndices.length === 0) {
                 console.warn('No hay datos reales disponibles; usando totalValue como respaldo');
-                labels = [new Date().toISOString().split('T')[0]];
+                labels = [new Date()];
                 realValues = [totalValue || 0];
                 expectedValues = [totalValue || 0];
                 bestValues = [totalValue || 0];
@@ -501,18 +533,18 @@ async function fetchPortfolioData(token, accountId) {
             console.log('portfolioHistory:', portfolioHistory);
 
             let historicalData = portfolioHistory.map(item => ({
-                date: item.date || 'N/A',
+                date: new Date(item.date || '2000-01-01'),
                 value: Number(item.total_amount || 0)
             }));
 
             // Filtrar datos con valor 0
             if (historicalData.length > 0) {
-                historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
+                historicalData = historicalData.filter(item => item.value > 0 && item.date.toString() !== 'Invalid Date');
             }
 
             // Ordenar datos por fecha
             if (historicalData.length > 0) {
-                historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                historicalData.sort((a, b) => a.date - b.date);
             }
 
             labels = historicalData.map(item => item.date);
@@ -521,7 +553,7 @@ async function fetchPortfolioData(token, accountId) {
             // Si no hay datos históricos, usar totalValue como respaldo
             if (realValues.length === 0) {
                 console.warn('No hay datos históricos en portfolios; usando totalValue como respaldo');
-                labels = [new Date().toISOString().split('T')[0]];
+                labels = [new Date()];
                 realValues = [totalValue || 0];
             }
 
@@ -658,7 +690,7 @@ async function fetchPortfolioData(token, accountId) {
                 returnPercentage = ((value - previousValue) / previousValue) * 100;
             }
             return {
-                date: labels[index] || 'N/A',
+                date: labels[index] || new Date(),
                 value: value,
                 return: returnPercentage
             };
@@ -677,7 +709,7 @@ async function fetchPortfolioData(token, accountId) {
                 recentData.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="p-2">${item.date}</td>
+                        <td class="p-2">${item.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
                         <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
                         <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
                     `;
