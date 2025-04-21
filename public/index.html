@@ -246,36 +246,62 @@
 
         // Mostrar/ocultar indicador de carga
         function setLoading(isLoading) {
-            document.getElementById('loading-indicator').classList.toggle('hidden', !isLoading);
-            document.getElementById('fetch-accounts').disabled = isLoading;
-            document.getElementById('fetch-data').disabled = isLoading;
+            console.log('Ejecutando setLoading:', isLoading);
+            const loadingIndicator = document.getElementById('loading-indicator');
+            if (loadingIndicator) {
+                loadingIndicator.classList.toggle('hidden', !isLoading);
+            } else {
+                console.error('Elemento con id "loading-indicator" no encontrado en el HTML');
+            }
+            const fetchAccountsButton = document.getElementById('fetch-accounts');
+            const fetchDataButton = document.getElementById('fetch-data');
+            if (fetchAccountsButton) fetchAccountsButton.disabled = isLoading;
+            if (fetchDataButton) fetchDataButton.disabled = isLoading;
         }
 
         // Mostrar mensaje de error
         function setError(message) {
+            console.log('Ejecutando setError:', message);
             const errorDiv = document.getElementById('error-message');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('block');
+                errorDiv.style.display = 'block';
+            } else {
+                console.error('Elemento con id "error-message" no encontrado en el HTML');
+            }
         }
 
         // Mostrar mensaje de advertencia
         function setWarning(message) {
+            console.log('Ejecutando setWarning:', message);
             const warningDiv = document.getElementById('warning-message');
-            warningDiv.textContent = message;
-            warningDiv.classList.remove('hidden');
+            if (warningDiv) {
+                warningDiv.textContent = message;
+                warningDiv.classList.remove('hidden');
+            } else {
+                console.error('Elemento con id "warning-message" no encontrado en el HTML');
+            }
         }
 
         // Obtener lista de cuentas
         async function fetchAccounts(token) {
+            console.log('Iniciando fetchAccounts con token:', token);
             setLoading(true);
             try {
+                console.log('Enviando solicitud fetch a /api/users/me');
                 const response = await fetch('/api/users/me', {
                     headers: { Authorization: `Bearer ${token}` }
                 });
+                console.log('Respuesta recibida:', response);
+
                 if (!response.ok) {
                     const errorData = await response.json();
+                    console.log('Error en la respuesta:', errorData);
                     throw new Error(`Error HTTP: ${response.status} ${errorData.details || response.statusText}`);
                 }
+
                 const userData = await response.json();
                 console.log('Datos del usuario:', userData);
 
@@ -285,20 +311,32 @@
                 }
 
                 const select = document.getElementById('account-select');
-                select.innerHTML = '<option value="">Selecciona una cuenta</option>';
-                accounts.forEach(account => {
-                    const option = document.createElement('option');
-                    option.value = account.account_number;
-                    option.textContent = `Cuenta ${account.account_number} (${account.type || 'Sin tipo'})`;
-                    select.appendChild(option);
-                });
+                if (select) {
+                    select.innerHTML = '<option value="">Selecciona una cuenta</option>';
+                    accounts.forEach(account => {
+                        const option = document.createElement('option');
+                        option.value = account.account_number;
+                        option.textContent = `Cuenta ${account.account_number} (${account.type || 'Sin tipo'})`;
+                        select.appendChild(option);
+                    });
+                } else {
+                    console.error('Elemento con id "account-select" no encontrado en el HTML');
+                }
 
-                document.getElementById('account-selector').classList.remove('hidden');
-                document.getElementById('error-message').classList.add('hidden');
-                document.getElementById('warning-message').classList.add('hidden');
+                const accountSelector = document.getElementById('account-selector');
+                if (accountSelector) {
+                    accountSelector.classList.remove('hidden');
+                } else {
+                    console.error('Elemento con id "account-selector" no encontrado en el HTML');
+                }
+
+                const errorMessage = document.getElementById('error-message');
+                const warningMessage = document.getElementById('warning-message');
+                if (errorMessage) errorMessage.classList.add('hidden');
+                if (warningMessage) warningMessage.classList.add('hidden');
             } catch (error) {
+                console.error('Error en fetchAccounts:', error);
                 setError(`Error al cargar cuentas: ${error.message}`);
-                console.error('Error:', error);
             } finally {
                 setLoading(false);
             }
@@ -617,131 +655,155 @@
                 if (compositionTable) {
                     compositionTable.innerHTML = '';
                     if (weights.length === 0) {
- drive: {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+                        compositionTable.appendChild(row);
+                    } else {
+                        weights.forEach(fund => {
+                            console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
                             const row = document.createElement('tr');
-                            row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+                            row.innerHTML = `
+                                <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
+                                <td class="p-2">${fund.name}</td>
+                                <td class="p-2">€${fund.amount.toFixed(2)}</td>
+                                <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
+                            `;
                             compositionTable.appendChild(row);
-                        } else {
-                            weights.forEach(fund => {
-                                console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
-                                    <td class="p-2">${fund.name}</td>
-                                    <td class="p-2">€${fund.amount.toFixed(2)}</td>
-                                    <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
-                                `;
-                                compositionTable.appendChild(row);
-                            });
-                        }
-                    } else {
-                        console.error('Elemento con id "composition-table" no encontrado en el HTML');
-                    }
-
-                    // Preparar datos para el gráfico de componentes
-                    const componentDatasets = [];
-                    if (realValues.length > 0) {
-                        componentDatasets.push({
-                            label: 'Total Cartera (€)',
-                            data: realValues,
-                            borderColor: performanceColors.real,
-                            tension: 0.1,
-                            fill: false
                         });
                     }
-
-                    // Calcular la evolución de cada fondo con su color asignado
-                    weights.forEach(fund => {
-                        const weight = fund.weight || 0;
-                        const name = fund.name;
-                        const color = fund.color;
-                        console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
-                        const componentValues = realValues.map(value => value * weight);
-                        componentDatasets.push({
-                            label: `${name} (€)`,
-                            data: componentValues,
-                            borderColor: color,
-                            tension: 0.1,
-                            fill: false
-                        });
-                    });
-
-                    // Renderizar el gráfico de componentes incluso con datos mínimos
-                    if (componentDatasets.length > 0) {
-                        createComponentsChart(labels, componentDatasets);
-                    } else {
-                        console.warn('No hay datos de componentes para mostrar en el gráfico');
-                        setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
-                    }
-
-                    // Calcular rentabilidad para la tabla histórica
-                    const tableData = realValues.map((value, index) => {
-                        let returnPercentage = 0;
-                        if (index > 0) {
-                            const previousValue = realValues[index - 1];
-                            returnPercentage = ((value - previousValue) / previousValue) * 100;
-                        }
-                        return {
-                            date: labels[index] || 'N/A',
-                            value: value,
-                            return: returnPercentage
-                        };
-                    });
-
-                    // Actualizar tabla para mostrar las últimas 10 entradas
-                    const tableBody = document.getElementById('history-table');
-                    if (tableBody) {
-                        tableBody.innerHTML = '';
-                        if (tableData.length === 0) {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
-                            tableBody.appendChild(row);
-                        } else {
-                            const recentData = tableData.slice(-10);
-                            recentData.forEach(item => {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `
-                                    <td class="p-2">${item.date}</td>
-                                    <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
-                                    <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
-                                `;
-                                tableBody.appendChild(row);
-                            });
-
-                            if (tableData.length > 10) {
-                                const row = document.createElement('tr');
-                                row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
-                                tableBody.appendChild(row);
-                            }
-                        }
-                    } else {
-                        console.error('Elemento con id "history-table" no encontrado en el HTML');
-                    }
-
-                    document.getElementById('error-message').classList.add('hidden');
-                    document.getElementById('warning-message').classList.add('hidden');
-                } catch (error) {
-                    console.error('Error al obtener datos:', error);
-                    const errorDiv = document.getElementById('error-message');
-                    if (errorDiv) {
-                        errorDiv.textContent = `Error al obtener datos: ${error.message}`;
-                        errorDiv.classList.remove('hidden');
-                        errorDiv.classList.add('block');
-                        errorDiv.style.display = 'block';
-                    } else {
-                        console.error('Elemento con id "error-message" no encontrado en el HTML');
-                    }
-                } finally {
-                    setLoading(false);
+                } else {
+                    console.error('Elemento con id "composition-table" no encontrado en el HTML');
                 }
+
+                // Preparar datos para el gráfico de componentes
+                const componentDatasets = [];
+                if (realValues.length > 0) {
+                    componentDatasets.push({
+                        label: 'Total Cartera (€)',
+                        data: realValues,
+                        borderColor: performanceColors.real,
+                        tension: 0.1,
+                        fill: false
+                    });
+                }
+
+                // Calcular la evolución de cada fondo con su color asignado
+                weights.forEach(fund => {
+                    const weight = fund.weight || 0;
+                    const name = fund.name;
+                    const color = fund.color;
+                    console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
+                    const componentValues = realValues.map(value => value * weight);
+                    componentDatasets.push({
+                        label: `${name} (€)`,
+                        data: componentValues,
+                        borderColor: color,
+                        tension: 0.1,
+                        fill: false
+                    });
+                });
+
+                // Renderizar el gráfico de componentes incluso con datos mínimos
+                if (componentDatasets.length > 0) {
+                    createComponentsChart(labels, componentDatasets);
+                } else {
+                    console.warn('No hay datos de componentes para mostrar en el gráfico');
+                    setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
+                }
+
+                // Calcular rentabilidad para la tabla histórica
+                const tableData = realValues.map((value, index) => {
+                    let returnPercentage = 0;
+                    if (index > 0) {
+                        const previousValue = realValues[index - 1];
+                        returnPercentage = ((value - previousValue) / previousValue) * 100;
+                    }
+                    return {
+                        date: labels[index] || 'N/A',
+                        value: value,
+                        return: returnPercentage
+                    };
+                });
+
+                // Actualizar tabla para mostrar las últimas 10 entradas
+                const tableBody = document.getElementById('history-table');
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                    if (tableData.length === 0) {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
+                        tableBody.appendChild(row);
+                    } else {
+                        const recentData = tableData.slice(-10);
+                        recentData.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td class="p-2">${item.date}</td>
+                                <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
+                                <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+                            `;
+                            tableBody.appendChild(row);
+                        });
+
+                        if (tableData.length > 10) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
+                            tableBody.appendChild(row);
+                        }
+                    }
+                } else {
+                    console.error('Elemento con id "history-table" no encontrado en el HTML');
+                }
+
+                document.getElementById('error-message').classList.add('hidden');
+                document.getElementById('warning-message').classList.add('hidden');
+            } catch (error) {
+                console.error('Error al obtener datos:', error);
+                setError(`Error al obtener datos: ${error.message}`);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        // Evento para cargar cuentas
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM completamente cargado. Registrando eventos...');
+            const fetchAccountsButton = document.getElementById('fetch-accounts');
+            if (fetchAccountsButton) {
+                console.log('Botón fetch-accounts encontrado. Registrando evento click.');
+                fetchAccountsButton.addEventListener('click', () => {
+                    console.log('Botón "Cargar Cuentas" clicado.');
+                    const token = document.getElementById('api-token').value.trim();
+                    console.log('Token ingresado:', token);
+                    if (!token) {
+                        console.log('Token vacío. Mostrando error.');
+                        setError('Por favor, introduce un token de API válido.');
+                        return;
+                    }
+                    console.log('Token válido. Ejecutando fetchAccounts...');
+                    fetchAccounts(token);
+                });
+            } else {
+                console.error('Elemento con id "fetch-accounts" no encontrado en el HTML');
             }
 
-            // Evento para cargar cuentas
-            document.getElementById('fetch-accounts').addEventListener('click', () => {
-                const token = document.getElementById('api-token').value.trim();
-                if (!token) {
-                    setError('Por favor, introduce un token de API válido.');
-                    return;
-                }
-                fetchAccounts(token);
-            });
+            // Evento para obtener datos de la cartera
+            const fetchDataButton = document.getElementById('fetch-data');
+            if (fetchDataButton) {
+                fetchDataButton.addEventListener('click', () => {
+                    console.log('Botón "Obtener Datos" clicado.');
+                    const token = document.getElementById('api-token').value.trim();
+                    const accountId = document.getElementById('account-select').value;
+                    if (!accountId) {
+                        setError('Por favor, selecciona una cuenta.');
+                        return;
+                    }
+                    fetchPortfolioData(token, accountId);
+                });
+            } else {
+                console.error('Elemento con id "fetch-data" no encontrado en el HTML');
+            }
+        });
+    </script>
+</body>
+</html>
