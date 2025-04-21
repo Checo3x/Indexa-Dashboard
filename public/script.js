@@ -356,10 +356,10 @@ async function fetchPortfolioData(token, accountId) {
             }
 
             // Obtener el valor inicial de la cartera desde el primer valor de "real"
-            const initialValue = realData.length > 0 && realData[0][1] ? realData[0][1] : 100;
+            const initialValue = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2 ? realData[0][1] : 100;
             console.log('initialValue:', initialValue);
 
-            const scalingFactor = totalValue / initialValue; // Escalar los valores para que coincidan con totalValue
+            const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1; // Evitar división por 0
             console.log('scalingFactor:', scalingFactor);
 
             // Validar que periods sea un array
@@ -398,11 +398,29 @@ async function fetchPortfolioData(token, accountId) {
 
             // Mapear los datos reales directamente
             realValues = new Array(periods.length).fill(null);
-            realData.forEach(([index, value]) => {
-                const idx = parseInt(index, 10);
-                if (idx >= 0 && idx < periods.length) {
-                    realValues[idx] = Number(value) * scalingFactor;
+            console.log('realData antes de forEach:', realData);
+            realData.forEach((entry, i) => {
+                console.log(`Procesando realData[${i}]:`, entry);
+                if (!Array.isArray(entry) || entry.length !== 2) {
+                    console.warn(`Formato inválido en realData[${i}]:`, entry);
+                    return;
                 }
+                const [index, value] = entry;
+                const idx = parseInt(index, 10);
+                if (isNaN(idx) || idx < 0 || idx >= periods.length) {
+                    console.warn(`Índice inválido en realData[${i}]: idx=${idx}, periods.length=${periods.length}`);
+                    return;
+                }
+                const numericValue = Number(value);
+                if (isNaN(numericValue)) {
+                    console.warn(`Valor no numérico en realData[${i}]: value=${value}`);
+                    return;
+                }
+                if (isNaN(scalingFactor) || !isFinite(scalingFactor)) {
+                    console.warn(`scalingFactor inválido: ${scalingFactor}`);
+                    return;
+                }
+                realValues[idx] = numericValue * scalingFactor;
             });
             console.log('realValues (después de mapear):', realValues);
 
@@ -676,314 +694,14 @@ async function fetchPortfolioData(token, accountId) {
             console.error('Elemento con id "history-table" no encontrado en el HTML');
         }
 
-        document.getElement periods.length).fill(null);
-    realData.forEach(([index, value]) => {
-        const idx = parseInt(index, 10);
-        if (idx >= 0 && idx < periods.length) {
-            realValues[idx] = Number(value) * scalingFactor;
-        }
-    });
-    console.log('realValues (después de mapear):', realValues);
-
-    // Filtrar períodos donde hay datos reales
-    const validIndices = realValues.map((val, idx) => {
-        const isValid = val !== null;
-        console.log(`validIndices[${idx}]: val=${val}, isValid=${isValid}`);
-        return isValid ? idx : -1;
-    }).filter(idx => idx !== -1);
-    console.log('validIndices:', validIndices);
-
-    if (validIndices.length === 0) {
-        console.warn('No hay datos reales disponibles; usando totalValue como respaldo');
-        labels = [new Date().toISOString().split('T')[0]];
-        realValues = [totalValue || 0];
-        expectedValues = [totalValue || 0];
-        bestValues = [totalValue || 0];
-        worstValues = [totalValue || 0];
-    } else {
-        // Filtrar etiquetas y valores para los índices válidos
-        labels = validIndices.map(idx => labels[idx]);
-        console.log('labels (después de filtrar con validIndices):', labels);
-
-        realValues = validIndices.map(idx => realValues[idx]);
-
-        // Calcular valores esperados, mejores y peores (en euros)
-        let cumulativeExpected = initialValue;
-        let cumulativeBest = initialValue;
-        let cumulativeWorst = initialValue;
-
-        expectedValues = Array(periods.length).fill(null);
-        bestValues = Array(periods.length).fill(null);
-        worstValues = Array(periods.length).fill(null);
-
-        for (let index = 0; index < periods.length; index++) {
-            const expectedEntry = expectedData.find(item => item[0] === index);
-            if (expectedEntry) {
-                const returnRate = expectedEntry[1];
-                cumulativeExpected *= (1 + returnRate);
-                expectedValues[index] = cumulativeExpected * scalingFactor;
-            } else if (index === 0) {
-                expectedValues[index] = initialValue * scalingFactor;
-            } else {
-                expectedValues[index] = expectedValues[index - 1];
-            }
-
-            const bestEntry = bestData.find(item => item[0] === index);
-            if (bestEntry) {
-                const returnRate = bestEntry[1];
-                cumulativeBest *= (1 + returnRate);
-                bestValues[index] = cumulativeBest * scalingFactor;
-            } else if (index === 0) {
-                bestValues[index] = initialValue * scalingFactor;
-            } else {
-                bestValues[index] = bestValues[index - 1];
-            }
-
-            const worstEntry = worstData.find(item => item[0] === index);
-            if (worstEntry) {
-                const returnRate = worstEntry[1];
-                cumulativeWorst *= (1 + returnRate);
-                worstValues[index] = cumulativeWorst * scalingFactor;
-            } else if (index === 0) {
-                worstValues[index] = initialValue * scalingFactor;
-            } else {
-                worstValues[index] = worstValues[index - 1];
-            }
-        }
-
-        // Filtrar para los índices válidos y extender hasta el final
-        const lastValidIndex = validIndices[validIndices.length - 1];
-        const extendedIndices = Array.from({ length: periods.length - lastValidIndex }, (_, i) => lastValidIndex + i);
-        const allIndices = [...validIndices, ...extendedIndices.slice(1)];
-
-        labels = allIndices.map(idx => labels[idx]);
-        realValues = validIndices.map(idx => realValues[idx]);
-        expectedValues = allIndices.map(idx => expectedValues[idx]);
-        bestValues = allIndices.map(idx => bestValues[idx]);
-        worstValues = allIndices.map(idx => worstValues[idx]);
+        document.getElementById('error-message').classList.add('hidden');
+        document.getElementById('warning-message').classList.add('hidden');
+    } catch (error) {
+        console.error('Error al obtener datos:', error);
+        setError(`Error al obtener datos: ${error.message}`);
+    } finally {
+        setLoading(false);
     }
-
-    console.log('Datos procesados para el gráfico total:', {
-        labels,
-        realValues,
-        expectedValues,
-        bestValues,
-        worstValues
-    });
-} else {
-    console.warn('historyData.performance no está disponible; intentando con portfolios');
-    // Fallback a portfolios si performance no está disponible
-    const portfolioHistory = historyData.portfolios || [];
-    console.log('portfolioHistory:', portfolioHistory);
-
-    let historicalData = portfolioHistory.map(item => ({
-        date: item.date || 'N/A',
-        value: Number(item.total_amount || 0)
-    }));
-
-    // Filtrar datos con valor 0
-    if (historicalData.length > 0) {
-        historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
-    }
-
-    // Ordenar datos por fecha
-    if (historicalData.length > 0) {
-        historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
-    }
-
-    labels = historicalData.map(item => item.date);
-    realValues = historicalData.map(item => item.value);
-
-    // Si no hay datos históricos, usar totalValue como respaldo
-    if (realValues.length === 0) {
-        console.warn('No hay datos históricos en portfolios; usando totalValue como respaldo');
-        labels = [new Date().toISOString().split('T')[0]];
-        realValues = [totalValue || 0];
-    }
-
-    console.log('Datos procesados desde portfolios:', { labels, realValues });
-}
-
-// Crear datasets para el gráfico total
-const datasets = [];
-if (realValues.length > 0) {
-    datasets.push({
-        label: 'Real (€)',
-        data: realValues,
-        borderColor: performanceColors.real,
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-}
-if (expectedValues.length > 0) {
-    datasets.push({
-        label: 'Esperado (€)',
-        data: expectedValues,
-        borderColor: performanceColors.expected,
-        borderDash: [5, 5],
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-}
-if (bestValues.length > 0) {
-    datasets.push({
-        label: 'Mejor Escenario (€)',
-        data: bestValues,
-        borderColor: performanceColors.best,
-        borderDash: [5, 5],
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-}
-if (worstValues.length > 0) {
-    datasets.push({
-        label: 'Peor Escenario (€)',
-        data: worstValues,
-        borderColor: performanceColors.worst,
-        borderDash: [5, 5],
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-}
-
-// Renderizar el gráfico total incluso con datos mínimos
-createPortfolioChart(labels, datasets);
-
-// Calcular los pesos reales de los fondos y asignar colores
-const weights = components.map((component, index) => {
-    const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-    const name = component.instrument?.name || component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
-    const color = colorPalette[index % colorPalette.length];
-    console.log(`Componente ${index}:`, component);
-    console.log(`Nombre del fondo (componente ${index}):`, component.instrument?.name, 'Nombre asignado:', name);
-    return {
-        name: name,
-        amount: component.amount || 0,
-        weight: weight,
-        color: color
-    };
-});
-console.log('Pesos reales de los fondos:', weights);
-
-// Llenar la tabla de composición con colores
-const compositionTable = document.getElementById('composition-table');
-if (compositionTable) {
-    compositionTable.innerHTML = '';
-    if (weights.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
-        compositionTable.appendChild(row);
-    } else {
-        weights.forEach(fund => {
-            console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
-                <td class="p-2">${fund.name}</td>
-                <td class="p-2">€${fund.amount.toFixed(2)}</td>
-                <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
-            `;
-            compositionTable.appendChild(row);
-        });
-    }
-} else {
-    console.error('Elemento con id "composition-table" no encontrado en el HTML');
-}
-
-// Preparar datos para el gráfico de componentes
-const componentDatasets = [];
-if (realValues.length > 0) {
-    componentDatasets.push({
-        label: 'Total Cartera (€)',
-        data: realValues,
-        borderColor: performanceColors.real,
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-}
-
-// Calcular la evolución de cada fondo con su color asignado
-weights.forEach(fund => {
-    const weight = fund.weight || 0;
-    const name = fund.name;
-    const color = fund.color;
-    console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
-    const componentValues = realValues.map(value => value * weight);
-    componentDatasets.push({
-        label: `${name} (€)`,
-        data: componentValues,
-        borderColor: color,
-        tension: 0.1,
-        fill: false,
-        spanGaps: true
-    });
-});
-
-// Renderizar el gráfico de componentes incluso con datos mínimos
-if (componentDatasets.length > 0) {
-    createComponentsChart(labels, componentDatasets);
-} else {
-    console.warn('No hay datos de componentes para mostrar en el gráfico');
-    setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
-}
-
-// Calcular rentabilidad para la tabla histórica
-const tableData = realValues.map((value, index) => {
-    let returnPercentage = 0;
-    if (index > 0 && realValues[index - 1] !== null) {
-        const previousValue = realValues[index - 1];
-        returnPercentage = ((value - previousValue) / previousValue) * 100;
-    }
-    return {
-        date: labels[index] || 'N/A',
-        value: value,
-        return: returnPercentage
-    };
-});
-
-// Actualizar tabla para mostrar las últimas 10 entradas
-const tableBody = document.getElementById('history-table');
-if (tableBody) {
-    tableBody.innerHTML = '';
-    if (tableData.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
-        tableBody.appendChild(row);
-    } else {
-        const recentData = tableData.slice(-10);
-        recentData.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="p-2">${item.date}</td>
-                <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : 'N/A'}</td>
-                <td class="p-2">${item.return ? `${item.return.toFixed(2)}%` : 'N/A'}</td>
-            `;
-            tableBody.appendChild(row);
-        });
-
-        if (tableData.length > 10) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
-            tableBody.appendChild(row);
-        }
-    }
-} else {
-    console.error('Elemento con id "history-table" no encontrado en el HTML');
-}
-
-document.getElementById('error-message').classList.add('hidden');
-document.getElementById('warning-message').classList.add('hidden');
-} catch (error) {
-    console.error('Error al obtener datos:', error);
-    setError(`Error al obtener datos: ${error.message}`);
-} finally {
-    setLoading(false);
-}
 }
 
 // Evento para cargar cuentas
