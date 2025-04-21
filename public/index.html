@@ -8,6 +8,7 @@
     <link rel="icon" href="/favicon.ico">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.min.js"></script>
 </head>
 <body class="bg-gray-100 font-sans">
     <div class="container mx-auto p-4">
@@ -152,9 +153,9 @@
             worst: '#E74C3C' // Rojo para el peor escenario
         };
 
-        function createPortfolioChart(labels, datasets) {
-            console.log('Datos para el gráfico total:', { labels, datasets });
-            if (!labels.length || !datasets.length) {
+        function createPortfolioChart(dates, datasets) {
+            console.log('Datos para el gráfico total:', { dates, datasets });
+            if (!dates.length || !datasets.length) {
                 console.warn('No hay datos suficientes para mostrar en el gráfico total');
                 setWarning('No hay suficientes datos históricos para mostrar todas las líneas en el gráfico total.');
                 return;
@@ -168,15 +169,21 @@
                 portfolioChart = new Chart(ctxPortfolio, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        labels: dates,
                         datasets: datasets
                     },
                     options: {
                         responsive: true,
                         scales: {
                             x: {
-                                title: { display: true, text: 'Fecha' },
-                                ticks: { maxTicksLimit: 10 }
+                                type: 'time',
+                                time: {
+                                    unit: 'month',
+                                    displayFormats: {
+                                        month: 'MMM YYYY'
+                                    }
+                                },
+                                title: { display: true, text: 'Fecha' }
                             },
                             y: {
                                 title: { display: true, text: 'Valor (€)' },
@@ -198,9 +205,9 @@
             }
         }
 
-        function createComponentsChart(labels, datasets) {
-            console.log('Datos para el gráfico de componentes:', { labels, datasets });
-            if (!labels.length || !datasets.length) {
+        function createComponentsChart(dates, datasets) {
+            console.log('Datos para el gráfico de componentes:', { dates, datasets });
+            if (!dates.length || !datasets.length) {
                 console.warn('No hay datos suficientes para mostrar en el gráfico de componentes');
                 setWarning('No hay suficientes datos para mostrar todas las líneas en el gráfico de componentes.');
                 return;
@@ -214,15 +221,21 @@
                 componentsChart = new Chart(ctxComponents, {
                     type: 'line',
                     data: {
-                        labels: labels,
+                        labels: dates,
                         datasets: datasets
                     },
                     options: {
                         responsive: true,
                         scales: {
                             x: {
-                                title: { display: true, text: 'Fecha' },
-                                ticks: { maxTicksLimit: 10 }
+                                type: 'time',
+                                time: {
+                                    unit: 'month',
+                                    displayFormats: {
+                                        month: 'MMM YYYY'
+                                    }
+                                },
+                                title: { display: true, text: 'Fecha' }
                             },
                             y: {
                                 title: { display: true, text: 'Valor (€)' },
@@ -398,7 +411,7 @@
                 }
 
                 // Procesar datos de performance para el gráfico total
-                let labels = [];
+                let dates = [];
                 let realValues = [];
                 let expectedValues = [];
                 let bestValues = [];
@@ -417,23 +430,33 @@
                     console.log('bestData:', bestData);
                     console.log('worstData:', worstData);
 
-                    // Obtener el valor inicial de la cartera desde el primer valor de "real" o totalValue
-                    const initialValue = realData.length > 0 && realData[0][1] ? realData[0][1] : (totalValue || 100);
+                    // Obtener el valor inicial de la cartera desde el primer valor de "real"
+                    const initialValue = realData.length > 0 && realData[0][1] ? realData[0][1] : 100;
                     console.log('initialValue:', initialValue);
 
-                    // Mapear las fechas y valores
-                    labels = periods.map(periodEntry => periodEntry[1]?.split(' ')[0] || 'N/A');
+                    // Mapear las fechas (como objetos Date) y valores
+                    dates = periods.map(periodEntry => new Date(periodEntry[1]));
 
-                    // Valores reales (en euros), usando 0 como valor predeterminado si falta
+                    // Valores reales (en euros), escalados a totalValue
+                    const realDataMap = new Map(realData.map(entry => [entry[0], entry[1]]));
+                    const scalingFactor = totalValue / initialValue; // Escalar los valores para que coincidan con totalValue
                     realValues = periods.map((_, index) => {
-                        const entry = realData.find(item => item[0] === index);
-                        return entry ? entry[1] : 0;
+                        const value = realDataMap.has(index) ? realDataMap.get(index) : null;
+                        return value !== null ? value * scalingFactor : null;
                     });
 
-                    // Ajustar las fechas para que coincidan con los valores reales disponibles
-                    if (realValues.length > 0 && realValues.every(val => val === 0)) {
-                        console.warn('Todos los valores reales son 0; usando totalValue como respaldo');
-                        realValues = Array(labels.length).fill(totalValue || 0);
+                    // Filtrar períodos donde hay datos reales
+                    const validIndices = realValues.map((val, idx) => val !== null ? idx : -1).filter(idx => idx !== -1);
+                    if (validIndices.length === 0) {
+                        console.warn('No hay datos reales disponibles; usando totalValue como respaldo');
+                        dates = [new Date()];
+                        realValues = [totalValue || 0];
+                    } else {
+                        dates = validIndices.map(idx => dates[idx]);
+                        realValues = validIndices.map(idx => realValues[idx]);
+                        expectedValues = validIndices.map(idx => expectedValues[idx] || initialValue * scalingFactor);
+                        bestValues = validIndices.map(idx => bestValues[idx] || initialValue * scalingFactor);
+                        worstValues = validIndices.map(idx => worstValues[idx] || initialValue * scalingFactor);
                     }
 
                     // Calcular valores esperados, mejores y peores (en euros)
@@ -446,9 +469,9 @@
                         if (entry) {
                             const returnRate = entry[1];
                             cumulativeExpected *= (1 + returnRate);
-                            return cumulativeExpected;
+                            return cumulativeExpected * scalingFactor;
                         }
-                        return initialValue; // Usar el valor inicial si no hay datos
+                        return null;
                     });
 
                     bestValues = periods.map((_, index) => {
@@ -456,9 +479,9 @@
                         if (entry) {
                             const returnRate = entry[1];
                             cumulativeBest *= (1 + returnRate);
-                            return cumulativeBest;
+                            return cumulativeBest * scalingFactor;
                         }
-                        return initialValue;
+                        return null;
                     });
 
                     worstValues = periods.map((_, index) => {
@@ -466,13 +489,18 @@
                         if (entry) {
                             const returnRate = entry[1];
                             cumulativeWorst *= (1 + returnRate);
-                            return cumulativeWorst;
+                            return cumulativeWorst * scalingFactor;
                         }
-                        return initialValue;
+                        return null;
                     });
 
+                    // Filtrar valores nulos y mantener solo los períodos con datos reales
+                    expectedValues = validIndices.map(idx => expectedValues[idx] || initialValue * scalingFactor);
+                    bestValues = validIndices.map(idx => bestValues[idx] || initialValue * scalingFactor);
+                    worstValues = validIndices.map(idx => worstValues[idx] || initialValue * scalingFactor);
+
                     console.log('Datos procesados para el gráfico total:', {
-                        labels,
+                        dates,
                         realValues,
                         expectedValues,
                         bestValues,
@@ -485,7 +513,7 @@
                     console.log('portfolioHistory:', portfolioHistory);
 
                     let historicalData = portfolioHistory.map(item => ({
-                        date: item.date || 'N/A',
+                        date: new Date(item.date),
                         value: Number(item.total_amount || 0)
                     }));
 
@@ -496,20 +524,20 @@
 
                     // Ordenar datos por fecha
                     if (historicalData.length > 0) {
-                        historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                        historicalData.sort((a, b) => a.date - b.date);
                     }
 
-                    labels = historicalData.map(item => item.date);
+                    dates = historicalData.map(item => item.date);
                     realValues = historicalData.map(item => item.value);
 
                     // Si no hay datos históricos, usar totalValue como respaldo
                     if (realValues.length === 0) {
                         console.warn('No hay datos históricos en portfolios; usando totalValue como respaldo');
-                        labels = [new Date().toISOString().split('T')[0]]; // Fecha actual
+                        dates = [new Date()];
                         realValues = [totalValue || 0];
                     }
 
-                    console.log('Datos procesados desde portfolios:', { labels, realValues });
+                    console.log('Datos procesados desde portfolios:', { dates, realValues });
                 }
 
                 // Crear datasets para el gráfico total
@@ -523,7 +551,7 @@
                         fill: false
                     });
                 }
-                if (expectedValues.length > 0 && expectedValues.some(val => val !== realValues[0])) {
+                if (expectedValues.length > 0) {
                     datasets.push({
                         label: 'Esperado (€)',
                         data: expectedValues,
@@ -533,7 +561,7 @@
                         fill: false
                     });
                 }
-                if (bestValues.length > 0 && bestValues.some(val => val !== realValues[0])) {
+                if (bestValues.length > 0) {
                     datasets.push({
                         label: 'Mejor Escenario (€)',
                         data: bestValues,
@@ -543,7 +571,7 @@
                         fill: false
                     });
                 }
-                if (worstValues.length > 0 && worstValues.some(val => val !== realValues[0])) {
+                if (worstValues.length > 0) {
                     datasets.push({
                         label: 'Peor Escenario (€)',
                         data: worstValues,
@@ -555,7 +583,7 @@
                 }
 
                 // Renderizar el gráfico total incluso con datos mínimos
-                createPortfolioChart(labels, datasets);
+                createPortfolioChart(dates, datasets);
 
                 // Calcular los pesos reales de los fondos y asignar colores
                 const weights = components.map((component, index) => {
@@ -628,7 +656,7 @@
 
                 // Renderizar el gráfico de componentes incluso con datos mínimos
                 if (componentDatasets.length > 0) {
-                    createComponentsChart(labels, componentDatasets);
+                    createComponentsChart(dates, componentDatasets);
                 } else {
                     console.warn('No hay datos de componentes para mostrar en el gráfico');
                     setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
@@ -642,7 +670,7 @@
                         returnPercentage = ((value - previousValue) / previousValue) * 100;
                     }
                     return {
-                        date: labels[index] || 'N/A',
+                        date: dates[index].toISOString().split('T')[0],
                         value: value,
                         return: returnPercentage
                     };
