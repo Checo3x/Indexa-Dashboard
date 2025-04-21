@@ -323,16 +323,27 @@ async function fetchPortfolioData(token, accountId) {
 
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
-            const realData = historyData.performance.real || [];
+            let realData = historyData.performance.real || [];
             const expectedData = historyData.performance.expected_return || [];
             const bestData = historyData.performance.best_return || [];
             const worstData = historyData.performance.worst_return || [];
 
             console.log('periods:', periods);
-            console.log('realData:', realData);
+            console.log('realData (antes de procesar):', realData);
             console.log('expectedData:', expectedData);
             console.log('bestData:', bestData);
             console.log('worstData:', worstData);
+
+            // Manejar el caso en que realData no sea un array
+            if (!Array.isArray(realData)) {
+                console.warn('realData no es un array, se recibió:', realData);
+                if (typeof realData === 'number') {
+                    realData = [[0, realData]]; // Convertimos a un array con el primer índice
+                } else {
+                    realData = []; // Si no es un array ni un número, lo tratamos como vacío
+                }
+                console.log('realData (después de ajustar):', realData);
+            }
 
             // Obtener el valor inicial de la cartera desde el primer valor de "real"
             const initialValue = realData.length > 0 && realData[0][1] ? realData[0][1] : 100;
