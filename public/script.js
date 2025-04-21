@@ -7,7 +7,7 @@ let portfolioChartData = null;
 let componentsChartData = null;
 let compositionTableData = null;
 let historyTableData = null;
-let currentToken = null; // Variable global para almacenar el token
+let currentToken = null;
 
 if (typeof Chart === 'undefined') {
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
@@ -253,9 +253,9 @@ async function fetchPortfolioData(token, accountId) {
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
             let realData = historyData.performance.real || [];
-            const expectedData = historyData.performance.expected_return || [];
-            const bestData = historyData.performance.best_return || [];
-            const worstData = historyData.performance.worst_return || [];
+            const expectedData = historyData.performance.expected || [];
+            const bestData = historyData.performance.best || [];
+            const worstData = historyData.performance.worst || [];
             if (!Array.isArray(realData)) {
                 if (typeof realData === 'number') {
                     realData = [[0, realData]];
@@ -288,22 +288,16 @@ async function fetchPortfolioData(token, accountId) {
                         periodIndices.push(periodEntry[0]);
                     }
                 });
-            }
-            // Si periods no está en formato de pares o está vacío, generamos índices manualmente
-            if (!isPeriodPairFormat || filteredPeriods.length === 0) {
-                const startIndex = 190; // Correspondiente a marzo 2025
-                const endIndex = 197;   // Correspondiente a septiembre 2025
-                const months = [];
-                let tempDate = new Date(minDate);
-                while (tempDate <= maxDate) {
-                    months.push(tempDate.toISOString().split('T')[0]);
-                    tempDate.setMonth(tempDate.getMonth() + 1);
-                }
-                for (let i = 0; i < months.length; i++) {
-                    const index = startIndex + i;
-                    filteredPeriods.push([index, months[i]]);
-                    periodIndices.push(index);
-                }
+            } else {
+                // periods es un array de strings (fechas), generamos índices implícitos
+                periods.forEach((dateStr, idx) => {
+                    const date = new Date(dateStr.split(' ')[0]);
+                    if (isNaN(date)) return;
+                    if (date >= minDate && date <= maxDate) {
+                        filteredPeriods.push([idx, dateStr]);
+                        periodIndices.push(idx);
+                    }
+                });
             }
             console.log('Period Indices:', periodIndices);
             console.log('Filtered Periods:', filteredPeriods);
@@ -337,10 +331,10 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 realValues = filteredRealValues;
 
-                // Encontrar el último índice con datos reales (abril 2025)
-                const lastRealIndex = periodIndices.indexOf(191); // Abril 2025 (índice 191)
+                // Encontrar el último índice con datos reales (abril 2025, índice 2)
+                const lastRealIndex = periodIndices.indexOf(2); // Abril 2025
                 const lastRealValue = realValues[lastRealIndex] || totalValue;
-                const projectionStartIndex = periodIndices.indexOf(191); // Comenzar proyecciones desde abril 2025
+                const projectionStartIndex = periodIndices.indexOf(2); // Comenzar proyecciones desde abril 2025
 
                 let cumulativeExpectedFactor = 1;
                 let cumulativeBestFactor = 1;
@@ -358,39 +352,39 @@ async function fetchPortfolioData(token, accountId) {
                 }
 
                 // Calcular proyecciones a partir de abril 2025
-                for (let i = projectionStartIndex; i < labels.length; i++) {
+                for (let i = projectionStartIndex + 1; i < labels.length; i++) {
                     const index = periodIndices[i];
-                    const entryExpected = expectedData.find(item => item[0] === index);
-                    if (entryExpected) {
-                        const factor = entryExpected[1] / 100;
+                    const entryExpected = expectedData[index];
+                    if (entryExpected !== undefined) {
+                        const factor = entryExpected / 100;
                         cumulativeExpectedFactor *= factor;
                         const value = lastRealValue * cumulativeExpectedFactor;
                         expectedValues[i] = value;
-                        console.log(`Expected [${index}]: Factor=${entryExpected[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
+                        console.log(`Expected [${index}]: Factor=${entryExpected}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
                     } else {
                         console.log(`Expected [${index}]: No factor found`);
                         expectedValues[i] = lastRealValue * cumulativeExpectedFactor;
                     }
 
-                    const entryBest = bestData.find(item => item[0] === index);
-                    if (entryBest) {
-                        const factor = entryBest[1] / 100;
+                    const entryBest = bestData[index];
+                    if (entryBest !== undefined) {
+                        const factor = entryBest / 100;
                         cumulativeBestFactor *= factor;
                         const value = lastRealValue * cumulativeBestFactor;
                         bestValues[i] = value;
-                        console.log(`Best [${index}]: Factor=${entryBest[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
+                        console.log(`Best [${index}]: Factor=${entryBest}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
                     } else {
                         console.log(`Best [${index}]: No factor found`);
                         bestValues[i] = lastRealValue * cumulativeBestFactor;
                     }
 
-                    const entryWorst = worstData.find(item => item[0] === index);
-                    if (entryWorst) {
-                        const factor = entryWorst[1] / 100;
+                    const entryWorst = worstData[index];
+                    if (entryWorst !== undefined) {
+                        const factor = entryWorst / 100;
                         cumulativeWorstFactor *= factor;
                         const value = lastRealValue * cumulativeWorstFactor;
                         worstValues[i] = value;
-                        console.log(`Worst [${index}]: Factor=${entryWorst[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
+                        console.log(`Worst [${index}]: Factor=${entryWorst}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
                     } else {
                         console.log(`Worst [${index}]: No factor found`);
                         worstValues[i] = lastRealValue * cumulativeWorstFactor;
@@ -595,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setError('Por favor, introduce un token de API válido.');
                 return;
             }
-            currentToken = token; // Almacenar el token
+            currentToken = token;
             fetchAccounts(token);
         });
     }
@@ -606,7 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const tokenInput = document.getElementById('api-token');
             let token = tokenInput.value.trim();
             
-            // Si no se ingresó un token, usar el token almacenado
             if (!token && currentToken) {
                 token = currentToken;
             }
@@ -616,7 +609,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             
-            currentToken = token; // Actualizar el token almacenado si se ingresó uno nuevo
+            currentToken = token;
             const accountId = document.getElementById('account-select').value;
             if (!accountId) {
                 setError('Por favor, selecciona una cuenta.');
@@ -627,7 +620,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Añadir un evento al cambio de selección de cuenta para limpiar mensajes
     const accountSelect = document.getElementById('account-select');
     if (accountSelect) {
         accountSelect.addEventListener('change', () => {
