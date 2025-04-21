@@ -242,10 +242,8 @@ async function fetchPortfolioData(token, accountId) {
         let bestValues = [];
         let worstValues = [];
         const currentDate = new Date('2025-04-21');
-        const minDate = new Date(currentDate);
-        minDate.setMonth(currentDate.getMonth() - 5);
-        const maxDate = new Date(currentDate);
-        maxDate.setMonth(currentDate.getMonth() + 5);
+        const minDate = new Date('2024-11-01'); // 5 meses antes de abril 2025
+        const maxDate = new Date('2025-09-30'); // 5 meses después de abril 2025
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
             let realData = historyData.performance.real || [];
@@ -285,18 +283,22 @@ async function fetchPortfolioData(token, accountId) {
                     }
                 });
             } else {
-                periods.forEach((dateStr, idx) => {
-                    if (typeof dateStr !== 'string') return;
-                    const formattedDate = dateStr.split(' ')[0];
-                    const date = new Date(formattedDate);
-                    if (isNaN(date)) return;
-                    if (date >= minDate && date <= maxDate) {
-                        filteredPeriods.push(dateStr);
-                        periodIndices.push(idx);
-                    }
-                });
+                // Si periods no está en formato de pares, generamos índices manualmente
+                const startIndex = 186; // Nov 2024
+                const endIndex = 197;   // Sep 2025
+                const months = [];
+                let tempDate = new Date(minDate);
+                while (tempDate <= maxDate) {
+                    months.push(tempDate.toISOString().split('T')[0]);
+                    tempDate.setMonth(tempDate.getMonth() + 1);
+                }
+                for (let i = 0; i < months.length; i++) {
+                    filteredPeriods.push([startIndex + i, months[i]]);
+                    periodIndices.push(startIndex + i);
+                }
             }
             console.log('Period Indices:', periodIndices);
+            console.log('Filtered Periods:', filteredPeriods);
             if (isPeriodPairFormat) {
                 labels = filteredPeriods.map(periodEntry =>
                     Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
@@ -304,8 +306,10 @@ async function fetchPortfolioData(token, accountId) {
                         : 'Unknown'
                 );
             } else {
-                labels = filteredPeriods.map(dateStr =>
-                    typeof dateStr === 'string' ? formatDateToMonthYear(dateStr) : 'Unknown'
+                labels = filteredPeriods.map(periodEntry =>
+                    Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
+                        ? formatDateToMonthYear(periodEntry[1])
+                        : 'Unknown'
                 );
             }
             realValues = new Array(filteredPeriods.length).fill(null);
@@ -335,7 +339,7 @@ async function fetchPortfolioData(token, accountId) {
 
                 // Encontrar el último índice con datos reales (abril 2025)
                 const lastRealIndex = validIndices[validIndices.length - 1];
-                const lastRealValue = realValues[lastRealIndex];
+                const lastRealValue = realValues[lastRealIndex] || totalValue;
                 const projectionStartIndex = periodIndices.indexOf(191); // Comenzar proyecciones desde abril 2025 (índice 191)
 
                 let cumulativeExpectedFactor = 1;
@@ -363,6 +367,8 @@ async function fetchPortfolioData(token, accountId) {
                         const value = lastRealValue * cumulativeExpectedFactor;
                         expectedValues[i] = value;
                         console.log(`Expected [${index}]: Factor=${entryExpected[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
+                    } else {
+                        console.log(`Expected [${index}]: No factor found`);
                     }
 
                     const entryBest = bestData.find(item => item[0] === index);
@@ -372,6 +378,8 @@ async function fetchPortfolioData(token, accountId) {
                         const value = lastRealValue * cumulativeBestFactor;
                         bestValues[i] = value;
                         console.log(`Best [${index}]: Factor=${entryBest[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
+                    } else {
+                        console.log(`Best [${index}]: No factor found`);
                     }
 
                     const entryWorst = worstData.find(item => item[0] === index);
@@ -381,6 +389,8 @@ async function fetchPortfolioData(token, accountId) {
                         const value = lastRealValue * cumulativeWorstFactor;
                         worstValues[i] = value;
                         console.log(`Worst [${index}]: Factor=${entryWorst[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
+                    } else {
+                        console.log(`Worst [${index}]: No factor found`);
                     }
                 }
             }
