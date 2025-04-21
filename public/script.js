@@ -266,7 +266,7 @@ async function fetchPortfolioData(token, accountId) {
             }
             const initialValue = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2 ? realData[0][1] : 100;
             const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1;
-            console.log('Initial Value:', initialValue, 'Total Value:', totalValue, 'Scaling Factor:', scalingFactor); // Debug
+            console.log('Initial Value:', initialValue, 'Total Value:', totalValue, 'Scaling Factor:', scalingFactor);
             if (!Array.isArray(periods)) {
                 throw new Error('periods no es un array');
             }
@@ -281,7 +281,7 @@ async function fetchPortfolioData(token, accountId) {
                     if (isNaN(date)) return;
                     if (date >= minDate && date <= maxDate) {
                         filteredPeriods.push(periodEntry);
-                        periodIndices.push(idx);
+                        periodIndices.push(periodEntry[0]); // Usar el índice real del período (por ejemplo, 190, 191, ...)
                     }
                 });
             } else {
@@ -296,7 +296,7 @@ async function fetchPortfolioData(token, accountId) {
                     }
                 });
             }
-            console.log('Period Indices:', periodIndices); // Debug
+            console.log('Period Indices:', periodIndices);
             if (isPeriodPairFormat) {
                 labels = filteredPeriods.map(periodEntry =>
                     Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
@@ -333,52 +333,56 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 realValues = filteredRealValues;
 
-                // Calcular valores proyectados de manera acumulativa
-                let cumulativeExpectedFactor = 1; // Factor acumulativo (inicia en 1 para multiplicar)
+                // Encontrar el último índice con datos reales (abril 2025)
+                const lastRealIndex = validIndices[validIndices.length - 1];
+                const lastRealValue = realValues[lastRealIndex];
+                const projectionStartIndex = periodIndices.indexOf(191); // Comenzar proyecciones desde abril 2025 (índice 191)
+
+                let cumulativeExpectedFactor = 1;
                 let cumulativeBestFactor = 1;
                 let cumulativeWorstFactor = 1;
 
-                expectedValues = periodIndices.map((index, i) => {
-                    const entry = expectedData.find(item => item[0] === index);
-                    if (entry) {
-                        const factor = entry[1] / 100; // Convertir porcentaje a factor (por ejemplo, 100.332248764146 -> 1.00332248764146)
+                expectedValues = new Array(labels.length).fill(null);
+                bestValues = new Array(labels.length).fill(null);
+                worstValues = new Array(labels.length).fill(null);
+
+                // Copiar valores reales hasta el último índice real
+                for (let i = 0; i <= lastRealIndex; i++) {
+                    expectedValues[i] = realValues[i];
+                    bestValues[i] = realValues[i];
+                    worstValues[i] = realValues[i];
+                }
+
+                // Calcular proyecciones a partir de abril 2025
+                for (let i = projectionStartIndex; i < labels.length; i++) {
+                    const index = periodIndices[i];
+                    const entryExpected = expectedData.find(item => item[0] === index);
+                    if (entryExpected) {
+                        const factor = entryExpected[1] / 100;
                         cumulativeExpectedFactor *= factor;
-                        const value = totalValue * cumulativeExpectedFactor;
-                        console.log(`Expected [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`); // Debug
-                        return value;
+                        const value = lastRealValue * cumulativeExpectedFactor;
+                        expectedValues[i] = value;
+                        console.log(`Expected [${index}]: Factor=${entryExpected[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
                     }
-                    const value = totalValue * cumulativeExpectedFactor;
-                    console.log(`Expected [${index}]: No factor, Cumulative=${cumulativeExpectedFactor}, Value=${value}`); // Debug
-                    return value;
-                });
 
-                bestValues = periodIndices.map((index, i) => {
-                    const entry = bestData.find(item => item[0] === index);
-                    if (entry) {
-                        const factor = entry[1] / 100;
+                    const entryBest = bestData.find(item => item[0] === index);
+                    if (entryBest) {
+                        const factor = entryBest[1] / 100;
                         cumulativeBestFactor *= factor;
-                        const value = totalValue * cumulativeBestFactor;
-                        console.log(`Best [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`); // Debug
-                        return value;
+                        const value = lastRealValue * cumulativeBestFactor;
+                        bestValues[i] = value;
+                        console.log(`Best [${index}]: Factor=${entryBest[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
                     }
-                    const value = totalValue * cumulativeBestFactor;
-                    console.log(`Best [${index}]: No factor, Cumulative=${cumulativeBestFactor}, Value=${value}`); // Debug
-                    return value;
-                });
 
-                worstValues = periodIndices.map((index, i) => {
-                    const entry = worstData.find(item => item[0] === index);
-                    if (entry) {
-                        const factor = entry[1] / 100;
+                    const entryWorst = worstData.find(item => item[0] === index);
+                    if (entryWorst) {
+                        const factor = entryWorst[1] / 100;
                         cumulativeWorstFactor *= factor;
-                        const value = totalValue * cumulativeWorstFactor;
-                        console.log(`Worst [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`); // Debug
-                        return value;
+                        const value = lastRealValue * cumulativeWorstFactor;
+                        worstValues[i] = value;
+                        console.log(`Worst [${index}]: Factor=${entryWorst[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
                     }
-                    const value = totalValue * cumulativeWorstFactor;
-                    console.log(`Worst [${index}]: No factor, Cumulative=${cumulativeWorstFactor}, Value=${value}`); // Debug
-                    return value;
-                });
+                }
             }
         } else {
             const portfolioHistory = historyData.portfolios || [];
