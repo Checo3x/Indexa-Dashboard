@@ -242,7 +242,7 @@ async function fetchPortfolioData(token, accountId) {
         let bestValues = [];
         let worstValues = [];
         const currentDate = new Date('2025-04-21');
-        const minDate = new Date('2024-11-01'); // 5 meses antes de abril 2025
+        const minDate = new Date('2025-03-01'); // Datos comienzan en marzo 2025
         const maxDate = new Date('2025-09-30'); // 5 meses después de abril 2025
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
@@ -279,13 +279,14 @@ async function fetchPortfolioData(token, accountId) {
                     if (isNaN(date)) return;
                     if (date >= minDate && date <= maxDate) {
                         filteredPeriods.push(periodEntry);
-                        periodIndices.push(periodEntry[0]); // Usar el índice real del período (por ejemplo, 190, 191, ...)
+                        periodIndices.push(periodEntry[0]);
                     }
                 });
-            } else {
-                // Si periods no está en formato de pares, generamos índices manualmente
-                const startIndex = 186; // Nov 2024
-                const endIndex = 197;   // Sep 2025
+            }
+            // Si periods no está en formato de pares o está vacío, generamos índices manualmente
+            if (!isPeriodPairFormat || filteredPeriods.length === 0) {
+                const startIndex = 190; // Correspondiente a marzo 2025
+                const endIndex = 197;   // Correspondiente a septiembre 2025
                 const months = [];
                 let tempDate = new Date(minDate);
                 while (tempDate <= maxDate) {
@@ -293,25 +294,18 @@ async function fetchPortfolioData(token, accountId) {
                     tempDate.setMonth(tempDate.getMonth() + 1);
                 }
                 for (let i = 0; i < months.length; i++) {
-                    filteredPeriods.push([startIndex + i, months[i]]);
-                    periodIndices.push(startIndex + i);
+                    const index = startIndex + i;
+                    filteredPeriods.push([index, months[i]]);
+                    periodIndices.push(index);
                 }
             }
             console.log('Period Indices:', periodIndices);
             console.log('Filtered Periods:', filteredPeriods);
-            if (isPeriodPairFormat) {
-                labels = filteredPeriods.map(periodEntry =>
-                    Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
-                        ? formatDateToMonthYear(periodEntry[1])
-                        : 'Unknown'
-                );
-            } else {
-                labels = filteredPeriods.map(periodEntry =>
-                    Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
-                        ? formatDateToMonthYear(periodEntry[1])
-                        : 'Unknown'
-                );
-            }
+            labels = filteredPeriods.map(periodEntry =>
+                Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
+                    ? formatDateToMonthYear(periodEntry[1])
+                    : 'Unknown'
+            );
             realValues = new Array(filteredPeriods.length).fill(null);
             realData.forEach(entry => {
                 if (!Array.isArray(entry) || entry.length !== 2) return;
@@ -338,9 +332,9 @@ async function fetchPortfolioData(token, accountId) {
                 realValues = filteredRealValues;
 
                 // Encontrar el último índice con datos reales (abril 2025)
-                const lastRealIndex = validIndices[validIndices.length - 1];
+                const lastRealIndex = periodIndices.indexOf(191); // Abril 2025 (índice 191)
                 const lastRealValue = realValues[lastRealIndex] || totalValue;
-                const projectionStartIndex = periodIndices.indexOf(191); // Comenzar proyecciones desde abril 2025 (índice 191)
+                const projectionStartIndex = periodIndices.indexOf(191); // Comenzar proyecciones desde abril 2025
 
                 let cumulativeExpectedFactor = 1;
                 let cumulativeBestFactor = 1;
@@ -350,7 +344,7 @@ async function fetchPortfolioData(token, accountId) {
                 bestValues = new Array(labels.length).fill(null);
                 worstValues = new Array(labels.length).fill(null);
 
-                // Copiar valores reales hasta el último índice real
+                // Copiar valores reales hasta abril 2025
                 for (let i = 0; i <= lastRealIndex; i++) {
                     expectedValues[i] = realValues[i];
                     bestValues[i] = realValues[i];
@@ -369,6 +363,7 @@ async function fetchPortfolioData(token, accountId) {
                         console.log(`Expected [${index}]: Factor=${entryExpected[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
                     } else {
                         console.log(`Expected [${index}]: No factor found`);
+                        expectedValues[i] = lastRealValue * cumulativeExpectedFactor;
                     }
 
                     const entryBest = bestData.find(item => item[0] === index);
@@ -380,6 +375,7 @@ async function fetchPortfolioData(token, accountId) {
                         console.log(`Best [${index}]: Factor=${entryBest[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
                     } else {
                         console.log(`Best [${index}]: No factor found`);
+                        bestValues[i] = lastRealValue * cumulativeBestFactor;
                     }
 
                     const entryWorst = worstData.find(item => item[0] === index);
@@ -391,6 +387,7 @@ async function fetchPortfolioData(token, accountId) {
                         console.log(`Worst [${index}]: Factor=${entryWorst[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
                     } else {
                         console.log(`Worst [${index}]: No factor found`);
+                        worstValues[i] = lastRealValue * cumulativeWorstFactor;
                     }
                 }
             }
