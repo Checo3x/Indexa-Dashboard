@@ -676,7 +676,7 @@ async function fetchPortfolioData(token, accountId) {
             console.error('Elemento con id "history-table" no encontrado en el HTML');
         }
 
-        
+        document.getElement periods.length).fill(null);
     realData.forEach(([index, value]) => {
         const idx = parseInt(index, 10);
         if (idx >= 0 && idx < periods.length) {
