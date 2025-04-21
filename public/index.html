@@ -383,8 +383,7 @@
                     console.error('Elemento con id "annual-return" no encontrado en el HTML');
                 }
 
-                const volatilityElement = document.getElement //Why not showing the data on the chart?
-Id('volatility');
+                const volatilityElement = document.getElementById('volatility');
                 if (volatilityElement) {
                     volatilityElement.textContent = `${volatility.toFixed(2)}%`;
                 } else {
@@ -431,18 +430,22 @@ Id('volatility');
 
                     // Crear un mapa para los datos reales y depurar
                     const realDataMap = new Map(realData.map(entry => {
-                        console.log(`Mapeando realData: índice=${entry[0]}, valor=${entry[1]}`);
-                        return [entry[0], entry[1]];
+                        const index = Number(entry[0]); // Forzar que el índice sea un número
+                        const value = Number(entry[1]);
+                        console.log(`Mapeando realData: índice=${index} (tipo: ${typeof index}), valor=${value} (tipo: ${typeof value})`);
+                        return [index, value];
                     }));
                     console.log('realDataMap:', [...realDataMap]);
+                    console.log('Claves de realDataMap:', [...realDataMap.keys()]);
 
                     const scalingFactor = totalValue / initialValue; // Escalar los valores para que coincidan con totalValue
                     console.log('scalingFactor:', scalingFactor);
 
                     realValues = periods.map((_, index) => {
-                        const hasValue = realDataMap.has(index);
-                        const value = hasValue ? realDataMap.get(index) : null;
-                        console.log(`realValues[${index}]: hasValue=${hasValue}, value=${value}`);
+                        const mapIndex = Number(index); // Asegurarnos de que el índice sea un número
+                        const hasValue = realDataMap.has(mapIndex);
+                        const value = hasValue ? realDataMap.get(mapIndex) : null;
+                        console.log(`realValues[${index}]: mapIndex=${mapIndex} (tipo: ${typeof mapIndex}), hasValue=${hasValue}, value=${value}`);
                         return value !== null ? value * scalingFactor : null;
                     });
                     console.log('realValues (antes de filtrar):', realValues);
@@ -614,229 +617,131 @@ Id('volatility');
                 if (compositionTable) {
                     compositionTable.innerHTML = '';
                     if (weights.length === 0) {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
-                        compositionTable.appendChild(row);
-                    } else {
-                        weights.forEach(fund => {
-                            console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
+ drive: {
                             const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
-                                <td class="p-2">${fund.name}</td>
-                                <td class="p-2">€${fund.amount.toFixed(2)}</td>
-                                <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
-                            `;
+                            row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
                             compositionTable.appendChild(row);
-                        });
-                    }
-                } else {
-                    console.error('Elemento con id "composition-table" no encontrado en el HTML');
-                }
-
-                // Preparar datos para el gráfico de componentes
-                const componentDatasets = [];
-                if (realValues.length > 0) {
-                    componentDatasets.push({
-                        label: 'Total Cartera (€)',
-                        data: realValues,
-                        borderColor: performanceColors.real,
-                        tension: 0.1,
-                        fill: false
-                    });
-                }
-
-                // Calcular la evolución de cada fondo con su color asignado
-                weights.forEach(fund => {
-                    const weight = fund.weight || 0;
-                    const name = fund.name;
-                    const color = fund.color;
-                    console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
-                    const componentValues = realValues.map(value => value * weight);
-                    componentDatasets.push({
-                        label: `${name} (€)`,
-                        data: componentValues,
-                        borderColor: color,
-                        tension: 0.1,
-                        fill: false
-                    });
-                });
-
-                // Renderizar el gráfico de componentes incluso con datos mínimos
-                if (componentDatasets.length > 0) {
-                    createComponentsChart(labels, componentDatasets);
-                } else {
-                    console.warn('No hay datos de componentes para mostrar en el gráfico');
-                    setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
-                }
-
-                // Calcular rentabilidad para la tabla histórica
-                const tableData = realValues.map((value, index) => {
-                    let returnPercentage = 0;
-                    if (index > 0) {
-                        const previousValue = realValues[index - 1];
-                        returnPercentage = ((value - previousValue) / previousValue) * 100;
-                    }
-                    return {
-                        date: labels[index] || 'N/A',
-                        value: value,
-                        return: returnPercentage
-                    };
-                });
-
-                // Actualizar tabla para mostrar las últimas 10 entradas
-                const tableBody = document.getElementById('history-table');
-                if (tableBody) {
-                    tableBody.innerHTML = '';
-                    if (tableData.length === 0) {
-                        const row = document.createElement('tr');
-                        row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
-                        tableBody.appendChild(row);
-                    } else {
-                        const recentData = tableData.slice(-10);
-                        recentData.forEach(item => {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `
-                                <td class="p-2">${item.date}</td>
-                                <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
-                                <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
-                            `;
-                            tableBody.appendChild(row);
-                        });
-
-                        if (tableData.length > 10) {
-                            const row = document.createElement('tr');
-                            row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
-                            tableBody.appendChild(row);
+                        } else {
+                            weights.forEach(fund => {
+                                console.log('Añadiendo fondo a la tabla:', fund.name, 'con color:', fund.color);
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
+                                    <td class="p-2">${fund.name}</td>
+                                    <td class="p-2">€${fund.amount.toFixed(2)}</td>
+                                    <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
+                                `;
+                                compositionTable.appendChild(row);
+                            });
                         }
+                    } else {
+                        console.error('Elemento con id "composition-table" no encontrado en el HTML');
                     }
-                } else {
-                    console.error('Elemento con id "history-table" no encontrado en el HTML');
+
+                    // Preparar datos para el gráfico de componentes
+                    const componentDatasets = [];
+                    if (realValues.length > 0) {
+                        componentDatasets.push({
+                            label: 'Total Cartera (€)',
+                            data: realValues,
+                            borderColor: performanceColors.real,
+                            tension: 0.1,
+                            fill: false
+                        });
+                    }
+
+                    // Calcular la evolución de cada fondo con su color asignado
+                    weights.forEach(fund => {
+                        const weight = fund.weight || 0;
+                        const name = fund.name;
+                        const color = fund.color;
+                        console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
+                        const componentValues = realValues.map(value => value * weight);
+                        componentDatasets.push({
+                            label: `${name} (€)`,
+                            data: componentValues,
+                            borderColor: color,
+                            tension: 0.1,
+                            fill: false
+                        });
+                    });
+
+                    // Renderizar el gráfico de componentes incluso con datos mínimos
+                    if (componentDatasets.length > 0) {
+                        createComponentsChart(labels, componentDatasets);
+                    } else {
+                        console.warn('No hay datos de componentes para mostrar en el gráfico');
+                        setWarning('No hay datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
+                    }
+
+                    // Calcular rentabilidad para la tabla histórica
+                    const tableData = realValues.map((value, index) => {
+                        let returnPercentage = 0;
+                        if (index > 0) {
+                            const previousValue = realValues[index - 1];
+                            returnPercentage = ((value - previousValue) / previousValue) * 100;
+                        }
+                        return {
+                            date: labels[index] || 'N/A',
+                            value: value,
+                            return: returnPercentage
+                        };
+                    });
+
+                    // Actualizar tabla para mostrar las últimas 10 entradas
+                    const tableBody = document.getElementById('history-table');
+                    if (tableBody) {
+                        tableBody.innerHTML = '';
+                        if (tableData.length === 0) {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
+                            tableBody.appendChild(row);
+                        } else {
+                            const recentData = tableData.slice(-10);
+                            recentData.forEach(item => {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `
+                                    <td class="p-2">${item.date}</td>
+                                    <td class="p-2">€${(item.value || 0).toFixed(2)}</td>
+                                    <td class="p-2">${(item.return || 0).toFixed(2)}%</td>
+                                `;
+                                tableBody.appendChild(row);
+                            });
+
+                            if (tableData.length > 10) {
+                                const row = document.createElement('tr');
+                                row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${tableData.length} disponibles</td>`;
+                                tableBody.appendChild(row);
+                            }
+                        }
+                    } else {
+                        console.error('Elemento con id "history-table" no encontrado en el HTML');
+                    }
+
+                    document.getElementById('error-message').classList.add('hidden');
+                    document.getElementById('warning-message').classList.add('hidden');
+                } catch (error) {
+                    console.error('Error al obtener datos:', error);
+                    const errorDiv = document.getElementById('error-message');
+                    if (errorDiv) {
+                        errorDiv.textContent = `Error al obtener datos: ${error.message}`;
+                        errorDiv.classList.remove('hidden');
+                        errorDiv.classList.add('block');
+                        errorDiv.style.display = 'block';
+                    } else {
+                        console.error('Elemento con id "error-message" no encontrado en el HTML');
+                    }
+                } finally {
+                    setLoading(false);
                 }
+            }
 
-                document.getElementInitialValue: 100
-No hay datos reales disponibles; usando totalValue como respaldo
-Datos procesados para el gráfico total: {
-  labels: ['2025-04-21'],
-  realValues: [4413.120000000021],
-  expectedValues: [4413.120000000021],
-  bestValues: [4413.120000000021],
-  worstValues: [4413.120000000021],
-  [[Prototype]]: Object
-}
-Datos para el gráfico total: {
-  labels: ['2025-04-21'],
-  realValues: [4413.120000000021],
-  expectedValues: [4413.120000000021],
-  bestValues: [4413.120000000021],
-  worstValues: [4413.120000000021],
-  [[Prototype]]: Object
-}
-Componente 0: {
-  instrument: { name: 'Índex Más Rentabilidad Acciones', identifier_name: null, description: null, [[Prototype]]: Object },
-  amount: 4950.5791820753337,
-  weight_real: null,
-  [[Prototype]]: Object
-}
-Nombre del fondo (componente 0): Índex Más Rentabilidad Acciones Nombre asignado: Índex Más Rentabilidad Acciones
-Componente 1: {
-  instrument: { name: 'Índex Más Rentabilidad Bonos', identifier_name: null, description: null, [[Prototype]]: Object },
-  amount: -537.4591820753126,
-  weight_real: null,
-  [[Prototype]]: Object
-}
-Nombre del fondo (componente 1): Índex Más Rentabilidad Bonos Nombre asignado: Índex Más Rentabilidad Bonos
-Pesos reales de los fondos: [
-  {
-    name: 'Índex Más Rentabilidad Acciones',
-    amount: 4950.5791820753337,
-    weight: 1.1217156871211142,
-    color: '#FF6B6B',
-    [[Prototype]]: Object
-  },
-  {
-    name: 'Índex Más Rentabilidad Bonos',
-    amount: -537.4591820753126,
-    weight: -0.12171568712109318,
-    color: '#4ECDC4',
-    [[Prototype]]: Object
-  },
-  [[Prototype]]: Array(0)
-]
-Añadiendo fondo a la tabla: Índex Más Rentabilidad Acciones con color: #FF6B6B
-Añadiendo fondo a la tabla: Índex Más Rentabilidad Bonos con color: #4ECDC4
-Creando dataset para fondo: Índex Más Rentabilidad Acciones con peso: 1.1217156871211142 y color: #FF6B6B
-Creando dataset para fondo: Índex Más Rentabilidad Bonos con peso: -0.12171568712109318 y color: #4ECDC4
-Datos para el gráfico de componentes: {
-  datasets: [
-    {
-      label: 'Total Cartera (€)',
-      data: [4413.120000000021],
-      borderColor: '#4ECDC4',
-      tension: 0.1,
-      fill: false,
-      [[Prototype]]: Object
-    },
-    {
-      label: 'Índex Más Rentabilidad Acciones (€)',
-      data: [4950.5791820753337],
-      borderColor: '#FF6B6B',
-      tension: 0.1,
-      fill: false,
-      [[Prototype]]: Object
-    },
-    {
-      label: 'Índex Más Rentabilidad Bonos (€)',
-      data: [-537.4591820753126],
-      borderColor: '#4ECDC4',
-      tension: 0.1,
-      fill: false,
-      [[Prototype]]: Object
-    },
-    [[Prototype]]: Array(0)
-  ],
-  labels: ['2025-04-21'],
-  [[Prototype]]: Object
-}
-[PROTOTYPE]: Object
-[NEW] Explain Console errors by using Copilot in Edge. Click here to learn an error. DON’T SHOW AGAIN. .getElementById('error-message').classList.add('hidden');
-                document.getElementById('warning-message').classList.add('hidden');
-            } catch (error) {
-                console.error('Error al obtener datos:', error);
-                const errorDiv = document.getElementById('error-message');
-                if (errorDiv) {
-                    errorDiv.textContent = `Error al obtener datos: ${error.message}`;
-                    errorDiv.classList.remove('hidden');
-                    errorDiv.classList.add('block');
-                    errorDiv.style.display = 'block';
-                } else {
-                    console.error('Elemento con id "error-message" no encontrado en el HTML');
+            // Evento para cargar cuentas
+            document.getElementById('fetch-accounts').addEventListener('click', () => {
+                const token = document.getElementById('api-token').value.trim();
+                if (!token) {
+                    setError('Por favor, introduce un token de API válido.');
+                    return;
                 }
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        // Evento para cargar cuentas
-        document.getElementById('fetch-accounts').addEventListener('click', () => {
-            const token = document.getElementById('api-token').value.trim();
-            if (!token) {
-                setError('Por favor, introduce un token de API válido.');
-                return;
-            }
-            fetchAccounts(token);
-        });
-
-        // Evento para obtener datos de la cartera
-        document.getElementById('fetch-data').addEventListener('click', () => {
-            const token = document.getElementById('api-token').value.trim();
-            const accountId = document.getElementById('account-select').value;
-            if (!accountId) {
-                setError('Por favor, selecciona una cuenta.');
-                return;
-            }
-            fetchPortfolioData(token, accountId);
-        });
-    </script>
-</body>
-</html>
+                fetchAccounts(token);
+            });
