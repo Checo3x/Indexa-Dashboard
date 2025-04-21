@@ -127,7 +127,7 @@
             setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
         }
 
-        // Paleta de colores predefinida para los fondos
+        // Paleta de colores predefinida para los fondos y líneas del gráfico
         const colorPalette = [
             '#FF6B6B', // Coral
             '#4ECDC4', // Turquesa
@@ -141,9 +141,17 @@
             '#2ECC71'  // Verde
         ];
 
-        function createPortfolioChart(labels, data) {
-            console.log('Datos para el gráfico total:', { labels, data });
-            if (!labels.length || !data.length) {
+        // Colores específicos para las líneas de performance
+        const performanceColors = {
+            real: '#4ECDC4', // Turquesa para el valor real
+            expected: '#3498DB', // Azul para el valor esperado
+            best: '#2ECC71', // Verde para el mejor escenario
+            worst: '#E74C3C' // Rojo para el peor escenario
+        };
+
+        function createPortfolioChart(labels, datasets) {
+            console.log('Datos para el gráfico total:', { labels, datasets });
+            if (!labels.length || !datasets.length) {
                 console.warn('No hay datos para mostrar en el gráfico total');
                 return;
             }
@@ -157,13 +165,7 @@
                     type: 'line',
                     data: {
                         labels: labels,
-                        datasets: [{
-                            label: 'Total Cartera (€)',
-                            data: data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            tension: 0.1,
-                            fill: false
-                        }]
+                        datasets: datasets
                     },
                     options: {
                         responsive: true,
@@ -175,6 +177,12 @@
                             y: {
                                 title: { display: true, text: 'Valor (€)' },
                                 beginAtZero: false
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
                             }
                         }
                     }
@@ -310,7 +318,6 @@
                 }
                 const historyData = await historyResponse.json();
                 console.log('Datos históricos completos (historyData):', historyData);
-                console.log('historyData.portfolios:', historyData.portfolios);
 
                 // Intentar obtener los componentes desde instrument_accounts o comparison
                 let components = [];
@@ -369,41 +376,146 @@
                     console.error('Elemento con id "additional-cash-needed" no encontrado en el HTML');
                 }
 
-                // Usar "portfolios" para el gráfico total y la tabla
-                const portfolioHistory = historyData.portfolios || [];
-                console.log('portfolioHistory:', portfolioHistory);
+                // Procesar datos de performance para el gráfico total
+                let labels = [];
+                let realValues = [];
+                let expectedValues = [];
+                let bestValues = [];
+                let worstValues = [];
 
-                let historicalData = [];
-                if (portfolioHistory.length > 0) {
-                    historicalData = portfolioHistory.map(item => ({
+                if (historyData.performance && historyData.performance.period) {
+                    const periods = historyData.performance.period;
+                    const realData = historyData.performance.real || [];
+                    const expectedData = historyData.performance.expected_return || [];
+                    const bestData = historyData.performance.best_return || [];
+                    const worstData = historyData.performance.worst_return || [];
+
+                    // Obtener el valor inicial de la cartera desde el primer valor de "real"
+                    const initialValue = realData.length > 0 ? realData[0][1] : 100; // Valor por defecto si no hay datos
+
+                    // Mapear las fechas y valores
+                    labels = periods.map(periodEntry => periodEntry[1].split(' ')[0]); // Extraer solo la fecha (YYYY-MM-DD)
+
+                    // Valores reales (en euros)
+                    realValues = periods.map((_, index) => {
+                        const entry = realData.find(item => item[0] === index);
+                        return entry ? entry[1] : null;
+                    }).filter(val => val !== null);
+
+                    // Ajustar las fechas para que coincidan con los valores reales disponibles
+                    labels = labels.slice(0, realValues.length);
+
+                    // Calcular valores esperados, mejores y peores (en euros)
+                    let cumulativeExpected = initialValue;
+                    let cumulativeBest = initialValue;
+                    let cumulativeWorst = initialValue;
+
+                    expectedValues = periods.slice(0, realValues.length).map((_, index) => {
+                        const entry = expectedData.find(item => item[0] === index);
+                        if (entry) {
+                            const returnRate = entry[1];
+                            cumulativeExpected *= (1 + returnRate);
+                            return cumulativeExpected;
+                        }
+                        return null;
+                    }).filter(val => val !== null);
+
+                    bestValues = periods.slice(0, realValues.length).map((_, index) => {
+                        const entry = bestData.find(item => item[0] === index);
+                        if (entry) {
+                            const returnRate = entry[1];
+                            cumulativeBest *= (1 + returnRate);
+                            return cumulativeBest;
+                        }
+                        return null;
+                    }).filter(val => val !== null);
+
+                    worstValues = periods.slice(0, realValues.length).map((_, index) => {
+                        const entry = worstData.find(item => item[0] === index);
+                        if (entry) {
+                            const returnRate = entry[1];
+                            cumulativeWorst *= (1 + returnRate);
+                            return cumulativeWorst;
+                        }
+                        return null;
+                    }).filter(val => val !== null);
+
+                    console.log('Datos procesados para el gráfico total:', {
+                        labels,
+                        realValues,
+                        expectedValues,
+                        bestValues,
+                        worstValues
+                    });
+                } else {
+                    // Fallback a portfolios si performance no está disponible
+                    const portfolioHistory = historyData.portfolios || [];
+                    let historicalData = portfolioHistory.map(item => ({
                         date: item.date || 'N/A',
                         value: Number(item.total_amount || 0)
                     }));
+
+                    // Filtrar datos con valor 0
+                    if (historicalData.length > 0) {
+                        historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
+                    }
+
+                    // Ordenar datos por fecha
+                    if (historicalData.length > 0) {
+                        historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    }
+
+                    labels = historicalData.map(item => item.date);
+                    realValues = historicalData.map(item => item.value);
                 }
 
-                // Filtrar datos con valor 0
-                if (historicalData.length > 0) {
-                    historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
+                // Crear datasets para el gráfico total
+                const datasets = [];
+                if (realValues.length > 0) {
+                    datasets.push({
+                        label: 'Real (€)',
+                        data: realValues,
+                        borderColor: performanceColors.real,
+                        tension: 0.1,
+                        fill: false
+                    });
                 }
-                console.log('historicalData (filtrado):', historicalData);
-
-                // Ordenar datos por fecha
-                if (historicalData.length > 0) {
-                    historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                if (expectedValues.length > 0) {
+                    datasets.push({
+                        label: 'Esperado (€)',
+                        data: expectedValues,
+                        borderColor: performanceColors.expected,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false
+                    });
+                }
+                if (bestValues.length > 0) {
+                    datasets.push({
+                        label: 'Mejor Escenario (€)',
+                        data: bestValues,
+                        borderColor: performanceColors.best,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false
+                    });
+                }
+                if (worstValues.length > 0) {
+                    datasets.push({
+                        label: 'Peor Escenario (€)',
+                        data: worstValues,
+                        borderColor: performanceColors.worst,
+                        borderDash: [5, 5],
+                        tension: 0.1,
+                        fill: false
+                    });
                 }
 
-                // Preparar datos para el gráfico total
-                const labels = historicalData.map(item => item.date);
-                const values = historicalData.map(item => item.value);
-                console.log('Datos completos para el gráfico total:', historicalData);
-                console.log('Labels:', labels);
-                console.log('Values:', values);
-
-                if (labels.length === 0 || values.length === 0) {
+                if (labels.length === 0 || datasets.length === 0) {
                     console.warn('No hay datos históricos disponibles para el gráfico total');
                     setError('No hay datos históricos disponibles para mostrar en el gráfico total.');
                 } else {
-                    createPortfolioChart(labels, values);
+                    createPortfolioChart(labels, datasets);
                 }
 
                 // Calcular los pesos reales de los fondos y asignar colores
@@ -448,15 +560,17 @@
                 }
 
                 // Preparar datos para el gráfico de componentes
-                const datasets = [];
+                const componentDatasets = [];
                 // Añadir el total como una línea en el gráfico de componentes
-                datasets.push({
-                    label: 'Total Cartera (€)',
-                    data: values,
-                    borderColor: 'rgb(75, 192, 192)',
-                    tension: 0.1,
-                    fill: false
-                });
+                if (realValues.length > 0) {
+                    componentDatasets.push({
+                        label: 'Total Cartera (€)',
+                        data: realValues,
+                        borderColor: performanceColors.real,
+                        tension: 0.1,
+                        fill: false
+                    });
+                }
 
                 // Calcular la evolución de cada fondo con su color asignado
                 weights.forEach(fund => {
@@ -464,8 +578,8 @@
                     const name = fund.name;
                     const color = fund.color;
                     console.log('Creando dataset para fondo:', name, 'con peso:', weight, 'y color:', color);
-                    const componentValues = historicalData.map(item => item.value * weight);
-                    datasets.push({
+                    const componentValues = realValues.map(value => value * weight);
+                    componentDatasets.push({
                         label: `${name} (€)`,
                         data: componentValues,
                         borderColor: color,
@@ -475,24 +589,23 @@
                 });
 
                 // Crear el gráfico de componentes
-                if (datasets.length > 1) { // Asegurarse de que hay al menos un fondo además del total
-                    createComponentsChart(labels, datasets);
+                if (componentDatasets.length > 1) { // Asegurarse de que hay al menos un fondo además del total
+                    createComponentsChart(labels, componentDatasets);
                 } else {
                     console.warn('No hay suficientes datos de componentes para mostrar en el gráfico');
                     setError('No hay suficientes datos de componentes para mostrar en el gráfico. Revisa la estructura de los datos de la API.');
                 }
 
-                // Calcular rentabilidad para la tabla
-                const tableData = historicalData.map((item, index) => {
+                // Calcular rentabilidad para la tabla histórica
+                const tableData = realValues.map((value, index) => {
                     let returnPercentage = 0;
                     if (index > 0) {
-                        const previousValue = historicalData[index - 1].value;
-                        const currentValue = item.value;
-                        returnPercentage = ((currentValue - previousValue) / previousValue) * 100;
+                        const previousValue = realValues[index - 1];
+                        returnPercentage = ((value - previousValue) / previousValue) * 100;
                     }
                     return {
-                        date: item.date,
-                        value: item.value,
+                        date: labels[index],
+                        value: value,
                         return: returnPercentage
                     };
                 });
