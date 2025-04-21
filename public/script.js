@@ -369,7 +369,6 @@ async function fetchPortfolioData(token, accountId) {
             }
 
             // Determinar el formato de periods y mapear las etiquetas
-            let labels = [];
             const isPeriodPairFormat = periods.length > 0 && Array.isArray(periods[0]);
             if (isPeriodPairFormat) {
                 // Formato antiguo: [[0, "2025-02-28 00:00:00"], [1, "2025-03-31 00:00:00"], ...]
