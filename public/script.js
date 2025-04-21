@@ -227,10 +227,13 @@ async function fetchPortfolioData(token, accountId) {
         }
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
+        const volatility = (historyData.volatility || 0) * 100; // Restaurar volatilidad desde la API
         const totalValueElement = document.getElementById('total-value');
         if (totalValueElement) totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
         const annualReturnElement = document.getElementById('annual-return');
         if (annualReturnElement) annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+        const volatilityElement = document.getElementById('volatility');
+        if (volatilityElement) volatilityElement.textContent = `${volatility.toFixed(2)}%`;
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
         let labels = [];
@@ -327,35 +330,40 @@ async function fetchPortfolioData(token, accountId) {
                     filteredRealValues[idx] = realValues[idx];
                 });
                 realValues = filteredRealValues;
-                let cumulativeExpected = initialValue;
-                let cumulativeBest = initialValue;
-                let cumulativeWorst = initialValue;
+
+                // Calcular valores proyectados de manera acumulativa
+                let cumulativeExpectedFactor = 100; // El factor inicial es 100 (100%)
+                let cumulativeBestFactor = 100;
+                let cumulativeWorstFactor = 100;
+
                 expectedValues = periodIndices.map(index => {
                     const entry = expectedData.find(item => item[0] === index);
                     if (entry) {
-                        const returnRate = entry[1];
-                        cumulativeExpected *= (1 + returnRate);
-                        return cumulativeExpected * scalingFactor;
+                        const factor = entry[1]; // Factor en porcentaje (por ejemplo, 100.332248764146)
+                        cumulativeExpectedFactor = (cumulativeExpectedFactor * factor) / 100;
+                        return (initialValue * (cumulativeExpectedFactor / 100)) * scalingFactor;
                     }
-                    return initialValue * scalingFactor;
+                    return (initialValue * (cumulativeExpectedFactor / 100)) * scalingFactor;
                 });
+
                 bestValues = periodIndices.map(index => {
                     const entry = bestData.find(item => item[0] === index);
                     if (entry) {
-                        const returnRate = entry[1];
-                        cumulativeBest *= (1 + returnRate);
-                        return cumulativeBest * scalingFactor;
+                        const factor = entry[1];
+                        cumulativeBestFactor = (cumulativeBestFactor * factor) / 100;
+                        return (initialValue * (cumulativeBestFactor / 100)) * scalingFactor;
                     }
-                    return initialValue * scalingFactor;
+                    return (initialValue * (cumulativeBestFactor / 100)) * scalingFactor;
                 });
+
                 worstValues = periodIndices.map(index => {
                     const entry = worstData.find(item => item[0] === index);
                     if (entry) {
-                        const returnRate = entry[1];
-                        cumulativeWorst *= (1 + returnRate);
-                        return cumulativeWorst * scalingFactor;
+                        const factor = entry[1];
+                        cumulativeWorstFactor = (cumulativeWorstFactor * factor) / 100;
+                        return (initialValue * (cumulativeWorstFactor / 100)) * scalingFactor;
                     }
-                    return initialValue * scalingFactor;
+                    return (initialValue * (cumulativeWorstFactor / 100)) * scalingFactor;
                 });
             }
         } else {
