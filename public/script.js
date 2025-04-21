@@ -334,6 +334,8 @@ async function fetchPortfolioData(token, accountId) {
             console.log('bestData:', bestData);
             console.log('worstData:', worstData);
 
+            console.log('Ejecutando validación de realData...');
+
             // Manejar el caso en que realData no sea un array
             if (!Array.isArray(realData)) {
                 console.warn('realData no es un array, se recibió:', realData);
@@ -343,6 +345,15 @@ async function fetchPortfolioData(token, accountId) {
                     realData = []; // Si no es un array ni un número, lo tratamos como vacío
                 }
                 console.log('realData (después de ajustar):', realData);
+            } else {
+                // Verificar si los elementos de realData son pares [index, value] o valores numéricos
+                const isPairFormat = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2;
+                if (!isPairFormat) {
+                    console.log('realData no está en formato de pares [index, value], convirtiendo a pares...');
+                    // Convertir realData a formato de pares [index, value]
+                    realData = realData.map((value, index) => [index, value]);
+                    console.log('realData (después de convertir a pares):', realData);
+                }
             }
 
             // Obtener el valor inicial de la cartera desde el primer valor de "real"
