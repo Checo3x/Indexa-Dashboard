@@ -7,6 +7,7 @@ let portfolioChartData = null;
 let componentsChartData = null;
 let compositionTableData = null;
 let historyTableData = null;
+let currentToken = null; // Variable global para almacenar el token
 
 if (typeof Chart === 'undefined') {
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
@@ -152,8 +153,16 @@ function setWarning(message) {
     }
 }
 
+function clearMessages() {
+    const errorMessage = document.getElementById('error-message');
+    const warningMessage = document.getElementById('warning-message');
+    if (errorMessage) errorMessage.classList.add('hidden');
+    if (warningMessage) warningMessage.classList.add('hidden');
+}
+
 async function fetchAccounts(token) {
     setLoading(true);
+    clearMessages();
     try {
         const response = await fetch('/api/users/me', {
             headers: { Authorization: `Bearer ${token}` }
@@ -179,10 +188,6 @@ async function fetchAccounts(token) {
         }
         const accountSelector = document.getElementById('account-selector');
         if (accountSelector) accountSelector.classList.remove('hidden');
-        const errorMessage = document.getElementById('error-message');
-        const warningMessage = document.getElementById('warning-message');
-        if (errorMessage) errorMessage.classList.add('hidden');
-        if (warningMessage) warningMessage.classList.add('hidden');
     } catch (error) {
         setError(`Error al cargar cuentas: ${error.message}`);
     } finally {
@@ -192,6 +197,7 @@ async function fetchAccounts(token) {
 
 async function fetchPortfolioData(token, accountId) {
     setLoading(true);
+    clearMessages();
     try {
         const accountInfo = document.getElementById('account-info');
         const selectedAccount = document.getElementById('selected-account');
@@ -505,10 +511,6 @@ async function fetchPortfolioData(token, accountId) {
             return { date: labels[index] || 'N/A', value, return: returnPercentage };
         });
         historyTableData = tableData;
-        document.getElementById('error-message').classList.add('hidden');
-        document.getElementById('warning-message').classList.add('hidden');
-        const tokenInput = document.getElementById('api-token');
-        if (tokenInput) tokenInput.value = '';
     } catch (error) {
         setError(`Error al obtener datos: ${error.message}`);
     } finally {
@@ -587,30 +589,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchAccountsButton = document.getElementById('fetch-accounts');
     if (fetchAccountsButton) {
         fetchAccountsButton.addEventListener('click', () => {
-            const token = document.getElementById('api-token').value.trim();
+            const tokenInput = document.getElementById('api-token');
+            const token = tokenInput.value.trim();
             if (!token) {
                 setError('Por favor, introduce un token de API válido.');
                 return;
             }
+            currentToken = token; // Almacenar el token
             fetchAccounts(token);
         });
     }
+
     const fetchDataButton = document.getElementById('fetch-data');
     if (fetchDataButton) {
         fetchDataButton.addEventListener('click', () => {
-            const token = document.getElementById('api-token').value.trim();
+            const tokenInput = document.getElementById('api-token');
+            let token = tokenInput.value.trim();
+            
+            // Si no se ingresó un token, usar el token almacenado
+            if (!token && currentToken) {
+                token = currentToken;
+            }
+            
             if (!token) {
                 setError('Por favor, introduce un token de API válido.');
                 return;
             }
+            
+            currentToken = token; // Actualizar el token almacenado si se ingresó uno nuevo
             const accountId = document.getElementById('account-select').value;
             if (!accountId) {
                 setError('Por favor, selecciona una cuenta.');
                 return;
             }
+            
             fetchPortfolioData(token, accountId);
         });
     }
+
+    // Añadir un evento al cambio de selección de cuenta para limpiar mensajes
+    const accountSelect = document.getElementById('account-select');
+    if (accountSelect) {
+        accountSelect.addEventListener('change', () => {
+            clearMessages();
+        });
+    }
+
     const toggleChartsButton = document.getElementById('toggle-charts');
     if (toggleChartsButton) {
         toggleChartsButton.addEventListener('click', () => {
@@ -628,6 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
     const toggleCompositionButton = document.getElementById('toggle-composition');
     if (toggleCompositionButton) {
         toggleCompositionButton.addEventListener('click', () => {
@@ -640,6 +665,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
     const toggleHistoryButton = document.getElementById('toggle-history');
     if (toggleHistoryButton) {
         toggleHistoryButton.addEventListener('click', () => {
