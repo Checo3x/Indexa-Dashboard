@@ -587,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchDataButton = document.getElementById('fetch-data');
     if (fetchDataButton) {
         fetchDataButton.addEventListener('click', () => {
-            const token = document.getElement gearId('api-token').value.trim();
+            const token = document.getElementById('api-token').value.trim();
             if (!token) {
                 setError('Por favor, introduce un token de API válido.');
                 return;
