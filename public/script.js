@@ -227,7 +227,7 @@ async function fetchPortfolioData(token, accountId) {
         }
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
-        const volatility = (historyData.volatility || 0) * 100; // Restaurar volatilidad desde la API
+        const volatility = (historyData.volatility || 0) * 100;
         const totalValueElement = document.getElementById('total-value');
         if (totalValueElement) totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
         const annualReturnElement = document.getElementById('annual-return');
@@ -266,6 +266,7 @@ async function fetchPortfolioData(token, accountId) {
             }
             const initialValue = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2 ? realData[0][1] : 100;
             const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1;
+            console.log('Initial Value:', initialValue, 'Total Value:', totalValue, 'Scaling Factor:', scalingFactor); // Debug
             if (!Array.isArray(periods)) {
                 throw new Error('periods no es un array');
             }
@@ -295,6 +296,7 @@ async function fetchPortfolioData(token, accountId) {
                     }
                 });
             }
+            console.log('Period Indices:', periodIndices); // Debug
             if (isPeriodPairFormat) {
                 labels = filteredPeriods.map(periodEntry =>
                     Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
@@ -332,38 +334,50 @@ async function fetchPortfolioData(token, accountId) {
                 realValues = filteredRealValues;
 
                 // Calcular valores proyectados de manera acumulativa
-                let cumulativeExpectedFactor = 100; // El factor inicial es 100 (100%)
-                let cumulativeBestFactor = 100;
-                let cumulativeWorstFactor = 100;
+                let cumulativeExpectedFactor = 1; // Factor acumulativo (inicia en 1 para multiplicar)
+                let cumulativeBestFactor = 1;
+                let cumulativeWorstFactor = 1;
 
-                expectedValues = periodIndices.map(index => {
+                expectedValues = periodIndices.map((index, i) => {
                     const entry = expectedData.find(item => item[0] === index);
                     if (entry) {
-                        const factor = entry[1]; // Factor en porcentaje (por ejemplo, 100.332248764146)
-                        cumulativeExpectedFactor = (cumulativeExpectedFactor * factor) / 100;
-                        return (initialValue * (cumulativeExpectedFactor / 100)) * scalingFactor;
+                        const factor = entry[1] / 100; // Convertir porcentaje a factor (por ejemplo, 100.332248764146 -> 1.00332248764146)
+                        cumulativeExpectedFactor *= factor;
+                        const value = totalValue * cumulativeExpectedFactor;
+                        console.log(`Expected [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`); // Debug
+                        return value;
                     }
-                    return (initialValue * (cumulativeExpectedFactor / 100)) * scalingFactor;
+                    const value = totalValue * cumulativeExpectedFactor;
+                    console.log(`Expected [${index}]: No factor, Cumulative=${cumulativeExpectedFactor}, Value=${value}`); // Debug
+                    return value;
                 });
 
-                bestValues = periodIndices.map(index => {
+                bestValues = periodIndices.map((index, i) => {
                     const entry = bestData.find(item => item[0] === index);
                     if (entry) {
-                        const factor = entry[1];
-                        cumulativeBestFactor = (cumulativeBestFactor * factor) / 100;
-                        return (initialValue * (cumulativeBestFactor / 100)) * scalingFactor;
+                        const factor = entry[1] / 100;
+                        cumulativeBestFactor *= factor;
+                        const value = totalValue * cumulativeBestFactor;
+                        console.log(`Best [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeBestFactor}, Value=${value}`); // Debug
+                        return value;
                     }
-                    return (initialValue * (cumulativeBestFactor / 100)) * scalingFactor;
+                    const value = totalValue * cumulativeBestFactor;
+                    console.log(`Best [${index}]: No factor, Cumulative=${cumulativeBestFactor}, Value=${value}`); // Debug
+                    return value;
                 });
 
-                worstValues = periodIndices.map(index => {
+                worstValues = periodIndices.map((index, i) => {
                     const entry = worstData.find(item => item[0] === index);
                     if (entry) {
-                        const factor = entry[1];
-                        cumulativeWorstFactor = (cumulativeWorstFactor * factor) / 100;
-                        return (initialValue * (cumulativeWorstFactor / 100)) * scalingFactor;
+                        const factor = entry[1] / 100;
+                        cumulativeWorstFactor *= factor;
+                        const value = totalValue * cumulativeWorstFactor;
+                        console.log(`Worst [${index}]: Factor=${entry[1]}, Cumulative=${cumulativeWorstFactor}, Value=${value}`); // Debug
+                        return value;
                     }
-                    return (initialValue * (cumulativeWorstFactor / 100)) * scalingFactor;
+                    const value = totalValue * cumulativeWorstFactor;
+                    console.log(`Worst [${index}]: No factor, Cumulative=${cumulativeWorstFactor}, Value=${value}`); // Debug
+                    return value;
                 });
             }
         } else {
@@ -573,7 +587,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchDataButton = document.getElementById('fetch-data');
     if (fetchDataButton) {
         fetchDataButton.addEventListener('click', () => {
-            const token = document.getElementById('api-token').value.trim();
+            const token = document.getElement gearId('api-token').value.trim();
             if (!token) {
                 setError('Por favor, introduce un token de API válido.');
                 return;
