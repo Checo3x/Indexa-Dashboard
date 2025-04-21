@@ -350,7 +350,6 @@ async function fetchPortfolioData(token, accountId) {
                 const isPairFormat = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2;
                 if (!isPairFormat) {
                     console.log('realData no está en formato de pares [index, value], convirtiendo a pares...');
-                    // Convertir realData a formato de pares [index, value]
                     realData = realData.map((value, index) => [index, value]);
                     console.log('realData (después de convertir a pares):', realData);
                 }
@@ -364,11 +363,16 @@ async function fetchPortfolioData(token, accountId) {
             console.log('scalingFactor:', scalingFactor);
 
             // Mapear las etiquetas (fechas como cadenas)
-            labels = periods.map(periodEntry => {
-                const dateStr = periodEntry[1]?.split(' ')[0] || 'N/A';
+            labels = periods.map((periodEntry, idx) => {
+                if (!Array.isArray(periodEntry) || periodEntry.length < 2 || typeof periodEntry[1] !== 'string') {
+                    console.warn(`Formato inesperado en periodEntry[${idx}]:`, periodEntry);
+                    return 'N/A';
+                }
+                const dateStr = periodEntry[1].split(' ')[0] || 'N/A';
                 const date = new Date(dateStr);
                 return isNaN(date) ? 'N/A' : dateStr;
             });
+            console.log('labels (después de mapear periods):', labels);
 
             // Mapear los datos reales directamente
             realValues = new Array(periods.length).fill(null);
@@ -396,7 +400,17 @@ async function fetchPortfolioData(token, accountId) {
                 bestValues = [totalValue || 0];
                 worstValues = [totalValue || 0];
             } else {
-                labels = validIndices.map(idx => labels[idx]);
+                // Filtrar etiquetas y valores para los índices válidos
+                labels = validIndices.map(idx => {
+                    const label = labels[idx];
+                    if (!label || label === 'N/A') {
+                        console.warn(`Etiqueta inválida para idx=${idx}:`, label);
+                        return new Date().toISOString().split('T')[0]; // Fallback a fecha actual
+                    }
+                    return label;
+                });
+                console.log('labels (después de filtrar con validIndices):', labels);
+
                 realValues = validIndices.map(idx => realValues[idx]);
 
                 // Calcular valores esperados, mejores y peores (en euros)
