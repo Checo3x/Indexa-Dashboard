@@ -31,6 +31,13 @@ const performanceColors = {
     worst: '#E74C3C' // Rojo para el peor escenario
 };
 
+// Función para formatear fechas a "MMM YYYY" (por ejemplo, "Feb 2025")
+function formatDateToMonthYear(dateStr) {
+    const date = new Date(dateStr.split(' ')[0]);
+    if (isNaN(date)) return 'Unknown';
+    return date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+}
+
 function createPortfolioChart(labels, datasets) {
     console.log('Datos para el gráfico total:', { labels, datasets });
     if (!labels.length || !datasets.length) {
@@ -47,27 +54,21 @@ function createPortfolioChart(labels, datasets) {
         portfolioChart = new Chart(ctxPortfolio, {
             type: 'line',
             data: {
-                labels: labels, // Ahora labels son objetos Date
+                labels: labels, // Etiquetas como cadenas (por ejemplo, "Feb 2025")
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        type: 'time', // Configurar eje X como temporal
-                        time: {
-                            unit: 'month', // Mostrar por meses
-                            displayFormats: {
-                                month: 'MMM yyyy' // Formato: "Feb 2025"
-                            },
-                            tooltipFormat: 'dd MMM yyyy' // Formato en tooltip: "28 Feb 2025"
-                        },
+                        type: 'category', // Usar eje de categorías
                         title: {
                             display: true,
                             text: 'Fecha'
                         },
                         ticks: {
-                            maxTicksLimit: 10
+                            maxTicksLimit: 10,
+                            autoSkip: true
                         }
                     },
                     y: {
@@ -82,6 +83,20 @@ function createPortfolioChart(labels, datasets) {
                     legend: {
                         display: true,
                         position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += `€${context.parsed.y.toFixed(2)}`;
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
@@ -109,27 +124,21 @@ function createComponentsChart(labels, datasets) {
         componentsChart = new Chart(ctxComponents, {
             type: 'line',
             data: {
-                labels: labels, // Ahora labels son objetos Date
+                labels: labels, // Etiquetas como cadenas (por ejemplo, "Feb 2025")
                 datasets: datasets
             },
             options: {
                 responsive: true,
                 scales: {
                     x: {
-                        type: 'time', // Configurar eje X como temporal
-                        time: {
-                            unit: 'month', // Mostrar por meses
-                            displayFormats: {
-                                month: 'MMM yyyy' // Formato: "Feb 2025"
-                            },
-                            tooltipFormat: 'dd MMM yyyy' // Formato en tooltip: "28 Feb 2025"
-                        },
+                        type: 'category', // Usar eje de categorías
                         title: {
                             display: true,
                             text: 'Fecha'
                         },
                         ticks: {
-                            maxTicksLimit: 10
+                            maxTicksLimit: 10,
+                            autoSkip: true
                         }
                     },
                     y: {
@@ -144,6 +153,20 @@ function createComponentsChart(labels, datasets) {
                     legend: {
                         display: true,
                         position: 'top'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += `€${context.parsed.y.toFixed(2)}`;
+                                }
+                                return label;
+                            }
+                        }
                     }
                 }
             }
@@ -400,29 +423,25 @@ async function fetchPortfolioData(token, accountId) {
                 throw new Error('periods no es un array');
             }
 
-            // Determinar el formato de periods y mapear las etiquetas a objetos Date
+            // Mapear las etiquetas a un formato legible (por ejemplo, "Feb 2025")
             const isPeriodPairFormat = periods.length > 0 && Array.isArray(periods[0]);
             if (isPeriodPairFormat) {
                 // Formato antiguo: [[0, "2025-02-28 00:00:00"], [1, "2025-03-31 00:00:00"], ...]
                 labels = periods.map((periodEntry, idx) => {
                     if (!Array.isArray(periodEntry) || periodEntry.length < 2 || typeof periodEntry[1] !== 'string') {
                         console.warn(`Formato inesperado en periodEntry[${idx}]:`, periodEntry);
-                        return new Date(`2000-01-01`); // Fecha por defecto para errores
+                        return `Unknown-${idx}`;
                     }
-                    const dateStr = periodEntry[1].split(' ')[0] || '2000-01-01';
-                    const date = new Date(dateStr);
-                    return isNaN(date) ? new Date(`2000-01-01`) : date;
+                    return formatDateToMonthYear(periodEntry[1]);
                 });
             } else {
                 // Formato nuevo: ["2025-02-28 00:00:00", "2025-03-31 00:00:00", ...]
                 labels = periods.map((dateStr, idx) => {
                     if (typeof dateStr !== 'string') {
                         console.warn(`Formato inesperado en periods[${idx}]:`, dateStr);
-                        return new Date(`2000-01-01`);
+                        return `Unknown-${idx}`;
                     }
-                    const formattedDate = dateStr.split(' ')[0] || '2000-01-01';
-                    const date = new Date(formattedDate);
-                    return isNaN(date) ? new Date(`2000-01-01`) : date;
+                    return formatDateToMonthYear(dateStr);
                 });
             }
             console.log('labels (después de mapear periods):', labels);
@@ -465,7 +484,7 @@ async function fetchPortfolioData(token, accountId) {
 
             if (validIndices.length === 0) {
                 console.warn('No hay datos reales disponibles; usando totalValue como respaldo');
-                labels = [new Date()];
+                labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
                 realValues = [totalValue || 0];
                 expectedValues = [totalValue || 0];
                 bestValues = [totalValue || 0];
@@ -533,27 +552,27 @@ async function fetchPortfolioData(token, accountId) {
             console.log('portfolioHistory:', portfolioHistory);
 
             let historicalData = portfolioHistory.map(item => ({
-                date: new Date(item.date || '2000-01-01'),
+                date: item.date || 'N/A',
                 value: Number(item.total_amount || 0)
             }));
 
             // Filtrar datos con valor 0
             if (historicalData.length > 0) {
-                historicalData = historicalData.filter(item => item.value > 0 && item.date.toString() !== 'Invalid Date');
+                historicalData = historicalData.filter(item => item.value > 0 && item.date !== 'N/A');
             }
 
             // Ordenar datos por fecha
             if (historicalData.length > 0) {
-                historicalData.sort((a, b) => a.date - b.date);
+                historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
             }
 
-            labels = historicalData.map(item => item.date);
+            labels = historicalData.map(item => formatDateToMonthYear(item.date));
             realValues = historicalData.map(item => item.value);
 
             // Si no hay datos históricos, usar totalValue como respaldo
             if (realValues.length === 0) {
                 console.warn('No hay datos históricos en portfolios; usando totalValue como respaldo');
-                labels = [new Date()];
+                labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
                 realValues = [totalValue || 0];
             }
 
@@ -568,7 +587,9 @@ async function fetchPortfolioData(token, accountId) {
                 data: realValues,
                 borderColor: performanceColors.real,
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5, // Aumentar el tamaño de los puntos para mayor visibilidad
+                pointHoverRadius: 7
             });
         }
         if (expectedValues.length > 0) {
@@ -578,7 +599,9 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.expected,
                 borderDash: [5, 5],
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
             });
         }
         if (bestValues.length > 0) {
@@ -588,7 +611,9 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.best,
                 borderDash: [5, 5],
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
             });
         }
         if (worstValues.length > 0) {
@@ -598,7 +623,9 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.worst,
                 borderDash: [5, 5],
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
             });
         }
 
@@ -654,7 +681,9 @@ async function fetchPortfolioData(token, accountId) {
                 data: realValues,
                 borderColor: performanceColors.real,
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
             });
         }
 
@@ -670,7 +699,9 @@ async function fetchPortfolioData(token, accountId) {
                 data: componentValues,
                 borderColor: color,
                 tension: 0.1,
-                fill: false
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 7
             });
         });
 
@@ -690,7 +721,7 @@ async function fetchPortfolioData(token, accountId) {
                 returnPercentage = ((value - previousValue) / previousValue) * 100;
             }
             return {
-                date: labels[index] || new Date(),
+                date: labels[index] || 'N/A',
                 value: value,
                 return: returnPercentage
             };
@@ -709,7 +740,7 @@ async function fetchPortfolioData(token, accountId) {
                 recentData.forEach(item => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td class="p-2">${item.date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</td>
+                        <td class="p-2">${item.date}</td>
                         <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
                         <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
                     `;
