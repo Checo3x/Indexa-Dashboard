@@ -382,7 +382,7 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
             }
-            labels = historicalData.map(item => formatDateToMonthYear(item.date));
+            labels = historicalData.map(item => formatuse `formatDateToMonthYear(item.date));
             realValues = historicalData.map(item => item.value);
             if (realValues.length === 0) {
                 labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
@@ -392,9 +392,21 @@ async function fetchPortfolioData(token, accountId) {
         const totalValueElement = document.getElementById('total-value');
         if (totalValueElement) totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
         const annualReturnElement = document.getElementById('annual-return');
-        if (annualReturnElement) annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+        if (annualReturnElement) {
+            annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+            annualReturnElement.classList.remove('bg-red-200');
+            if (annualReturn < 0) {
+                annualReturnElement.classList.add('bg-red-200');
+            }
+        }
         const volatilityElement = document.getElementById('volatility');
-        if (volatilityElement) volatilityElement.textContent = `${volatility.toFixed(2)}%`;
+        if (volatilityElement) {
+            volatilityElement.textContent = `${volatility.toFixed(2)}%`;
+            volatilityElement.classList.remove('bg-red-200');
+            if (volatility < 0) {
+                volatilityElement.classList.add('bg-red-200');
+            }
+        }
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
         const datasets = [];
@@ -512,6 +524,10 @@ async function fetchPortfolioData(token, accountId) {
         setError(`Error al obtener datos: ${error.message}`);
     } finally {
         setLoading(false);
+        const fetchDataButton = document.getElementById('fetch-data');
+        if (fetchDataButton) {
+            fetchDataButton.classList.add('hidden');
+        }
     }
 }
 
