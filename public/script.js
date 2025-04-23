@@ -160,9 +160,11 @@ function clearMessages() {
     if (warningMessage) warningMessage.classList.add('hidden');
 }
 
-async function fetchAccounts(token) {
+async function fetch
+
+Accounts(token) {
     setLoading(true);
-    clearMessages(); // Limpiar mensajes al iniciar la acción
+    clearMessages();
     try {
         const response = await fetch('/api/users/me', {
             headers: { Authorization: `Bearer ${token}` }
@@ -197,7 +199,7 @@ async function fetchAccounts(token) {
 
 async function fetchPortfolioData(token, accountId) {
     setLoading(true);
-    clearMessages(); // Limpiar mensajes al iniciar la acción
+    clearMessages();
     try {
         const accountInfo = document.getElementById('account-info');
         const selectedAccount = document.getElementById('selected-account');
@@ -234,26 +236,17 @@ async function fetchPortfolioData(token, accountId) {
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
         const volatility = (historyData.volatility || 0) * 100;
-        const totalValueElement = document.getElementById('total-value');
-        if (totalValueElement) totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
-        const annualReturnElement = document.getElementById('annual-return');
-        if (annualReturnElement) annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
-        const volatilityElement = document.getElementById('volatility');
-        if (volatilityElement) volatilityElement.textContent = `${volatility.toFixed(2)}%`;
-        const additionalCashElement = document.getElementById('additional-cash-needed');
-        if (additionalCashElement) additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
         let labels = [];
         let realValues = [];
         let expectedValues = [];
         let bestValues = [];
         let worstValues = [];
-        const currentDate = new Date(); // Fecha actual
-        const earliestDataDate = new Date('2025-03-01'); // Fecha más temprana de los datos históricos
-        const minDate = earliestDataDate; // Fecha de inicio: la más temprana de los datos
-        // Calcular maxDate: 5 meses después de la fecha actual
+        const currentDate = new Date();
+        const earliestDataDate = new Date('2025-03-01');
+        const minDate = earliestDataDate;
         const maxDate = new Date(currentDate);
         maxDate.setMonth(maxDate.getMonth() + 5);
-        maxDate.setDate(0); // Ajustar al último día del mes
+        maxDate.setDate(0);
         if (historyData.performance && historyData.performance.period) {
             const periods = historyData.performance.period;
             let realData = historyData.performance.real || [];
@@ -273,11 +266,6 @@ async function fetchPortfolioData(token, accountId) {
                 }
             }
             const initialValue = realData.length > 0 && Array.isArray(realData[0]) && realData[0].length === 2 ? realData[0][1] : 100;
-            const scalingFactor = initialValue !== 0 ? totalValue / initialValue : 1;
-            console.log('Initial Value:', initialValue, 'Total Value:', totalValue, 'Scaling Factor:', scalingFactor);
-            if (!Array.isArray(periods)) {
-                throw new Error('periods no es un array');
-            }
             const filteredPeriods = [];
             const periodIndices = [];
             const isPeriodPairFormat = periods.length > 0 && Array.isArray(periods[0]);
@@ -293,7 +281,6 @@ async function fetchPortfolioData(token, accountId) {
                     }
                 });
             } else {
-                // periods es un array de strings (fechas), generamos índices implícitos
                 periods.forEach((dateStr, idx) => {
                     const date = new Date(dateStr.split(' ')[0]);
                     if (isNaN(date)) return;
@@ -303,8 +290,6 @@ async function fetchPortfolioData(token, accountId) {
                     }
                 });
             }
-            console.log('Period Indices:', periodIndices);
-            console.log('Filtered Periods:', filteredPeriods);
             labels = filteredPeriods.map(periodEntry =>
                 Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
                     ? formatDateToMonthYear(periodEntry[1])
@@ -318,8 +303,8 @@ async function fetchPortfolioData(token, accountId) {
                 const filteredIdx = periodIndices.indexOf(idx);
                 if (filteredIdx === -1) return;
                 const numericValue = Number(value);
-                if (isNaN(numericValue) || isNaN(scalingFactor) || !isFinite(scalingFactor)) return;
-                realValues[filteredIdx] = numericValue * scalingFactor;
+                if (isNaN(numericValue)) return;
+                realValues[filteredIdx] = numericValue;
             });
             const validIndices = realValues.map((val, idx) => (val !== null ? idx : -1)).filter(idx => idx !== -1);
             if (validIndices.length === 0) {
@@ -335,64 +320,53 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 realValues = filteredRealValues;
 
-                // Encontrar el último índice con datos reales
                 const lastRealIndex = validIndices[validIndices.length - 1];
-                const lastRealValue = realValues[lastRealIndex] || totalValue;
+                const lastRealValue = realValues[lastRealIndex];
                 const lastRealPeriodIndex = periodIndices[lastRealIndex];
 
-                let cumulativeExpectedFactor = 1;
-                let cumulativeBestFactor = 1;
-                let cumulativeWorstFactor = 1;
+                totalValue = lastRealValue * (totalValue / initialValue);
+                const scalingFactor = totalValue / lastRealValue;
 
+                realValues = realValues.map(value => value !== null ? value * scalingFactor : null);
+
+                const initialFactor = realData[lastRealPeriodIndex][1];
                 expectedValues = new Array(labels.length).fill(null);
                 bestValues = new Array(labels.length).fill(null);
                 worstValues = new Array(labels.length).fill(null);
 
-                // Copiar valores reales hasta el último dato real
                 for (let i = 0; i <= lastRealIndex; i++) {
                     expectedValues[i] = realValues[i];
                     bestValues[i] = realValues[i];
                     worstValues[i] = realValues[i];
                 }
 
-                // Calcular proyecciones desde el mes siguiente al último dato real
                 for (let i = lastRealIndex + 1; i < labels.length; i++) {
                     const index = periodIndices[i];
-                    const relativeIndex = index - lastRealPeriodIndex; // Número de meses desde el último dato real
                     const entryExpected = expectedData[index];
                     if (entryExpected !== undefined) {
-                        const factor = entryExpected / 100;
-                        cumulativeExpectedFactor *= factor;
-                        const value = lastRealValue * cumulativeExpectedFactor;
+                        const factor = entryExpected / initialFactor;
+                        const value = lastRealValue * factor * scalingFactor;
                         expectedValues[i] = value;
-                        console.log(`Expected [${index}]: Factor=${entryExpected}, Cumulative=${cumulativeExpectedFactor}, Value=${value}`);
                     } else {
-                        console.log(`Expected [${index}]: No factor found`);
-                        expectedValues[i] = lastRealValue * cumulativeExpectedFactor;
+                        expectedValues[i] = lastRealValue * scalingFactor;
                     }
 
                     const entryBest = bestData[index];
                     if (entryBest !== undefined) {
-                        const factor = entryBest / 100;
-                        cumulativeBestFactor *= factor;
-                        const value = lastRealValue * cumulativeBestFactor;
+                        const factor = entryBest / initialFactor;
+                        const value = lastRealValue * factor * scalingFactor;
                         bestValues[i] = value;
-                        console.log(`Best [${index}]: Factor=${entryBest}, Cumulative=${cumulativeBestFactor}, Value=${value}`);
                     } else {
-                        console.log(`Best [${index}]: No factor found`);
-                        bestValues[i] = lastRealValue * cumulativeBestFactor;
+                        bestValues[i] = lastRealValue * scalingFactor;
                     }
 
                     const entryWorst = worstData[index];
                     if (entryWorst !== undefined) {
-                        const factor = entryWorst / 100;
-                        cumulativeWorstFactor *= factor;
-                        const value = lastRealValue * cumulativeWorstFactor;
+                        const factor = entryWorst / initialFactor;
+                        const value = lastRealValue * factor * scalingFactor;
                         worstValues[i] = value;
-                        console.log(`Worst [${index}]: Factor=${entryWorst}, Cumulative=${cumulativeWorstFactor}, Value=${value}`);
                     } else {
-                        console.log(`Worst [${index}]: No factor found`);
-                        worstValues[i] = lastRealValue * cumulativeWorstFactor;
+                        worstValues[i] = lastRealValue * scalingFactor;
                     }
                 }
             }
@@ -417,6 +391,14 @@ async function fetchPortfolioData(token, accountId) {
                 realValues = [totalValue || 0];
             }
         }
+        const totalValueElement = document.getElementById('total-value');
+        if (totalValueElement) totalValueElement.textContent = `€${totalValue.toFixed(2)}`;
+        const annualReturnElement = document.getElementById('annual-return');
+        if (annualReturnElement) annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
+        const volatilityElement = document.getElementById('volatility');
+        if (volatilityElement) volatilityElement.textContent = `${volatility.toFixed(2)}%`;
+        const additionalCashElement = document.getElementById('additional-cash-needed');
+        if (additionalCashElement) additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
         const datasets = [];
         if (realValues.length > 0) {
             datasets.push({
@@ -511,7 +493,6 @@ async function fetchPortfolioData(token, accountId) {
         });
         historyTableData = tableData;
 
-        // Renderizar gráficos y tablas automáticamente si las secciones están visibles
         const portfolioSection = document.getElementById('portfolio-chart-section');
         const componentsSection = document.getElementById('components-chart-section');
         const compositionSection = document.getElementById('composition-section');
@@ -647,10 +628,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountSelect = document.getElementById('account-select');
     if (accountSelect) {
         accountSelect.addEventListener('change', () => {
-            clearMessages(); // Limpiar mensajes al cambiar de cuenta
+            clearMessages();
             const accountId = accountSelect.value;
             if (accountId && currentToken) {
-                // Obtener datos automáticamente al cambiar de cuenta
                 fetchPortfolioData(currentToken, accountId);
             }
         });
