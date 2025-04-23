@@ -160,9 +160,7 @@ function clearMessages() {
     if (warningMessage) warningMessage.classList.add('hidden');
 }
 
-async function fetch
-
-Accounts(token) {
+async function fetchAccounts(token) {
     setLoading(true);
     clearMessages();
     try {
