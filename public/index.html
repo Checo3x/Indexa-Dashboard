@@ -29,7 +29,7 @@
             font-size: 2.5rem;
             font-weight: 700;
             position: relative;
-            margin-bottom: 3rem;
+            margin-bottom: 2rem;
         }
 
         h1::after {
@@ -83,8 +83,20 @@
             transition: opacity 0.3s ease-in-out;
         }
 
-        /* Estilo de secciones */
-        #api-token-section, #account-selector, #account-info, 
+        /* Contenedor combinado para token y selección de cuenta */
+        #input-section {
+            background: #ffffff;
+            color: #1a1a2e;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        /* Estilo de otras secciones */
+        #account-info, 
         #portfolio-chart-section, #components-chart-section, 
         #composition-section, #history-section {
             background: #ffffff;
@@ -92,7 +104,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             padding: 1.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
             width: 100%;
         }
 
@@ -100,6 +112,7 @@
             width: 100%;
             max-width: 800px;
             border-radius: 8px;
+            margin-bottom: 1.5rem;
         }
 
         /* Estilo de inputs y selects */
@@ -141,6 +154,20 @@
             cursor: not-allowed;
         }
 
+        /* Barra de herramientas para botones de alternancia */
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .toolbar button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+
         /* Gráficos */
         #portfolio-chart, #components-chart {
             max-width: 800px;
@@ -179,19 +206,61 @@
         .toggle-password:hover {
             color: #00c4d3;
         }
+
+        /* Diseño responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            #input-section, #account-info, 
+            #portfolio-chart-section, #components-chart-section, 
+            #composition-section, #history-section {
+                padding: 1rem;
+                margin-bottom: 1rem;
+            }
+
+            .toolbar button {
+                padding: 0.5rem 0.75rem;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            #account-info .grid {
+                grid-template-columns: 1fr;
+            }
+
+            #account-info .grid p {
+                margin-bottom: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="container mx-auto p-6">
         <h1>Gestión de Carteras</h1>
 
-        <div id="api-token-section" class="mb-6 flex flex-col items-center">
-            <label for="api-token" class="block text-lg font-medium mb-2">Introduce tu token de API:</label>
-            <div class="flex items-center mt-2">
-                <input type="password" id="api-token" class="p-2 border rounded w-full max-w-md" placeholder="Token de API">
-                <span id="toggle-password" class="toggle-password"><i class="fas fa-eye"></i></span>
+        <div id="input-section" class="flex flex-col items-center">
+            <div class="flex flex-col items-center w-full">
+                <label for="api-token" class="block text-lg font-medium mb-2">Introduce tu token de API:</label>
+                <div class="flex items-center mb-4 w-full max-w-md">
+                    <input type="password" id="api-token" class="p-2 border rounded w-full" placeholder="Token de API">
+                    <span id="toggle-password" class="toggle-password"><i class="fas fa-eye"></i></span>
+                </div>
+                <button id="fetch-accounts" class="mb-4"><i class="fas fa-download"></i> Cargar Cuentas</button>
             </div>
-            <button id="fetch-accounts" class="mt-4"><i class="fas fa-download"></i> Cargar Cuentas</button>
+
+            <div id="account-selector" class="fade-hidden fade-transition flex flex-col items-center w-full">
+                <label for="account-select" class="block text-lg font-medium mb-2">Selecciona una cuenta:</label>
+                <select id="account-select" class="p-2 border rounded w-full max-w-md">
+                    <option value="">Selecciona una cuenta para cargar los datos</option>
+                </select>
+            </div>
         </div>
 
         <div id="loading-indicator" class="fade-hidden flex items-center justify-center my-4">
@@ -201,17 +270,10 @@
             </svg>
         </div>
 
-        <div id="error-message" class="fade-hidden fade-transition p-4 mb-4 text-red-700 bg-red-100 rounded mx-auto max-w-4xl"></div>
-        <div id="warning-message" class="fade-hidden fade-transition p-4 mb-4 text-yellow-700 bg-yellow-100 rounded mx-auto max-w-4xl"></div>
+        <div id="error-message" class="fade-hidden fade-transition p-4 text-red-700 bg-red-100 rounded mx-auto"></div>
+        <div id="warning-message" class="fade-hidden fade-transition p-4 text-yellow-700 bg-yellow-100 rounded mx-auto"></div>
 
-        <div id="account-selector" class="fade-hidden fade-transition flex flex-col items-center">
-            <label for="account-select" class="block text-lg font-medium mb-2">Selecciona una cuenta:</label>
-            <select id="account-select" class="mt-2 p-2 border rounded w-full max-w-md">
-                <option value="">Selecciona una cuenta para cargar los datos</option>
-            </select>
-        </div>
-
-        <div id="account-info" class="fade-hidden fade-transition mt-6 p-4 rounded mx-auto max-w-4xl">
+        <div id="account-info" class="fade-hidden fade-transition p-4 rounded mx-auto max-w-4xl">
             <h2 class="text-xl font-semibold mb-4 text-center">Información de la Cuenta</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <p><strong>Cuenta seleccionada:</strong> <span id="selected-account"></span></p>
@@ -222,27 +284,27 @@
             </div>
         </div>
 
-        <div class="mt-6 flex justify-center gap-4">
+        <div class="toolbar">
             <button id="toggle-charts" class="px-4 py-2 rounded"><i class="fas fa-chart-line"></i> Ocultar Gráficos</button>
             <button id="toggle-composition" class="px-4 py-2 rounded"><i class="fas fa-table"></i> Mostrar Composición</button>
             <button id="toggle-history" class="px-4 py-2 rounded"><i class="fas fa-history"></i> Mostrar Histórico</button>
         </div>
 
-        <div id="portfolio-chart-section" class="height-hidden height-transition mt-6 flex justify-center">
+        <div id="portfolio-chart-section" class="height-hidden height-transition flex justify-center">
             <div class="w-full max-w-4xl">
                 <h2 class="text-xl font-semibold mb-4 text-center">Evolución de la Cartera</h2>
                 <canvas id="portfolio-chart"></canvas>
             </div>
         </div>
 
-        <div id="components-chart-section" class="height-hidden height-transition mt-6 flex justify-center">
+        <div id="components-chart-section" class="height-hidden height-transition flex justify-center">
             <div class="w-full max-w-4xl">
                 <h2 class="text-xl font-semibold mb-4 text-center">Evolución de Componentes</h2>
                 <canvas id="components-chart"></canvas>
             </div>
         </div>
 
-        <div id="composition-section" class="height-hidden height-transition mt-6 flex justify-center">
+        <div id="composition-section" class="height-hidden height-transition flex justify-center">
             <div class="w-full max-w-4xl">
                 <h2 class="text-xl font-semibold mb-4 text-center">Composición de la Cartera</h2>
                 <table class="w-full border-collapse">
@@ -259,7 +321,7 @@
             </div>
         </div>
 
-        <div id="history-section" class="height-hidden height-transition mt-6 flex justify-center">
+        <div id="history-section" class="height-hidden height-transition flex justify-center">
             <div class="w-full max-w-4xl">
                 <h2 class="text-xl font-semibold mb-4 text-center">Histórico de Rentabilidad</h2>
                 <table class="w-full border-collapse">
