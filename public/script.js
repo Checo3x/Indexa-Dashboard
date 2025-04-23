@@ -382,7 +382,7 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
             }
-            labels = historicalData.map(item => formatuse `formatDateToMonthYear(item.date)`);
+            labels = historicalData.map(item => formatDateToMonthYear(item.date));
             realValues = historicalData.map(item => item.value);
             if (realValues.length === 0) {
                 labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
