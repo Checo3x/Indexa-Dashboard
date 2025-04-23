@@ -129,10 +129,8 @@ function createComponentsChart(labels, datasets) {
 function setLoading(isLoading) {
     const loadingIndicator = document.getElementById('loading-indicator');
     const fetchAccountsButton = document.getElementById('fetch-accounts');
-    const fetchDataButton = document.getElementById('fetch-data');
     if (loadingIndicator) loadingIndicator.classList.toggle('hidden', !isLoading);
     if (fetchAccountsButton) fetchAccountsButton.disabled = isLoading;
-    if (fetchDataButton) fetchDataButton.disabled = isLoading;
 }
 
 function setError(message) {
@@ -524,10 +522,6 @@ async function fetchPortfolioData(token, accountId) {
         setError(`Error al obtener datos: ${error.message}`);
     } finally {
         setLoading(false);
-        const fetchDataButton = document.getElementById('fetch-data');
-        if (fetchDataButton) {
-            fetchDataButton.classList.add('hidden');
-        }
     }
 }
 
@@ -611,32 +605,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             currentToken = token;
             fetchAccounts(token);
-        });
-    }
-
-    const fetchDataButton = document.getElementById('fetch-data');
-    if (fetchDataButton) {
-        fetchDataButton.addEventListener('click', () => {
-            const tokenInput = document.getElementById('api-token');
-            let token = tokenInput.value.trim();
-            
-            if (!token && currentToken) {
-                token = currentToken;
-            }
-            
-            if (!token) {
-                setError('Por favor, introduce un token de API válido.');
-                return;
-            }
-            
-            currentToken = token;
-            const accountId = document.getElementById('account-select').value;
-            if (!accountId) {
-                setError('Por favor, selecciona una cuenta.');
-                return;
-            }
-            
-            fetchPortfolioData(token, accountId);
         });
     }
 
