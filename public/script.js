@@ -129,7 +129,10 @@ function createComponentsChart(labels, datasets) {
 function setLoading(isLoading) {
     const loadingIndicator = document.getElementById('loading-indicator');
     const fetchAccountsButton = document.getElementById('fetch-accounts');
-    if (loadingIndicator) loadingIndicator.classList.toggle('hidden', !isLoading);
+    if (loadingIndicator) {
+        loadingIndicator.classList.toggle('fade-hidden', !isLoading);
+        loadingIndicator.classList.toggle('fade-visible', isLoading);
+    }
     if (fetchAccountsButton) fetchAccountsButton.disabled = isLoading;
 }
 
@@ -137,9 +140,8 @@ function setError(message) {
     const errorDiv = document.getElementById('error-message');
     if (errorDiv) {
         errorDiv.textContent = message;
-        errorDiv.classList.remove('hidden');
-        errorDiv.classList.add('block');
-        errorDiv.style.display = 'block';
+        errorDiv.classList.remove('fade-hidden');
+        errorDiv.classList.add('fade-visible');
     }
 }
 
@@ -147,15 +149,22 @@ function setWarning(message) {
     const warningDiv = document.getElementById('warning-message');
     if (warningDiv) {
         warningDiv.textContent = message;
-        warningDiv.classList.remove('hidden');
+        warningDiv.classList.remove('fade-hidden');
+        warningDiv.classList.add('fade-visible');
     }
 }
 
 function clearMessages() {
     const errorMessage = document.getElementById('error-message');
     const warningMessage = document.getElementById('warning-message');
-    if (errorMessage) errorMessage.classList.add('hidden');
-    if (warningMessage) warningMessage.classList.add('hidden');
+    if (errorMessage) {
+        errorMessage.classList.remove('fade-visible');
+        errorMessage.classList.add('fade-hidden');
+    }
+    if (warningMessage) {
+        warningMessage.classList.remove('fade-visible');
+        warningMessage.classList.add('fade-hidden');
+    }
 }
 
 async function fetchAccounts(token) {
@@ -176,7 +185,7 @@ async function fetchAccounts(token) {
         }
         const select = document.getElementById('account-select');
         if (select) {
-            select.innerHTML = '<option value="">Selecciona una cuenta</option>';
+            select.innerHTML = '<option value="">Selecciona una cuenta para cargar los datos</option>';
             accounts.forEach(account => {
                 const option = document.createElement('option');
                 option.value = account.account_number;
@@ -185,7 +194,10 @@ async function fetchAccounts(token) {
             });
         }
         const accountSelector = document.getElementById('account-selector');
-        if (accountSelector) accountSelector.classList.remove('hidden');
+        if (accountSelector) {
+            accountSelector.classList.remove('fade-hidden');
+            accountSelector.classList.add('fade-visible');
+        }
     } catch (error) {
         setError(`Error al cargar cuentas: ${error.message}`);
     } finally {
@@ -201,7 +213,8 @@ async function fetchPortfolioData(token, accountId) {
         const selectedAccount = document.getElementById('selected-account');
         if (accountInfo && selectedAccount) {
             selectedAccount.textContent = `Cuenta ${accountId}`;
-            accountInfo.classList.remove('hidden');
+            accountInfo.classList.remove('fade-hidden');
+            accountInfo.classList.add('fade-visible');
         }
         const portfolioResponse = await fetch(`/api/accounts/${accountId}/portfolio`, {
             headers: { Authorization: `Bearer ${token}` }
@@ -506,16 +519,16 @@ async function fetchPortfolioData(token, accountId) {
         const compositionSection = document.getElementById('composition-section');
         const historySection = document.getElementById('history-section');
 
-        if (portfolioSection && !portfolioSection.classList.contains('hidden')) {
+        if (portfolioSection && !portfolioSection.classList.contains('height-hidden')) {
             renderPortfolioChart();
         }
-        if (componentsSection && !componentsSection.classList.contains('hidden')) {
+        if (componentsSection && !componentsSection.classList.contains('height-hidden')) {
             renderComponentsChart();
         }
-        if (compositionSection && !compositionSection.classList.contains('hidden')) {
+        if (compositionSection && !compositionSection.classList.contains('height-hidden')) {
             renderCompositionTable();
         }
-        if (historySection && !historySection.classList.contains('hidden')) {
+        if (historySection && !historySection.classList.contains('height-hidden')) {
             renderHistoryTable();
         }
     } catch (error) {
@@ -625,9 +638,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const portfolioSection = document.getElementById('portfolio-chart-section');
             const componentsSection = document.getElementById('components-chart-section');
             if (portfolioSection && componentsSection) {
-                const isHidden = portfolioSection.classList.contains('hidden');
-                portfolioSection.classList.toggle('hidden', !isHidden);
-                componentsSection.classList.toggle('hidden', !isHidden);
+                const isHidden = portfolioSection.classList.contains('height-hidden');
+                portfolioSection.classList.toggle('height-hidden', !isHidden);
+                portfolioSection.classList.toggle('height-visible', isHidden);
+                componentsSection.classList.toggle('height-hidden', !isHidden);
+                componentsSection.classList.toggle('height-visible', isHidden);
                 toggleChartsButton.textContent = isHidden ? 'Ocultar Gráficos' : 'Mostrar Gráficos';
                 if (isHidden) {
                     renderPortfolioChart();
@@ -642,8 +657,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleCompositionButton.addEventListener('click', () => {
             const compositionSection = document.getElementById('composition-section');
             if (compositionSection) {
-                const isHidden = compositionSection.classList.contains('hidden');
-                compositionSection.classList.toggle('hidden', !isHidden);
+                const isHidden = compositionSection.classList.contains('height-hidden');
+                compositionSection.classList.toggle('height-hidden', !isHidden);
+                compositionSection.classList.toggle('height-visible', isHidden);
                 toggleCompositionButton.textContent = isHidden ? 'Ocultar Composición' : 'Mostrar Composición';
                 if (isHidden) renderCompositionTable();
             }
@@ -655,8 +671,9 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleHistoryButton.addEventListener('click', () => {
             const historySection = document.getElementById('history-section');
             if (historySection) {
-                const isHidden = historySection.classList.contains('hidden');
-                historySection.classList.toggle('hidden', !isHidden);
+                const isHidden = historySection.classList.contains('height-hidden');
+                historySection.classList.toggle('height-hidden', !isHidden);
+                historySection.classList.toggle('height-visible', isHidden);
                 toggleHistoryButton.textContent = isHidden ? 'Ocultar Histórico' : 'Mostrar Histórico';
                 if (isHidden) renderHistoryTable();
             }
