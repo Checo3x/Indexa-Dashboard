@@ -162,7 +162,7 @@ function clearMessages() {
 
 async function fetchAccounts(token) {
     setLoading(true);
-    clearMessages();
+    clearMessages(); // Limpiar mensajes al iniciar la acción
     try {
         const response = await fetch('/api/users/me', {
             headers: { Authorization: `Bearer ${token}` }
@@ -197,7 +197,7 @@ async function fetchAccounts(token) {
 
 async function fetchPortfolioData(token, accountId) {
     setLoading(true);
-    clearMessages();
+    clearMessages(); // Limpiar mensajes al iniciar la acción
     try {
         const accountInfo = document.getElementById('account-info');
         const selectedAccount = document.getElementById('selected-account');
@@ -510,6 +510,25 @@ async function fetchPortfolioData(token, accountId) {
             return { date: labels[index] || 'N/A', value, return: returnPercentage };
         });
         historyTableData = tableData;
+
+        // Renderizar gráficos y tablas automáticamente si las secciones están visibles
+        const portfolioSection = document.getElementById('portfolio-chart-section');
+        const componentsSection = document.getElementById('components-chart-section');
+        const compositionSection = document.getElementById('composition-section');
+        const historySection = document.getElementById('history-section');
+
+        if (portfolioSection && !portfolioSection.classList.contains('hidden')) {
+            renderPortfolioChart();
+        }
+        if (componentsSection && !componentsSection.classList.contains('hidden')) {
+            renderComponentsChart();
+        }
+        if (compositionSection && !compositionSection.classList.contains('hidden')) {
+            renderCompositionTable();
+        }
+        if (historySection && !historySection.classList.contains('hidden')) {
+            renderHistoryTable();
+        }
     } catch (error) {
         setError(`Error al obtener datos: ${error.message}`);
     } finally {
@@ -628,7 +647,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const accountSelect = document.getElementById('account-select');
     if (accountSelect) {
         accountSelect.addEventListener('change', () => {
-            clearMessages();
+            clearMessages(); // Limpiar mensajes al cambiar de cuenta
+            const accountId = accountSelect.value;
+            if (accountId && currentToken) {
+                // Obtener datos automáticamente al cambiar de cuenta
+                fetchPortfolioData(currentToken, accountId);
+            }
         });
     }
 
