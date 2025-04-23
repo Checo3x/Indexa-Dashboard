@@ -65,12 +65,21 @@ function createPortfolioChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 14 },
-                            color: '#1a1a2e'
+                            font: { size: 16 },
+                            color: '#1a1a2e',
+                            padding: 10
                         }
                     },
                     tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#00ddeb',
+                        borderWidth: 1,
                         callbacks: {
+                            title: context => {
+                                return `Fecha: ${context[0].label}`;
+                            },
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
@@ -123,12 +132,21 @@ function createComponentsChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 14 },
-                            color: '#1a1a2e'
+                            font: { size: 16 },
+                            color: '#1a1a2e',
+                            padding: 10
                         }
                     },
                     tooltip: {
+                        backgroundColor: '#1a1a2e',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#00ddeb',
+                        borderWidth: 1,
                         callbacks: {
+                            title: context => {
+                                return `Fecha: ${context[0].label}`;
+                            },
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
@@ -188,6 +206,7 @@ function clearMessages() {
 }
 
 async function fetchAccounts(token) {
+    const tokenInput = document.getElementById('api-token');
     setLoading(true);
     clearMessages();
     try {
@@ -218,8 +237,16 @@ async function fetchAccounts(token) {
             accountSelector.classList.remove('fade-hidden');
             accountSelector.classList.add('fade-visible');
         }
+        if (tokenInput) {
+            tokenInput.classList.remove('invalid');
+            tokenInput.classList.add('valid');
+        }
     } catch (error) {
         setError(`Error al cargar cuentas: ${error.message}`);
+        if (tokenInput) {
+            tokenInput.classList.remove('valid');
+            tokenInput.classList.add('invalid');
+        }
     } finally {
         setLoading(false);
     }
@@ -425,17 +452,17 @@ async function fetchPortfolioData(token, accountId) {
         const annualReturnElement = document.getElementById('annual-return');
         if (annualReturnElement) {
             annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
-            annualReturnElement.classList.remove('bg-red-200');
+            annualReturnElement.classList.remove('negative-value');
             if (annualReturn < 0) {
-                annualReturnElement.classList.add('bg-red-200');
+                annualReturnElement.classList.add('negative-value');
             }
         }
         const volatilityElement = document.getElementById('volatility');
         if (volatilityElement) {
             volatilityElement.textContent = `${volatility.toFixed(2)}%`;
-            volatilityElement.classList.remove('bg-red-200');
+            volatilityElement.classList.remove('negative-value');
             if (volatility < 0) {
-                volatilityElement.classList.add('bg-red-200');
+                volatilityElement.classList.add('negative-value');
             }
         }
         const additionalCashElement = document.getElementById('additional-cash-needed');
@@ -609,7 +636,7 @@ function renderHistoryTable() {
             const recentData = historyTableData.slice(-10);
             recentData.forEach(item => {
                 const row = document.createElement('tr');
-                const returnClass = item.return < 0 ? 'bg-red-200' : '';
+                const returnClass = item.return < 0 ? 'negative-value' : '';
                 row.innerHTML = `
                     <td class="p-2">${item.date}</td>
                     <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
@@ -634,6 +661,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = tokenInput.value.trim();
             if (!token) {
                 setError('Por favor, introduce un token de API válido.');
+                tokenInput.classList.remove('valid');
+                tokenInput.classList.add('invalid');
                 return;
             }
             currentToken = token;
@@ -664,6 +693,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 componentsSection.classList.toggle('height-hidden', !isHidden);
                 componentsSection.classList.toggle('height-visible', isHidden);
                 toggleChartsButton.innerHTML = isHidden ? '<i class="fas fa-chart-line"></i> Ocultar Gráficos' : '<i class="fas fa-chart-line"></i> Mostrar Gráficos';
+                toggleChartsButton.classList.toggle('active', isHidden);
                 if (isHidden) {
                     renderPortfolioChart();
                     renderComponentsChart();
@@ -681,6 +711,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 compositionSection.classList.toggle('height-hidden', !isHidden);
                 compositionSection.classList.toggle('height-visible', isHidden);
                 toggleCompositionButton.innerHTML = isHidden ? '<i class="fas fa-table"></i> Ocultar Composición' : '<i class="fas fa-table"></i> Mostrar Composición';
+                toggleCompositionButton.classList.toggle('active', isHidden);
                 if (isHidden) renderCompositionTable();
             }
         });
@@ -695,6 +726,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 historySection.classList.toggle('height-hidden', !isHidden);
                 historySection.classList.toggle('height-visible', isHidden);
                 toggleHistoryButton.innerHTML = isHidden ? '<i class="fas fa-history"></i> Ocultar Histórico' : '<i class="fas fa-history"></i> Mostrar Histórico';
+                toggleHistoryButton.classList.toggle('active', isHidden);
                 if (isHidden) renderHistoryTable();
             }
         });
