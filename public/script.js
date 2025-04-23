@@ -46,20 +46,29 @@ function createPortfolioChart(labels, datasets) {
             data: { labels, datasets },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Permitir que el gráfico se ajuste al tamaño del contenedor
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10, autoSkip: true }
+                        ticks: { maxTicksLimit: 10, autoSkip: true },
+                        grid: { display: false }
                     },
                     y: {
                         title: { display: true, text: 'Valor (€)' },
-                        beginAtZero: false
+                        beginAtZero: false,
+                        grid: { color: '#e2e8f0' }
                     }
                 },
                 plugins: {
-                    legend: { display: true, position: 'top' },
+                    legend: { 
+                        display: true, 
+                        position: 'top',
+                        labels: {
+                            font: { size: 14 },
+                            color: '#1a1a2e'
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: context => {
@@ -95,20 +104,29 @@ function createComponentsChart(labels, datasets) {
             data: { labels, datasets },
             options: {
                 responsive: true,
-                maintainAspectRatio: false, // Permitir que el gráfico se ajuste al tamaño del contenedor
+                maintainAspectRatio: false,
                 scales: {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10, autoSkip: true }
+                        ticks: { maxTicksLimit: 10, autoSkip: true },
+                        grid: { display: false }
                     },
                     y: {
                         title: { display: true, text: 'Valor (€)' },
-                        beginAtZero: false
+                        beginAtZero: false,
+                        grid: { color: '#e2e8f0' }
                     }
                 },
                 plugins: {
-                    legend: { display: true, position: 'top' },
+                    legend: { 
+                        display: true, 
+                        position: 'top',
+                        labels: {
+                            font: { size: 14 },
+                            color: '#1a1a2e'
+                        }
+                    },
                     tooltip: {
                         callbacks: {
                             label: context => {
@@ -645,7 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 portfolioSection.classList.toggle('height-visible', isHidden);
                 componentsSection.classList.toggle('height-hidden', !isHidden);
                 componentsSection.classList.toggle('height-visible', isHidden);
-                toggleChartsButton.textContent = isHidden ? 'Ocultar Gráficos' : 'Mostrar Gráficos';
+                toggleChartsButton.innerHTML = isHidden ? '<i class="fas fa-chart-line"></i> Ocultar Gráficos' : '<i class="fas fa-chart-line"></i> Mostrar Gráficos';
                 if (isHidden) {
                     renderPortfolioChart();
                     renderComponentsChart();
@@ -662,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isHidden = compositionSection.classList.contains('height-hidden');
                 compositionSection.classList.toggle('height-hidden', !isHidden);
                 compositionSection.classList.toggle('height-visible', isHidden);
-                toggleCompositionButton.textContent = isHidden ? 'Ocultar Composición' : 'Mostrar Composición';
+                toggleCompositionButton.innerHTML = isHidden ? '<i class="fas fa-table"></i> Ocultar Composición' : '<i class="fas fa-table"></i> Mostrar Composición';
                 if (isHidden) renderCompositionTable();
             }
         });
@@ -676,20 +694,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isHidden = historySection.classList.contains('height-hidden');
                 historySection.classList.toggle('height-hidden', !isHidden);
                 historySection.classList.toggle('height-visible', isHidden);
-                toggleHistoryButton.textContent = isHidden ? 'Ocultar Histórico' : 'Mostrar Histórico';
+                toggleHistoryButton.innerHTML = isHidden ? '<i class="fas fa-history"></i> Ocultar Histórico' : '<i class="fas fa-history"></i> Mostrar Histórico';
                 if (isHidden) renderHistoryTable();
             }
         });
     }
 
-    // Lógica para alternar la visibilidad del token
     const togglePasswordButton = document.getElementById('toggle-password');
     const tokenInput = document.getElementById('api-token');
     if (togglePasswordButton && tokenInput) {
         togglePasswordButton.addEventListener('click', () => {
             const isPassword = tokenInput.type === 'password';
             tokenInput.type = isPassword ? 'text' : 'password';
-            togglePasswordButton.textContent = isPassword ? '🙈' : '👁️';
+            togglePasswordButton.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
         });
     }
 });
