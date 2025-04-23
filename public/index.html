@@ -22,14 +22,14 @@
             align-items: center;
             justify-content: center;
             max-width: 1200px;
-            padding: 2rem;
+            padding: 1.5rem; /* Reducido de 2rem */
         }
 
         h1 {
             font-size: 2.5rem;
             font-weight: 700;
             position: relative;
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem; /* Reducido de 2rem */
         }
 
         h1::after {
@@ -47,6 +47,15 @@
         h2 {
             font-size: 1.5rem;
             font-weight: 600;
+        }
+
+        /* Separador decorativo */
+        .separator {
+            width: 50px;
+            height: 2px;
+            background: #00ddeb;
+            margin: 1rem auto; /* Reducido de 1.5rem */
+            opacity: 0.5;
         }
 
         /* Transiciones y animaciones */
@@ -96,7 +105,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem; /* Reducido de 1.5rem */
             width: 100%;
             max-width: 600px;
         }
@@ -110,7 +119,7 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             padding: 1.5rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem; /* Reducido de 1.5rem */
             width: 100%;
         }
 
@@ -118,7 +127,7 @@
             width: 100%;
             max-width: 800px;
             border-radius: 8px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem; /* Reducido de 1.5rem */
         }
 
         /* Estilo de inputs y selects */
@@ -202,7 +211,7 @@
             justify-content: center;
             gap: 0.75rem;
             flex-wrap: wrap;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem; /* Reducido de 1.5rem */
             position: sticky;
             top: 1rem;
             z-index: 10;
@@ -297,7 +306,7 @@
             #portfolio-chart-section, #components-chart-section, 
             #composition-section, #history-section {
                 padding: 1rem;
-                margin-bottom: 1rem;
+                margin-bottom: 0.75rem; /* Reducido de 1rem */
             }
 
             .toolbar {
@@ -307,6 +316,10 @@
             .toolbar button {
                 padding: 0.5rem 0.75rem;
                 font-size: 0.85rem;
+            }
+
+            .separator {
+                margin: 0.75rem auto; /* Reducido de 1rem */
             }
         }
 
@@ -349,7 +362,9 @@
             </div>
         </div>
 
-        <div id="loading-indicator" class="fade-hidden flex items-center justify-center my-4">
+        <div class="separator"></div> <!-- Separador decorativo añadido -->
+
+        <div id="loading-indicator" class="fade-hidden flex items-center justify-center my-2">
             <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" role="img" aria-label="Cargando">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
