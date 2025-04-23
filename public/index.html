@@ -3,86 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Indexa Capital</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Gestión de Carteras</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Transiciones suaves para elementos que se muestran u ocultan */
+        .fade-transition {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .fade-hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .fade-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Transiciones de altura para secciones expandibles */
+        .height-transition {
+            transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+            overflow: hidden;
+        }
+
+        .height-hidden {
+            max-height: 0;
+            opacity: 0;
+        }
+
+        .height-visible {
+            max-height: 1000px; /* Ajusta según el contenido, o usa un valor dinámico */
+            opacity: 1;
+        }
+
+        /* Asegurar que el indicador de carga tenga una transición suave */
+        #loading-indicator {
+            transition: opacity 0.3s ease-in-out;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 p-6">
-    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-4">Dashboard de Indexa Capital</h1>
-        <div class="mb-4">
-            <label for="api-token" class="block text-sm font-medium text-gray-700">Token de API:</label>
-            <input type="password" id="api-token" class="mt-1 p-2 border rounded w-full" placeholder="Introduce tu token de API">
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold mb-6">Gestión de Carteras</h1>
+
+        <div id="api-token-section" class="mb-6">
+            <label for="api-token" class="block text-lg font-medium">Introduce tu token de API:</label>
+            <input type="text" id="api-token" class="mt-2 p-2 border rounded w-full max-w-md" placeholder="Token de API">
+            <button id="fetch-accounts" class="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">Cargar Cuentas</button>
         </div>
-        <button id="fetch-accounts" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Cargar Cuentas</button>
-        <div id="loading-indicator" class="hidden mt-4">
-            <p class="text-gray-600">Cargando...</p>
+
+        <div id="loading-indicator" class="fade-hidden flex items-center justify-center my-4">
+            <svg class="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
         </div>
-        <div id="error-message" class="hidden mt-4 p-4 bg-red-100 text-red-700 rounded"></div>
-        <div id="warning-message" class="hidden mt-4 p-4 bg-yellow-100 text-yellow-700 rounded"></div>
-        <div id="account-selector" class="hidden mt-4">
-    <label for="account-select" class="block text-lg font-medium">Selecciona una cuenta:</label>
-    <select id="account-select" class="mt-2 p-2 border rounded w-full max-w-md">
-        <option value="">Selecciona una cuenta</option>
-    </select>
+
+        <div id="error-message" class="fade-hidden fade-transition p-4 mb-4 text-red-700 bg-red-100 rounded"></div>
+        <div id="warning-message" class="fade-hidden fade-transition p-4 mb-4 text-yellow-700 bg-yellow-100 rounded"></div>
+
+        <div id="account-selector" class="fade-hidden fade-transition mt-4">
+            <label for="account-select" class="block text-lg font-medium">Selecciona una cuenta:</label>
+            <select id="account-select" class="mt-2 p-2 border rounded w-full max-w-md">
+                <option value="">Selecciona una cuenta para cargar los datos</option>
+            </select>
         </div>
-        <div id="account-info" class="hidden mt-4 p-4 bg-gray-50 rounded">
-            <h2 class="text-lg font-semibold">Información de la Cuenta</h2>
+
+        <div id="account-info" class="fade-hidden fade-transition mt-6 p-4 bg-gray-100 rounded">
+            <h2 class="text-xl font-semibold mb-4">Información de la Cuenta</h2>
             <p><strong>Cuenta seleccionada:</strong> <span id="selected-account"></span></p>
             <p><strong>Valor Total:</strong> <span id="total-value">€0.00</span></p>
             <p><strong>Rentabilidad Anual:</strong> <span id="annual-return">0.00%</span></p>
             <p><strong>Volatilidad:</strong> <span id="volatility">0.00%</span></p>
             <p><strong>Dinero Adicional Necesario:</strong> <span id="additional-cash-needed">€0.00</span></p>
-            <div class="mt-4 space-x-2">
-                <button id="toggle-charts" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Gráficos</button>
-                <button id="toggle-composition" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Composición</button>
-                <button id="toggle-history" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Mostrar Histórico</button>
-            </div>
         </div>
-        <div id="portfolio-chart-section" class="hidden mt-6">
-            <h2 class="text-lg font-semibold">Evolución Total de la Cartera</h2>
-            <canvas id="portfolio-chart" class="w-full h-64"></canvas>
+
+        <div class="mt-6">
+            <button id="toggle-charts" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Ocultar Gráficos</button>
+            <button id="toggle-composition" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Mostrar Composición</button>
+            <button id="toggle-history" class="ml-2 px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">Mostrar Histórico</button>
         </div>
-        <div id="components-chart-section" class="hidden mt-6">
-            <h2 class="text-lg font-semibold">Evolución de Componentes</h2>
-            <canvas id="components-chart" class="w-full h-64"></canvas>
+
+        <div id="portfolio-chart-section" class="height-hidden height-transition mt-6">
+            <h2 class="text-xl font-semibold mb-4">Evolución de la Cartera</h2>
+            <canvas id="portfolio-chart" class="w-full max-w-4xl"></canvas>
         </div>
-        <div id="composition-section" class="hidden mt-6">
-            <h2 class="text-lg font-semibold">Composición de la Cartera</h2>
-            <table class="min-w-full bg-white border">
+
+        <div id="components-chart-section" class="height-hidden height-transition mt-6">
+            <h2 class="text-xl font-semibold mb-4">Evolución de Componentes</h2>
+            <canvas id="components-chart" class="w-full max-w-4xl"></canvas>
+        </div>
+
+        <div id="composition-section" class="height-hidden height-transition mt-6">
+            <h2 class="text-xl font-semibold mb-4">Composición de la Cartera</h2>
+            <table class="w-full max-w-4xl border-collapse">
                 <thead>
-                    <tr>
-                        <th class="p-2 border">Color</th>
-                        <th class="p-2 border">Fondo</th>
-                        <th class="p-2 border">Valor (€)</th>
-                        <th class="p-2 border">Peso (%)</th>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Color</th>
+                        <th class="p-2 text-left">Fondo</th>
+                        <th class="p-2 text-left">Valor (€)</th>
+                        <th class="p-2 text-left">Peso (%)</th>
                     </tr>
                 </thead>
-                <tbody id="composition-table">
-                    <tr>
-                        <td colspan="4" class="p-2 text-center">Cargando...</td>
-                    </tr>
-                </tbody>
+                <tbody id="composition-table"></tbody>
             </table>
         </div>
-        <div id="history-section" class="hidden mt-6">
-            <h2 class="text-lg font-semibold">Histórico de Rentabilidad</h2>
-            <table class="min-w-full bg-white border">
+
+        <div id="history-section" class="height-hidden height-transition mt-6">
+            <h2 class="text-xl font-semibold mb-4">Histórico de Rentabilidad</h2>
+            <table class="w-full max-w-4xl border-collapse">
                 <thead>
-                    <tr>
-                        <th class="p-2 border">Fecha</th>
-                        <th class="p-2 border">Valor (€)</th>
-                        <th class="p-2 border">Rentabilidad (%)</th>
+                    <tr class="bg-gray-200">
+                        <th class="p-2 text-left">Fecha</th>
+                        <th class="p-2 text-left">Valor (€)</th>
+                        <th class="p-2 text-left">Rentabilidad (%)</th>
                     </tr>
                 </thead>
-                <tbody id="history-table">
-                    <tr>
-                        <td colspan="3" class="p-2 text-center">Cargando...</td>
-                    </tr>
-                </tbody>
+                <tbody id="history-table"></tbody>
             </table>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="/script.js"></script>
 </body>
 </html>
