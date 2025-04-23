@@ -46,6 +46,7 @@ function createPortfolioChart(labels, datasets) {
             data: { labels, datasets },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // Permitir que el gráfico se ajuste al tamaño del contenedor
                 scales: {
                     x: {
                         type: 'category',
@@ -94,6 +95,7 @@ function createComponentsChart(labels, datasets) {
             data: { labels, datasets },
             options: {
                 responsive: true,
+                maintainAspectRatio: false, // Permitir que el gráfico se ajuste al tamaño del contenedor
                 scales: {
                     x: {
                         type: 'category',
@@ -677,6 +679,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleHistoryButton.textContent = isHidden ? 'Ocultar Histórico' : 'Mostrar Histórico';
                 if (isHidden) renderHistoryTable();
             }
+        });
+    }
+
+    // Lógica para alternar la visibilidad del token
+    const togglePasswordButton = document.getElementById('toggle-password');
+    const tokenInput = document.getElementById('api-token');
+    if (togglePasswordButton && tokenInput) {
+        togglePasswordButton.addEventListener('click', () => {
+            const isPassword = tokenInput.type === 'password';
+            tokenInput.type = isPassword ? 'text' : 'password';
+            togglePasswordButton.textContent = isPassword ? '🙈' : '👁️';
         });
     }
 });
