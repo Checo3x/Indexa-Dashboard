@@ -582,10 +582,11 @@ function renderHistoryTable() {
             const recentData = historyTableData.slice(-10);
             recentData.forEach(item => {
                 const row = document.createElement('tr');
+                const returnClass = item.return < 0 ? 'bg-red-200' : '';
                 row.innerHTML = `
                     <td class="p-2">${item.date}</td>
                     <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
-                    <td class="p-2">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
+                    <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
                 `;
                 tableBody.appendChild(row);
             });
