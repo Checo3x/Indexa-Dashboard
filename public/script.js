@@ -812,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    f (toggleHistoryButton) {
+    if (toggleHistoryButton) {
         toggleHistoryButton.addEventListener('click', () => {
             const historySection = document.getElementById('history-section');
             if (historySection) {
