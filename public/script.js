@@ -599,14 +599,6 @@ async function fetchPortfolioData(token, accountId) {
                 volatilityElement.classList.add('positive-value');
             }
         }
-        const additionalCashElement = document.getElementById('additional-cash-needed');
-        if (additionalCashElement) {
-            const additionalCashValue = Number(additionalCashNeeded);
-            console.log("Asignando Dinero Adicional Necesario al DOM:", additionalCashValue);
-            additionalCashElement.textContent = `€${additionalCashValue.toFixed(2)}`;
-        } else {
-            console.error("Elemento con ID 'additional-cash-needed' no encontrado en el DOM");
-        }
         const datasets = [];
         if (realValues.length > 0) {
             datasets.push({
@@ -657,22 +649,12 @@ async function fetchPortfolioData(token, accountId) {
         }
         portfolioChartData = { labels, datasets };
         console.log("Componentes obtenidos:", components);
-        console.log("Estructura completa de instrument_accounts:", portfolioData.portfolio?.cash_accounts?.[0]?.instrument_accounts);
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            let price = component.price || 0;
+            let price = component.price || component.instrument?.nav || 0;
             let titles = component.titles || 0;
-            console.log(`Datos crudos de componente ${index + 1}:`, {
-                price_raw: component.price,
-                titles_raw: component.titles,
-                component_raw: component
-            });
-            if (!price && component.instrument?.nav) {
-                price = component.instrument.nav;
-                console.log(`Usando nav como price para componente ${index + 1}:`, price);
-            }
             if (!titles && price > 0) {
                 titles = component.amount / price;
                 console.log(`Títulos calculados para componente ${index + 1}:`, titles);
@@ -721,6 +703,15 @@ async function fetchPortfolioData(token, accountId) {
         }
         if (historySection && !historySection.classList.contains('height-hidden')) {
             renderHistoryTable();
+        }
+
+        // Mover la asignación de additional_cash_needed al final
+        const additionalCashElement = document.getElementById('additional-cash-needed');
+        if (additionalCashElement) {
+            const additionalCashValue = Number(additionalCashNeeded);
+            additionalCashElement.textContent = `€${additionalCashValue.toFixed(2)}`;
+        } else {
+            console.error("Elemento con ID 'additional-cash-needed' no encontrado en el DOM");
         }
     } catch (error) {
         setError(`Error al obtener datos: ${error.message}`);
