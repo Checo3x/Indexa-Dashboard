@@ -601,7 +601,6 @@ async function fetchPortfolioData(token, accountId) {
         }
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) {
-            // Aseguramos que el valor de additional_cash_needed se asigne correctamente
             const additionalCashValue = Number(additionalCashNeeded);
             additionalCashElement.textContent = `€${additionalCashValue.toFixed(2)}`;
         }
@@ -657,15 +656,15 @@ async function fetchPortfolioData(token, accountId) {
         console.log("Componentes obtenidos:", components);
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-            // Usamos instrument.name en lugar de identifier_name
             const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            let price = component.instrument?.price || 0;
-            let titles = component.instrument?.titles || 0;
+            // Accedemos a price y titles directamente desde component, no desde instrument
+            let price = component.price || 0;
+            let titles = component.titles || 0;
             // Log para depurar los valores de price y titles
             console.log(`Datos crudos de componente ${index + 1}:`, {
-                price_raw: component.instrument?.price,
-                titles_raw: component.instrument?.titles
+                price_raw: component.price,
+                titles_raw: component.titles
             });
             // Si price no está disponible, intentamos buscarlo en otros campos (si aplica)
             if (!price && component.instrument?.nav) {
