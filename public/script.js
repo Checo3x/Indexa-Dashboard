@@ -653,13 +653,8 @@ async function fetchPortfolioData(token, accountId) {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            let price = component.price || component.instrument?.nav || 0;
-            let titles = component.titles || 0;
-            console.log(`Estructura completa de componente ${index + 1}:`, component);
-            if (!titles && price > 0) {
-                titles = component.amount / price;
-                console.log(`Títulos calculados para componente ${index + 1}:`, titles);
-            }
+            const price = component.positions?.[0]?.price || 0;
+            const titles = component.positions?.[0]?.titles || 0;
             console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
