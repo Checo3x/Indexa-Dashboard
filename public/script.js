@@ -418,7 +418,7 @@ async function fetchPortfolioData(token, accountId) {
         if (totalValue === 0 && portfolioData.portfolio?.total_amount) {
             totalValue = portfolioData.portfolio.total_amount;
         }
-        const additionalCashNeeded = portfolioData.extra?.additional_cash_needed ?? 0;
+        const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         console.log("Dinero Adicional Necesario (desde API):", additionalCashNeeded);
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
         const volatility = (historyData.volatility || 0) * 100;
@@ -655,6 +655,7 @@ async function fetchPortfolioData(token, accountId) {
             const color = colorPalette[index % colorPalette.length];
             let price = component.price || component.instrument?.nav || 0;
             let titles = component.titles || 0;
+            console.log(`Estructura completa de componente ${index + 1}:`, component);
             if (!titles && price > 0) {
                 titles = component.amount / price;
                 console.log(`Títulos calculados para componente ${index + 1}:`, titles);
@@ -705,10 +706,10 @@ async function fetchPortfolioData(token, accountId) {
             renderHistoryTable();
         }
 
-        // Mover la asignación de additional_cash_needed al final
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) {
             const additionalCashValue = Number(additionalCashNeeded);
+            console.log("Asignando Dinero Adicional Necesario al DOM:", additionalCashValue);
             additionalCashElement.textContent = `€${additionalCashValue.toFixed(2)}`;
         } else {
             console.error("Elemento con ID 'additional-cash-needed' no encontrado en el DOM");
