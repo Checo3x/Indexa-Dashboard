@@ -22,7 +22,7 @@ const colorPalette = [
     '#D4A5A5', '#9B59B6', '#3498DB', '#E74C3C', '#2ECC71'
 ];
 
-const 🙂performanceColors = {
+const performanceColors = {
     real: '#4ECDC4',
     expected: '#3498DB',
     best: '#2ECC71',
