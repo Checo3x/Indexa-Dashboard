@@ -637,11 +637,12 @@ async function fetchPortfolioData(token, accountId) {
         portfolioChartData = { labels, datasets };
         console.log("Componentes obtenidos:", components);
         const weights = components.map((component, index) => {
+            console.log(`Estructura del componente ${index + 1}:`, component);
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            const price = component.positions?.[0]?.price || 0;
-            const titles = component.positions?.[0]?.titles || 0;
+            const price = component.positions?.[0]?.price || component.price || 0;
+            const titles = component.positions?.[0]?.titles || component.titles || 0;
             console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
