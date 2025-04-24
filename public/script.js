@@ -9,9 +9,8 @@ let compositionTableData = null;
 let historyTableData = null;
 let currentToken = null;
 
-// Escalas actuales de los gráficos
-let portfolioScale = 'euros'; // Puede ser 'euros' o 'percentage'
-let componentsScale = 'euros'; // Puede ser 'euros' o 'percentage'
+let portfolioScale = 'euros';
+let componentsScale = 'euros';
 
 if (typeof Chart === 'undefined') {
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
@@ -130,7 +129,7 @@ function createPortfolioChart(labels, datasets, scale) {
                 },
                 elements: {
                     line: {
-                        borderWidth: 3 // Líneas más gruesas
+                        borderWidth: 3
                     },
                     point: {
                         radius: 4,
@@ -165,11 +164,14 @@ function createComponentsChart(labels, datasets, scale) {
 
         if (scale === 'percentage') {
             yAxisTitle = 'Rentabilidad (%)';
-            const initialValue = dataToUse[0].data[0];
-            dataToUse = dataToUse.map(dataset => ({
-                ...dataset,
-                data: dataset.data.map(value => value !== null ? ((value - initialValue) / initialValue) * 100 : null)
-            }));
+            dataToUse = datasets.map(dataset => {
+                const initialValue = dataset.data.find(val => val !== null);
+                if (!initialValue) return { ...dataset, data: dataset.data.map(() => null) };
+                return {
+                    ...dataset,
+                    data: dataset.data.map(value => value !== null ? ((value - initialValue) / initialValue) * 100 : null)
+                };
+            });
         }
 
         componentsChart = new Chart(ctxComponents, {
@@ -236,7 +238,7 @@ function createComponentsChart(labels, datasets, scale) {
                 },
                 elements: {
                     line: {
-                        borderWidth: 3 // Líneas más gruesas
+                        borderWidth: 3
                     },
                     point: {
                         radius: 4,
@@ -328,6 +330,44 @@ async function fetchAccounts(token) {
             tokenInput.classList.remove('invalid');
             tokenInput.classList.add('valid');
         }
+
+        // Calcular resumen de cuentas
+        let totalValue = 0;
+        let totalReturn = 0;
+        let totalContributions = 0;
+        const accountPromises = accounts.map(async account => {
+            const portfolioResponse = await fetch(`/api/accounts/${account.account_number}/portfolio`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const portfolioData = await portfolioResponse.json();
+            const historyResponse = await fetch(`/api/accounts/${account.account_number}/performance`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const historyData = await historyResponse.json();
+            const accountValue = portfolioData.portfolio?.total_amount || 0;
+            const accountReturn = (historyData.return?.time_return_annual || 0) * 100;
+            const accountContributions = portfolioData.extra?.amount_to_trade || 0;
+            totalValue += accountValue;
+            totalReturn += accountReturn;
+            totalContributions += accountContributions;
+        });
+        await Promise.all(accountPromises);
+        totalReturn = accounts.length > 0 ? totalReturn / accounts.length : 0;
+
+        const overviewSection = document.getElementById('overview-section');
+        const overviewTotalValue = document.getElementById('overview-total-value');
+        const overviewReturn = document.getElementById('overview-return');
+        const overviewContributions = document.getElementById('overview-contributions');
+        if (overviewSection && overviewTotalValue && overviewReturn && overviewContributions) {
+            overviewTotalValue.textContent = `€${totalValue.toFixed(2)}`;
+            overviewReturn.textContent = `${totalReturn.toFixed(2)}%`;
+            overviewReturn.classList.remove('negative-value', 'positive-value');
+            if (totalReturn < 0) overviewReturn.classList.add('negative-value');
+            else if (totalReturn > 0) overviewReturn.classList.add('positive-value');
+            overviewContributions.textContent = `€${totalContributions.toFixed(2)}`;
+            overviewSection.classList.remove('fade-hidden');
+            overviewSection.classList.add('fade-visible');
+        }
     } catch (error) {
         setError(`Error al cargar cuentas: ${error.message}`);
         if (tokenInput) {
@@ -367,12 +407,17 @@ async function fetchPortfolioData(token, accountId) {
         }
         const historyData = await historyResponse.json();
         let components = [];
+        let cashAmount = 0;
         if (portfolioData.portfolio?.cash_accounts?.[0]?.instrument_accounts) {
             components = portfolioData.portfolio.cash_accounts[0].instrument_accounts;
         } else if (portfolioData.comparison) {
             components = portfolioData.comparison;
         }
+        if (portfolioData.portfolio?.cash_amount) {
+            cashAmount = portfolioData.portfolio.cash_amount;
+        }
         let totalValue = components.reduce((sum, component) => sum + (component.amount || 0), 0);
+        totalValue += cashAmount;
         if (totalValue === 0 && portfolioData.portfolio?.total_amount) {
             totalValue = portfolioData.portfolio.total_amount;
         }
@@ -559,7 +604,6 @@ async function fetchPortfolioData(token, accountId) {
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) {
             additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
-            // No añadimos clases de resaltado
         }
         const datasets = [];
         if (realValues.length > 0) {
@@ -614,8 +658,20 @@ async function fetchPortfolioData(token, accountId) {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.name || component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            return { name, amount: component.amount || 0, weight, color };
+            const price = component.instrument?.price || 0;
+            const titles = component.instrument?.titles || 0;
+            return { name, amount: component.amount || 0, weight, color, price, titles };
         });
+        if (cashAmount > 0) {
+            weights.push({
+                name: 'Efectivo',
+                amount: cashAmount,
+                weight: totalValue > 0 ? cashAmount / totalValue : 0,
+                color: '#CCCCCC',
+                price: 1, // Precio por unidad de efectivo es 1
+                titles: cashAmount // Número de "títulos" es el monto en efectivo
+            });
+        }
         compositionTableData = weights;
         const componentDatasets = [];
         if (realValues.length > 0) {
@@ -630,19 +686,33 @@ async function fetchPortfolioData(token, accountId) {
             });
         }
         weights.forEach(fund => {
-            const weight = fund.weight || 0;
-            const name = fund.name;
-            const color = fund.color;
-            const componentValues = realValues.map(value => value !== null ? value * weight : null);
-            componentDatasets.push({
-                label: `${name} (€)`,
-                data: componentValues,
-                borderColor: color,
-                tension: 0.1,
-                fill: false,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            });
+            if (fund.name === 'Efectivo') {
+                // Efectivo no cambia de valor con el tiempo
+                const componentValues = realValues.map(() => fund.amount);
+                componentDatasets.push({
+                    label: `${fund.name} (€)`,
+                    data: componentValues,
+                    borderColor: fund.color,
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                });
+            } else {
+                const weight = fund.weight || 0;
+                const name = fund.name;
+                const color = fund.color;
+                const componentValues = realValues.map(value => value !== null ? value * weight : null);
+                componentDatasets.push({
+                    label: `${name} (€)`,
+                    data: componentValues,
+                    borderColor: color,
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                });
+            }
         });
         componentsChartData = { labels, datasets: componentDatasets };
         const tableData = realValues.map((value, index) => {
@@ -698,7 +768,7 @@ function renderCompositionTable() {
         compositionTable.innerHTML = '';
         if (compositionTableData.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="4" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+            row.innerHTML = `<td colspan="6" class="p-2 text-center">No hay datos de composición disponibles</td>`;
             compositionTable.appendChild(row);
         } else {
             compositionTableData.forEach(fund => {
@@ -707,7 +777,14 @@ function renderCompositionTable() {
                     <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
                     <td class="p-2">${fund.name}</td>
                     <td class="p-2">€${fund.amount.toFixed(2)}</td>
-                    <td class="p-2">${(fund.weight * 100).toFixed(2)}%</td>
+                    <td class="p-2">
+                        <div class="weight-bar">
+                            <div class="weight-bar-fill" style="width: ${(fund.weight * 100).toFixed(2)}%;"></div>
+                        </div>
+                        ${(fund.weight * 100).toFixed(2)}%
+                    </td>
+                    <td class="p-2">€${fund.price.toFixed(2)}</td>
+                    <td class="p-2">${fund.titles.toFixed(2)}</td>
                 `;
                 compositionTable.appendChild(row);
             });
@@ -830,13 +907,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Listeners para los botones de alternancia de escala
     document.querySelectorAll('.scale-toggle').forEach(button => {
         button.addEventListener('click', () => {
             const chart = button.getAttribute('data-chart');
             const scale = button.getAttribute('data-scale');
-
-            // Actualizar la escala activa
             if (chart === 'portfolio') {
                 portfolioScale = scale;
                 document.getElementById('portfolio-euros').classList.toggle('active', scale === 'euros');
@@ -850,4 +924,36 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    const downloadDataButton = document.getElementById('download-data');
+    if (downloadDataButton) {
+        downloadDataButton.addEventListener('click', () => {
+            if (!portfolioChartData) {
+                setWarning('No hay datos disponibles para descargar.');
+                return;
+            }
+            const labels = portfolioChartData.labels;
+            const datasets = portfolioChartData.datasets;
+            let csvContent = "Fecha";
+            datasets.forEach(dataset => {
+                csvContent += `,${dataset.label}`;
+            });
+            csvContent += "\n";
+            labels.forEach((label, index) => {
+                csvContent += label;
+                datasets.forEach(dataset => {
+                    const value = dataset.data[index];
+                    csvContent += `,${value !== null ? value.toFixed(2) : ''}`;
+                });
+                csvContent += "\n";
+            });
+            const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "portfolio_data.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    }
 });
