@@ -419,6 +419,7 @@ async function fetchPortfolioData(token, accountId) {
             totalValue = portfolioData.portfolio.total_amount;
         }
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed ?? 0;
+        console.log("Dinero Adicional Necesario (desde API):", additionalCashNeeded);
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
         const volatility = (historyData.volatility || 0) * 100;
         let labels = [];
@@ -651,12 +652,14 @@ async function fetchPortfolioData(token, accountId) {
             });
         }
         portfolioChartData = { labels, datasets };
+        console.log("Componentes obtenidos:", components);
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-            const name = component.instrument?.description || component.instrument?.identifier_name || `Fondo ${index + 1}`;
+            const name = component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
             const price = component.instrument?.price || 0;
             const titles = component.instrument?.titles || 0;
+            console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
         if (cashAmount > 0) {
