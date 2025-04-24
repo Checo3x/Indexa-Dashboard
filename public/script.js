@@ -51,7 +51,7 @@ function createPortfolioChart(labels, datasets) {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10, autoSkip: true },
+                        ticks: { maxTicksLimit: 5, autoSkip: true }, /* Reducido para ajustarse al tamaño */
                         grid: { display: false }
                     },
                     y: {
@@ -65,9 +65,9 @@ function createPortfolioChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 16 },
+                            font: { size: 14 }, /* Reducido para ajustarse al diseño */
                             color: '#1a1a2e',
-                            padding: 10
+                            padding: 8
                         }
                     },
                     tooltip: {
@@ -118,7 +118,7 @@ function createComponentsChart(labels, datasets) {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 10, autoSkip: true },
+                        ticks: { maxTicksLimit: 5, autoSkip: true }, /* Reducido para ajustarse al tamaño */
                         grid: { display: false }
                     },
                     y: {
@@ -132,9 +132,9 @@ function createComponentsChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 16 },
+                            font: { size: 14 }, /* Reducido para ajustarse al diseño */
                             color: '#1a1a2e',
-                            padding: 10
+                            padding: 8
                         }
                     },
                     tooltip: {
@@ -452,21 +452,33 @@ async function fetchPortfolioData(token, accountId) {
         const annualReturnElement = document.getElementById('annual-return');
         if (annualReturnElement) {
             annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
-            annualReturnElement.classList.remove('negative-value');
+            annualReturnElement.classList.remove('negative-value', 'positive-value');
             if (annualReturn < 0) {
                 annualReturnElement.classList.add('negative-value');
+            } else if (annualReturn > 0) {
+                annualReturnElement.classList.add('positive-value');
             }
         }
         const volatilityElement = document.getElementById('volatility');
         if (volatilityElement) {
             volatilityElement.textContent = `${volatility.toFixed(2)}%`;
-            volatilityElement.classList.remove('negative-value');
+            volatilityElement.classList.remove('negative-value', 'positive-value');
             if (volatility < 0) {
                 volatilityElement.classList.add('negative-value');
+            } else if (volatility > 0) {
+                volatilityElement.classList.add('positive-value');
             }
         }
         const additionalCashElement = document.getElementById('additional-cash-needed');
-        if (additionalCashElement) additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
+        if (additionalCashElement) {
+            additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
+            additionalCashElement.classList.remove('negative-value', 'positive-value');
+            if (additionalCashNeeded < 0) {
+                additionalCashElement.classList.add('negative-value');
+            } else if (additionalCashNeeded > 0) {
+                additionalCashElement.classList.add('positive-value');
+            }
+        }
         const datasets = [];
         if (realValues.length > 0) {
             datasets.push({
@@ -561,15 +573,12 @@ async function fetchPortfolioData(token, accountId) {
         });
         historyTableData = tableData;
 
-        const portfolioSection = document.getElementById('portfolio-chart-section');
-        const componentsSection = document.getElementById('components-chart-section');
+        const chartsContainer = document.querySelector('.charts-container');
         const compositionSection = document.getElementById('composition-section');
         const historySection = document.getElementById('history-section');
 
-        if (portfolioSection && !portfolioSection.classList.contains('height-hidden')) {
+        if (chartsContainer && !chartsContainer.classList.contains('height-hidden')) {
             renderPortfolioChart();
-        }
-        if (componentsSection && !componentsSection.classList.contains('height-hidden')) {
             renderComponentsChart();
         }
         if (compositionSection && !compositionSection.classList.contains('height-hidden')) {
@@ -586,6 +595,7 @@ async function fetchPortfolioData(token, accountId) {
 }
 
 function renderPortfolioChart() {
+    if (portfolioChartData delusional: "src" is not available.
     if (portfolioChartData) {
         createPortfolioChart(portfolioChartData.labels, portfolioChartData.datasets);
     } else {
@@ -636,7 +646,7 @@ function renderHistoryTable() {
             const recentData = historyTableData.slice(-10);
             recentData.forEach(item => {
                 const row = document.createElement('tr');
-                const returnClass = item.return < 0 ? 'negative-value' : '';
+                const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
                 row.innerHTML = `
                     <td class="p-2">${item.date}</td>
                     <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
@@ -684,14 +694,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const toggleChartsButton = document.getElementById('toggle-charts');
     if (toggleChartsButton) {
         toggleChartsButton.addEventListener('click', () => {
-            const portfolioSection = document.getElementById('portfolio-chart-section');
-            const componentsSection = document.getElementById('components-chart-section');
-            if (portfolioSection && componentsSection) {
-                const isHidden = portfolioSection.classList.contains('height-hidden');
-                portfolioSection.classList.toggle('height-hidden', !isHidden);
-                portfolioSection.classList.toggle('height-visible', isHidden);
-                componentsSection.classList.toggle('height-hidden', !isHidden);
-                componentsSection.classList.toggle('height-visible', isHidden);
+            const chartsContainer = document.querySelector('.charts-container');
+            if (chartsContainer) {
+                const isHidden = chartsContainer.classList.contains('height-hidden');
+                chartsContainer.classList.toggle('height-hidden', !isHidden);
+                chartsContainer.classList.toggle('height-visible', isHidden);
                 toggleChartsButton.innerHTML = isHidden ? '<i class="fas fa-chart-line"></i> Ocultar Gráficos' : '<i class="fas fa-chart-line"></i> Mostrar Gráficos';
                 toggleChartsButton.classList.toggle('active', isHidden);
                 if (isHidden) {
