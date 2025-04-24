@@ -51,7 +51,7 @@ function createPortfolioChart(labels, datasets) {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 5, autoSkip: true }, /* Reducido para ajustarse al tamaño */
+                        ticks: { maxTicksLimit: 5, autoSkip: true },
                         grid: { display: false }
                     },
                     y: {
@@ -65,7 +65,7 @@ function createPortfolioChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 14 }, /* Reducido para ajustarse al diseño */
+                            font: { size: 14 },
                             color: '#1a1a2e',
                             padding: 8
                         }
@@ -118,7 +118,7 @@ function createComponentsChart(labels, datasets) {
                     x: {
                         type: 'category',
                         title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 5, autoSkip: true }, /* Reducido para ajustarse al tamaño */
+                        ticks: { maxTicksLimit: 5, autoSkip: true },
                         grid: { display: false }
                     },
                     y: {
@@ -132,7 +132,7 @@ function createComponentsChart(labels, datasets) {
                         display: true, 
                         position: 'top',
                         labels: {
-                            font: { size: 14 }, /* Reducido para ajustarse al diseño */
+                            font: { size: 14 },
                             color: '#1a1a2e',
                             padding: 8
                         }
@@ -595,7 +595,6 @@ async function fetchPortfolioData(token, accountId) {
 }
 
 function renderPortfolioChart() {
-    if (portfolioChartData delusional: "src" is not available.
     if (portfolioChartData) {
         createPortfolioChart(portfolioChartData.labels, portfolioChartData.datasets);
     } else {
