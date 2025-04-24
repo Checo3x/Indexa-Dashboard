@@ -80,7 +80,7 @@ function createPortfolioChart(labels, datasets, scale) {
                     },
                     y: {
                         title: { display: true, text: yAxisTitle },
-                        beginAtZero: true,
+                        // beginAtZero: true, // Eliminado para ajustar dinámicamente
                         grid: { color: '#e2e8f0' },
                         ticks: {
                             callback: function(value) {
@@ -189,7 +189,7 @@ function createComponentsChart(labels, datasets, scale) {
                     },
                     y: {
                         title: { display: true, text: yAxisTitle },
-                        beginAtZero: true,
+                        // beginAtZero: true, // Eliminado para ajustar dinámicamente
                         grid: { color: '#e2e8f0' },
                         ticks: {
                             callback: function(value) {
@@ -421,7 +421,7 @@ async function fetchPortfolioData(token, accountId) {
         if (totalValue === 0 && portfolioData.portfolio?.total_amount) {
             totalValue = portfolioData.portfolio.total_amount;
         }
-        const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
+        const additionalCashNeeded = portfolioData.extra?.additional_cash_needed ?? 0;
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
         const volatility = (historyData.volatility || 0) * 100;
         let labels = [];
@@ -656,10 +656,10 @@ async function fetchPortfolioData(token, accountId) {
         portfolioChartData = { labels, datasets };
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-            const name = component.instrument?.name || component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
+            const name = component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            const price = component.instrument?.price || 0;
-            const titles = component.instrument?.titles || 0;
+            const price = component.instrument?.price || 0; // Asegurado que se extraiga correctamente
+            const titles = component.instrument?.titles || 0; // Asegurado que se extraiga correctamente
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
         if (cashAmount > 0) {
@@ -668,26 +668,14 @@ async function fetchPortfolioData(token, accountId) {
                 amount: cashAmount,
                 weight: totalValue > 0 ? cashAmount / totalValue : 0,
                 color: '#CCCCCC',
-                price: 1, // Precio por unidad de efectivo es 1
-                titles: cashAmount // Número de "títulos" es el monto en efectivo
+                price: 1,
+                titles: cashAmount
             });
         }
         compositionTableData = weights;
         const componentDatasets = [];
-        if (realValues.length > 0) {
-            componentDatasets.push({
-                label: 'Total Cartera (€)',
-                data: realValues,
-                borderColor: performanceColors.real,
-                tension: 0.1,
-                fill: false,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            });
-        }
         weights.forEach(fund => {
             if (fund.name === 'Efectivo') {
-                // Efectivo no cambia de valor con el tiempo
                 const componentValues = realValues.map(() => fund.amount);
                 componentDatasets.push({
                     label: `${fund.name} (€)`,
