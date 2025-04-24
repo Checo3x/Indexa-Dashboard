@@ -341,7 +341,8 @@ async function fetchAccounts(token) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const historyData = await historyResponse.json();
-            const accountValue = portfolioData.instrument_accounts?.reduce((sum, component) => sum + (component.amount || 0), 0) || 0;
+            const positions = portfolioData.instrument_accounts?.flatMap(account => account.positions || []) || [];
+            const accountValue = positions.reduce((sum, position) => sum + (position.amount || 0), 0) || 0;
             const accountReturn = (historyData.return?.time_return_annual || 0) * 100;
             const accountContributions = portfolioData.extra?.amount_to_trade || 0;
             totalValue += accountValue;
@@ -403,7 +404,7 @@ async function fetchPortfolioData(token, accountId) {
             throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
         }
         const historyData = await historyResponse.json();
-        const components = portfolioData.instrument_accounts || [];
+        const components = portfolioData.instrument_accounts?.flatMap(account => account.positions || []) || [];
         let totalValue = components.reduce((sum, component) => sum + (component.amount || 0), 0);
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         console.log("Dinero Adicional Necesario (desde API):", additionalCashNeeded);
@@ -641,8 +642,8 @@ async function fetchPortfolioData(token, accountId) {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            const price = component.positions?.[0]?.price || component.price || 0;
-            const titles = component.positions?.[0]?.titles || component.titles || 0;
+            const price = component.price || 0;
+            const titles = component.titles || 0;
             console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
@@ -746,35 +747,6 @@ function renderCompositionTable() {
                 `;
                 compositionTable.appendChild(row);
             });
-        }
-    }
-}
-
-function renderHistoryTable() {
-    const tableBody = document.getElementById('history-table');
-    if (tableBody && historyTableData) {
-        tableBody.innerHTML = '';
-        if (historyTableData.length === 0) {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
-            tableBody.appendChild(row);
-        } else {
-            const recentData = historyTableData.slice(-10);
-            recentData.forEach(item => {
-                const row = document.createElement('tr');
-                const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
-                row.innerHTML = `
-                    <td class="p-2">${item.date}</td>
-                    <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
-                    <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-            if (historyTableData.length > 10) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${historyTableData.length} disponibles</td>`;
-                tableBody.appendChild(row);
-            }
         }
     }
 }
