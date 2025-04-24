@@ -601,7 +601,9 @@ async function fetchPortfolioData(token, accountId) {
         }
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) {
-            additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
+            // Aseguramos que el valor de additional_cash_needed se asigne correctamente
+            const additionalCashValue = Number(additionalCashNeeded);
+            additionalCashElement.textContent = `€${additionalCashValue.toFixed(2)}`;
         }
         const datasets = [];
         if (realValues.length > 0) {
@@ -655,7 +657,8 @@ async function fetchPortfolioData(token, accountId) {
         console.log("Componentes obtenidos:", components);
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-            const name = component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
+            // Usamos instrument.name en lugar de identifier_name
+            const name = component.instrument?.name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
             let price = component.instrument?.price || 0;
             let titles = component.instrument?.titles || 0;
@@ -677,7 +680,6 @@ async function fetchPortfolioData(token, accountId) {
             console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
-        // No añadimos el efectivo a la tabla de composición ni al gráfico de componentes
         compositionTableData = weights;
         const componentDatasets = [];
         weights.forEach(fund => {
