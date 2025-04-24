@@ -22,44 +22,42 @@
             align-items: center;
             justify-content: center;
             max-width: 1200px;
-            padding: 1rem; /* Reducido de 1.5rem */
+            padding: 1rem;
             margin: 0 auto;
         }
 
         h1 {
-            font-size: 2rem; /* Reducido de 2.5rem */
+            font-size: 2rem;
             font-weight: 700;
             position: relative;
-            margin-bottom: 0.75rem; /* Reducido de 1.5rem */
+            margin-bottom: 0.75rem;
         }
 
         h1::after {
             content: '';
             position: absolute;
-            bottom: -0.25rem; /* Reducido de 0.5rem */
+            bottom: -0.25rem;
             left: 50%;
             transform: translateX(-50%);
-            width: 80px; /* Reducido de 100px */
-            height: 3px; /* Reducido de 4px */
+            width: 80px;
+            height: 3px;
             background: #00ddeb;
             border-radius: 2px;
         }
 
         h2 {
-            font-size: 1.25rem; /* Reducido de 1.5rem */
+            font-size: 1.25rem;
             font-weight: 600;
         }
 
-        /* Separador decorativo */
         .separator {
-            width: 40px; /* Reducido de 50px */
-            height: 1px; /* Reducido de 2px */
+            width: 40px;
+            height: 1px;
             background: #00ddeb;
-            margin: 0.5rem auto; /* Reducido de 1rem */
+            margin: 0.5rem auto;
             opacity: 0.5;
         }
 
-        /* Transiciones y animaciones */
         .fade-transition {
             transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
@@ -99,45 +97,46 @@
             transition: opacity 0.3s ease-in-out;
         }
 
-        /* Contenedor combinado para token y selección de cuenta */
         #input-section {
             background: #ffffff;
             color: #1a1a2e;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 1rem; /* Reducido de 1.5rem */
-            margin-bottom: 0.5rem; /* Reducido de 1rem */
+            padding: 1rem;
+            margin-bottom: 0.5rem;
             width: 100%;
             max-width: 600px;
         }
 
-        /* Estilo de otras secciones */
+        #overview-section, 
         #account-info, 
-        #portfolio-chart-section, #components-chart-section, 
-        #composition-section, #history-section {
+        #portfolio-chart-section, 
+        #components-chart-section, 
+        #composition-section, 
+        #history-section {
             background: #ffffff;
             color: #1a1a2e;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            padding: 1rem; /* Reducido de 1.5rem */
-            margin-bottom: 0.5rem; /* Reducido de 0.75rem */
+            padding: 1rem;
+            margin-bottom: 0.5rem;
             width: 100%;
+            max-width: 800px; /* Ajustado para igualar anchos */
         }
 
         #error-message, #warning-message {
             width: 100%;
             max-width: 800px;
             border-radius: 8px;
-            margin-bottom: 0.5rem; /* Reducido de 0.75rem */
+            margin-bottom: 0.5rem;
         }
 
-        /* Contenedor para gráficos en paralelo */
         .charts-container {
             display: flex;
             flex-direction: row;
-            gap: 0.75rem; /* Reducido de 1rem */
+            gap: 0.75rem;
             width: 100%;
-            max-width: 1200px;
+            max-width: 800px; /* Ajustado para igualar anchos */
         }
 
         #portfolio-chart-section, #components-chart-section {
@@ -145,7 +144,6 @@
             min-width: 0;
         }
 
-        /* Estilo de inputs y selects */
         input, select {
             background: #f8fafc;
             border: none;
@@ -161,7 +159,6 @@
             border-bottom-color: #00ddeb;
         }
 
-        /* Feedback visual para el token */
         input.valid {
             border-bottom-color: #2ECC71;
         }
@@ -170,7 +167,6 @@
             border-bottom-color: #E74C3C;
         }
 
-        /* Estilo personalizado para el select */
         .select-wrapper {
             position: relative;
             width: 100%;
@@ -196,13 +192,12 @@
             padding-right: 2.5rem;
         }
 
-        /* Botones estilizados */
         button {
             background: #00ddeb;
             color: #ffffff;
             border: none;
             border-radius: 8px;
-            padding: 0.5rem 1rem; /* Reducido de 0.75rem 1.5rem */
+            padding: 0.5rem 1rem;
             font-weight: 500;
             transition: background 0.3s ease, transform 0.1s ease;
             display: inline-flex;
@@ -220,7 +215,6 @@
             cursor: not-allowed;
         }
 
-        /* Botones de alternancia de escala */
         .scale-toggle {
             background: #e2e8f0;
             color: #1a1a2e;
@@ -237,25 +231,24 @@
             color: #ffffff;
         }
 
-        /* Barra de herramientas para botones de alternancia */
         .toolbar {
             display: flex;
             justify-content: center;
-            gap: 0.5rem; /* Reducido de 0.75rem */
+            gap: 0.5rem;
             flex-wrap: wrap;
-            margin-bottom: 0.25rem; /* Reducido de 0.5rem */
+            margin-bottom: 0.25rem;
             position: sticky;
-            top: 0.5rem; /* Reducido de 1rem */
+            top: 0.5rem;
             z-index: 10;
             background: rgba(26, 26, 46, 0.8);
             backdrop-filter: blur(10px);
-            padding: 0.25rem; /* Reducido de 0.5rem */
+            padding: 0.25rem;
             border-radius: 8px;
         }
 
         .toolbar button {
             padding: 0.5rem 1rem;
-            font-size: 0.85rem; /* Reducido de 0.9rem */
+            font-size: 0.85rem;
             transition: background 0.3s ease;
         }
 
@@ -263,17 +256,15 @@
             background: #1a1a2e;
         }
 
-        /* Gráficos */
         #portfolio-chart, #components-chart {
             max-height: 300px;
             width: 100%;
             height: auto;
-            background: #f8fafc;
+            background: #ffffff; /* Cambiado a blanco */
             border-radius: 8px;
-            padding: 0.5rem; /* Reducido de 1rem */
+            padding: 0.5rem;
         }
 
-        /* Tablas */
         table {
             background: #ffffff;
             border-radius: 8px;
@@ -281,7 +272,7 @@
         }
 
         th, td {
-            padding: 0.5rem; /* Reducido de 0.75rem */
+            padding: 0.5rem;
         }
 
         tr {
@@ -292,20 +283,6 @@
             background: #f1f5f9;
         }
 
-        /* Toggle de contraseña */
-        .toggle-password {
-            cursor: pointer;
-            color: #00ddeb;
-            margin-left: 0.5rem;
-            transition: color 0.2s ease, transform 0.1s ease;
-        }
-
-        .toggle-password:hover {
-            color: #00c4d3;
-            transform: scale(1.2);
-        }
-
-        /* Resaltar valores positivos y negativos */
         .positive-value {
             background: #d1fae5;
             color: #065f46;
@@ -340,21 +317,45 @@
             font-size: 0.8rem;
         }
 
-        /* Diseño responsive */
+        .toggle-password {
+            cursor: pointer;
+            color: #00ddeb;
+            margin-left: 0.5rem;
+            transition: color 0.2s ease, transform 0.1s ease;
+        }
+
+        .toggle-password:hover {
+            color: #00c4d3;
+            transform: scale(1.2);
+        }
+
+        .weight-bar {
+            background: #e2e8f0;
+            height: 0.5rem;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .weight-bar-fill {
+            background: #00ddeb;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
         @media (max-width: 768px) {
             h1 {
-                font-size: 1.75rem; /* Reducido de 2rem */
+                font-size: 1.75rem;
             }
 
             .container {
-                padding: 0.75rem; /* Reducido de 1rem */
+                padding: 0.75rem;
             }
 
-            #input-section, #account-info, 
+            #input-section, #overview-section, #account-info, 
             #portfolio-chart-section, #components-chart-section, 
             #composition-section, #history-section {
-                padding: 0.75rem; /* Reducido de 1rem */
-                margin-bottom: 0.25rem; /* Reducido de 0.5rem */
+                padding: 0.75rem;
+                margin-bottom: 0.25rem;
             }
 
             .toolbar {
@@ -363,14 +364,13 @@
 
             .toolbar button {
                 padding: 0.5rem 0.75rem;
-                font-size: 0.8rem; /* Reducido de 0.85rem */
+                font-size: 0.8rem;
             }
 
             .separator {
-                margin: 0.25rem auto; /* Reducido de 0.5rem */
+                margin: 0.25rem auto;
             }
 
-            /* Apilar gráficos verticalmente en pantallas pequeñas */
             .charts-container {
                 flex-direction: column;
             }
@@ -381,12 +381,12 @@
         }
 
         @media (max-width: 480px) {
-            #account-info .grid {
+            #overview-section .grid, #account-info .grid {
                 grid-template-columns: 1fr;
             }
 
-            #account-info .grid p {
-                margin-bottom: 0.25rem; /* Reducido de 0.5rem */
+            #overview-section .grid p, #account-info .grid p {
+                margin-bottom: 0.25rem;
             }
 
             .select-wrapper {
@@ -431,7 +431,16 @@
         <div id="error-message" class="fade-hidden fade-transition p-4 text-red-700 bg-red-100 rounded mx-auto"></div>
         <div id="warning-message" class="fade-hidden fade-transition p-4 text-yellow-700 bg-yellow-100 rounded mx-auto"></div>
 
-        <div id="account-info" class="fade-hidden fade-transition p-4 rounded mx-auto max-w-4xl">
+        <div id="overview-section" class="fade-hidden fade-transition p-4 rounded mx-auto">
+            <h2 class="text-xl font-semibold mb-4 text-center">Resumen de Tus Cuentas</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <p><strong>Valor Total:</strong> <span id="overview-total-value">€0.00</span></p>
+                <p><strong>Rentabilidad:</strong> <span id="overview-return">0.00%</span></p>
+                <p><strong>Aportaciones Netas:</strong> <span id="overview-contributions">€0.00</span></p>
+            </div>
+        </div>
+
+        <div id="account-info" class="fade-hidden fade-transition p-4 rounded mx-auto">
             <h2 class="text-xl font-semibold mb-4 text-center">Información de la Cuenta</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <p><strong>Cuenta seleccionada:</strong> <span id="selected-account"></span></p>
@@ -454,6 +463,7 @@
                 <div class="flex mb-2">
                     <button id="portfolio-euros" class="scale-toggle active" data-chart="portfolio" data-scale="euros">En Euros (€)</button>
                     <button id="portfolio-percentage" class="scale-toggle" data-chart="portfolio" data-scale="percentage">En Porcentaje (%)</button>
+                    <button id="download-data" class="scale-toggle">Descargar Datos</button>
                 </div>
                 <canvas id="portfolio-chart" aria-label="Gráfico de evolución de la cartera"></canvas>
             </div>
@@ -468,7 +478,7 @@
         </div>
 
         <div id="composition-section" class="height-hidden height-transition flex justify-center">
-            <div class="w-full max-w-4xl">
+            <div class="w-full">
                 <h2 class="text-xl font-semibold mb-4 text-center">Composición de la Cartera</h2>
                 <table class="w-full border-collapse">
                     <thead>
@@ -477,6 +487,8 @@
                             <th class="p-2 text-left">Fondo</th>
                             <th class="p-2 text-left">Valor (€)</th>
                             <th class="p-2 text-left">Peso (%)</th>
+                            <th class="p-2 text-left">Precio por Título (€)</th>
+                            <th class="p-2 text-left">Títulos</th>
                         </tr>
                     </thead>
                     <tbody id="composition-table"></tbody>
@@ -485,7 +497,7 @@
         </div>
 
         <div id="history-section" class="height-hidden height-transition flex justify-center">
-            <div class="w-full max-w-4xl">
+            <div class="w-full">
                 <h2 class="text-xl font-semibold mb-4 text-center">Histórico de Rentabilidad</h2>
                 <table class="w-full border-collapse">
                     <thead>
