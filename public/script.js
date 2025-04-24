@@ -80,7 +80,6 @@ function createPortfolioChart(labels, datasets, scale) {
                     },
                     y: {
                         title: { display: true, text: yAxisTitle },
-                        // beginAtZero: true, // Eliminado para ajustar dinámicamente
                         grid: { color: '#e2e8f0' },
                         ticks: {
                             callback: function(value) {
@@ -189,7 +188,6 @@ function createComponentsChart(labels, datasets, scale) {
                     },
                     y: {
                         title: { display: true, text: yAxisTitle },
-                        // beginAtZero: true, // Eliminado para ajustar dinámicamente
                         grid: { color: '#e2e8f0' },
                         ticks: {
                             callback: function(value) {
@@ -331,7 +329,6 @@ async function fetchAccounts(token) {
             tokenInput.classList.add('valid');
         }
 
-        // Calcular resumen de cuentas
         let totalValue = 0;
         let totalReturn = 0;
         let totalContributions = 0;
@@ -656,10 +653,10 @@ async function fetchPortfolioData(token, accountId) {
         portfolioChartData = { labels, datasets };
         const weights = components.map((component, index) => {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
-            const name = component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
+            const name = component.instrument?.description || component.instrument?.identifier_name || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            const price = component.instrument?.price || 0; // Asegurado que se extraiga correctamente
-            const titles = component.instrument?.titles || 0; // Asegurado que se extraiga correctamente
+            const price = component.instrument?.price || 0;
+            const titles = component.instrument?.titles || 0;
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
         if (cashAmount > 0) {
