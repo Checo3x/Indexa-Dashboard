@@ -341,7 +341,7 @@ async function fetchAccounts(token) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const historyData = await historyResponse.json();
-            const accountValue = portfolioData.portfolio?.total_amount || 0;
+            const accountValue = portfolioData.instrument_accounts?.reduce((sum, component) => sum + (component.amount || 0), 0) || 0;
             const accountReturn = (historyData.return?.time_return_annual || 0) * 100;
             const accountContributions = portfolioData.extra?.amount_to_trade || 0;
             totalValue += accountValue;
@@ -403,21 +403,8 @@ async function fetchPortfolioData(token, accountId) {
             throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
         }
         const historyData = await historyResponse.json();
-        let components = [];
-        let cashAmount = 0;
-        if (portfolioData.portfolio?.cash_accounts?.[0]?.instrument_accounts) {
-            components = portfolioData.portfolio.cash_accounts[0].instrument_accounts;
-        } else if (portfolioData.comparison) {
-            components = portfolioData.comparison;
-        }
-        if (portfolioData.portfolio?.cash_amount) {
-            cashAmount = portfolioData.portfolio.cash_amount;
-        }
+        const components = portfolioData.instrument_accounts || [];
         let totalValue = components.reduce((sum, component) => sum + (component.amount || 0), 0);
-        totalValue += cashAmount;
-        if (totalValue === 0 && portfolioData.portfolio?.total_amount) {
-            totalValue = portfolioData.portfolio.total_amount;
-        }
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         console.log("Dinero Adicional Necesario (desde API):", additionalCashNeeded);
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
