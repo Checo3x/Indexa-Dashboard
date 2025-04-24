@@ -657,50 +657,43 @@ async function fetchPortfolioData(token, accountId) {
             const weight = component.weight_real || (totalValue > 0 ? (component.amount || 0) / totalValue : 0);
             const name = component.instrument?.identifier_name || component.instrument?.description || `Fondo ${index + 1}`;
             const color = colorPalette[index % colorPalette.length];
-            const price = component.instrument?.price || 0;
-            const titles = component.instrument?.titles || 0;
+            let price = component.instrument?.price || 0;
+            let titles = component.instrument?.titles || 0;
+            // Log para depurar los valores de price y titles
+            console.log(`Datos crudos de componente ${index + 1}:`, {
+                price_raw: component.instrument?.price,
+                titles_raw: component.instrument?.titles
+            });
+            // Si price no está disponible, intentamos buscarlo en otros campos (si aplica)
+            if (!price && component.instrument?.nav) {
+                price = component.instrument.nav;
+                console.log(`Usando nav como price para componente ${index + 1}:`, price);
+            }
+            // Si titles no está definido, intentamos calcularlo como amount / price
+            if (!titles && price > 0) {
+                titles = component.amount / price;
+                console.log(`Títulos calculados para componente ${index + 1}:`, titles);
+            }
             console.log(`Componente ${index + 1}:`, { name, amount: component.amount, weight, price, titles });
             return { name, amount: component.amount || 0, weight, color, price, titles };
         });
-        if (cashAmount > 0) {
-            weights.push({
-                name: 'Efectivo',
-                amount: cashAmount,
-                weight: totalValue > 0 ? cashAmount / totalValue : 0,
-                color: '#CCCCCC',
-                price: 1,
-                titles: cashAmount
-            });
-        }
+        // No añadimos el efectivo a la tabla de composición ni al gráfico de componentes
         compositionTableData = weights;
         const componentDatasets = [];
         weights.forEach(fund => {
-            if (fund.name === 'Efectivo') {
-                const componentValues = realValues.map(() => fund.amount);
-                componentDatasets.push({
-                    label: `${fund.name} (€)`,
-                    data: componentValues,
-                    borderColor: fund.color,
-                    tension: 0.1,
-                    fill: false,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                });
-            } else {
-                const weight = fund.weight || 0;
-                const name = fund.name;
-                const color = fund.color;
-                const componentValues = realValues.map(value => value !== null ? value * weight : null);
-                componentDatasets.push({
-                    label: `${name} (€)`,
-                    data: componentValues,
-                    borderColor: color,
-                    tension: 0.1,
-                    fill: false,
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                });
-            }
+            const weight = fund.weight || 0;
+            const name = fund.name;
+            const color = fund.color;
+            const componentValues = realValues.map(value => value !== null ? value * weight : null);
+            componentDatasets.push({
+                label: `${name} (€)`,
+                data: componentValues,
+                borderColor: color,
+                tension: 0.1,
+                fill: false,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            });
         });
         componentsChartData = { labels, datasets: componentDatasets };
         const tableData = realValues.map((value, index) => {
@@ -771,8 +764,8 @@ function renderCompositionTable() {
                         </div>
                         ${(fund.weight * 100).toFixed(2)}%
                     </td>
-                    <td class="p-2">€${fund.price.toFixed(2)}</td>
-                    <td class="p-2">${fund.titles.toFixed(2)}</td>
+                    <td class="p-2">${fund.price > 0 ? `€${fund.price.toFixed(2)}` : '-'}</td>
+                    <td class="p-2">${fund.titles > 0 ? fund.titles.toFixed(2) : '-'}</td>
                 `;
                 compositionTable.appendChild(row);
             });
