@@ -9,6 +9,10 @@ let compositionTableData = null;
 let historyTableData = null;
 let currentToken = null;
 
+// Escalas actuales de los gráficos
+let portfolioScale = 'euros'; // Puede ser 'euros' o 'percentage'
+let componentsScale = 'euros'; // Puede ser 'euros' o 'percentage'
+
 if (typeof Chart === 'undefined') {
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
 }
@@ -18,19 +22,24 @@ const colorPalette = [
     '#D4A5A5', '#9B59B6', '#3498DB', '#E74C3C', '#2ECC71'
 ];
 
-const performanceColors = {
+const 🙂performanceColors = {
     real: '#4ECDC4',
     expected: '#3498DB',
     best: '#2ECC71',
     worst: '#E74C3C'
 };
 
+function formatDateToDayMonthYear(dateStr) {
+    const date = new Date(dateStr.split(' ')[0]);
+    return isNaN(date) ? 'Unknown' : date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
 function formatDateToMonthYear(dateStr) {
     const date = new Date(dateStr.split(' ')[0]);
     return isNaN(date) ? 'Unknown' : date.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
 }
 
-function createPortfolioChart(labels, datasets) {
+function createPortfolioChart(labels, datasets, scale) {
     if (!labels.length || !datasets.length) {
         setWarning('No hay suficientes datos históricos para mostrar todas las líneas en el gráfico total.');
         return;
@@ -41,9 +50,25 @@ function createPortfolioChart(labels, datasets) {
     }
     try {
         if (portfolioChart) portfolioChart.destroy();
+
+        let yAxisTitle = 'Valor (€)';
+        let dataToUse = datasets.map(dataset => ({
+            ...dataset,
+            data: dataset.data.map(value => value !== null ? value : null)
+        }));
+
+        if (scale === 'percentage') {
+            yAxisTitle = 'Rentabilidad (%)';
+            const initialValue = dataToUse[0].data[0];
+            dataToUse = dataToUse.map(dataset => ({
+                ...dataset,
+                data: dataset.data.map(value => value !== null ? ((value - initialValue) / initialValue) * 100 : null)
+            }));
+        }
+
         portfolioChart = new Chart(ctxPortfolio, {
             type: 'line',
-            data: { labels, datasets },
+            data: { labels, datasets: dataToUse },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -55,17 +80,25 @@ function createPortfolioChart(labels, datasets) {
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: 'Valor (€)' },
-                        beginAtZero: false,
-                        grid: { color: '#e2e8f0' }
+                        title: { display: true, text: yAxisTitle },
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0' },
+                        ticks: {
+                            callback: function(value) {
+                                if (scale === 'percentage') {
+                                    return value.toFixed(2) + '%';
+                                }
+                                return '€' + value.toFixed(2);
+                            }
+                        }
                     }
                 },
                 plugins: {
                     legend: { 
                         display: true, 
-                        position: 'top',
+                        position: 'bottom',
                         labels: {
-                            font: { size: 14 },
+                            font: { size: 12 },
                             color: '#1a1a2e',
                             padding: 8
                         }
@@ -83,10 +116,25 @@ function createPortfolioChart(labels, datasets) {
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
-                                if (context.parsed.y !== null) label += `€${context.parsed.y.toFixed(2)}`;
+                                if (context.parsed.y !== null) {
+                                    if (scale === 'percentage') {
+                                        label += `${context.parsed.y.toFixed(2)}%`;
+                                    } else {
+                                        label += `€${context.parsed.y.toFixed(2)}`;
+                                    }
+                                }
                                 return label;
                             }
                         }
+                    }
+                },
+                elements: {
+                    line: {
+                        borderWidth: 3 // Líneas más gruesas
+                    },
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
                     }
                 }
             }
@@ -97,7 +145,7 @@ function createPortfolioChart(labels, datasets) {
     }
 }
 
-function createComponentsChart(labels, datasets) {
+function createComponentsChart(labels, datasets, scale) {
     if (!labels.length || !datasets.length) {
         setWarning('No hay suficientes datos para mostrar todas las líneas en el gráfico de componentes.');
         return;
@@ -108,9 +156,25 @@ function createComponentsChart(labels, datasets) {
     }
     try {
         if (componentsChart) componentsChart.destroy();
+
+        let yAxisTitle = 'Valor (€)';
+        let dataToUse = datasets.map(dataset => ({
+            ...dataset,
+            data: dataset.data.map(value => value !== null ? value : null)
+        }));
+
+        if (scale === 'percentage') {
+            yAxisTitle = 'Rentabilidad (%)';
+            const initialValue = dataToUse[0].data[0];
+            dataToUse = dataToUse.map(dataset => ({
+                ...dataset,
+                data: dataset.data.map(value => value !== null ? ((value - initialValue) / initialValue) * 100 : null)
+            }));
+        }
+
         componentsChart = new Chart(ctxComponents, {
             type: 'line',
-            data: { labels, datasets },
+            data: { labels, datasets: dataToUse },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -122,17 +186,25 @@ function createComponentsChart(labels, datasets) {
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: 'Valor (€)' },
-                        beginAtZero: false,
-                        grid: { color: '#e2e8f0' }
+                        title: { display: true, text: yAxisTitle },
+                        beginAtZero: true,
+                        grid: { color: '#e2e8f0' },
+                        ticks: {
+                            callback: function(value) {
+                                if (scale === 'percentage') {
+                                    return value.toFixed(2) + '%';
+                                }
+                                return '€' + value.toFixed(2);
+                            }
+                        }
                     }
                 },
                 plugins: {
                     legend: { 
                         display: true, 
-                        position: 'top',
+                        position: 'bottom',
                         labels: {
-                            font: { size: 14 },
+                            font: { size: 12 },
                             color: '#1a1a2e',
                             padding: 8
                         }
@@ -150,10 +222,25 @@ function createComponentsChart(labels, datasets) {
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
-                                if (context.parsed.y !== null) label += `€${context.parsed.y.toFixed(2)}`;
+                                if (context.parsed.y !== null) {
+                                    if (scale === 'percentage') {
+                                        label += `${context.parsed.y.toFixed(2)}%`;
+                                    } else {
+                                        label += `€${context.parsed.y.toFixed(2)}`;
+                                    }
+                                }
                                 return label;
                             }
                         }
+                    }
+                },
+                elements: {
+                    line: {
+                        borderWidth: 3 // Líneas más gruesas
+                    },
+                    point: {
+                        radius: 4,
+                        hoverRadius: 6
                     }
                 }
             }
@@ -348,7 +435,7 @@ async function fetchPortfolioData(token, accountId) {
             }
             labels = filteredPeriods.map(periodEntry =>
                 Array.isArray(periodEntry) && periodEntry.length >= 2 && typeof periodEntry[1] === 'string'
-                    ? formatDateToMonthYear(periodEntry[1])
+                    ? formatDateToDayMonthYear(periodEntry[1])
                     : 'Unknown'
             );
             realValues = new Array(filteredPeriods.length).fill(null);
@@ -364,7 +451,7 @@ async function fetchPortfolioData(token, accountId) {
             });
             const validIndices = realValues.map((val, idx) => (val !== null ? idx : -1)).filter(idx => idx !== -1);
             if (validIndices.length === 0) {
-                labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
+                labels = [new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })];
                 realValues = [totalValue || 0];
                 expectedValues = [totalValue || 0];
                 bestValues = [totalValue || 0];
@@ -440,10 +527,10 @@ async function fetchPortfolioData(token, accountId) {
                 });
                 historicalData.sort((a, b) => new Date(a.date) - new Date(b.date));
             }
-            labels = historicalData.map(item => formatDateToMonthYear(item.date));
+            labels = historicalData.map(item => formatDateToDayMonthYear(item.date));
             realValues = historicalData.map(item => item.value);
             if (realValues.length === 0) {
-                labels = [new Date().toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })];
+                labels = [new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })];
                 realValues = [totalValue || 0];
             }
         }
@@ -472,12 +559,7 @@ async function fetchPortfolioData(token, accountId) {
         const additionalCashElement = document.getElementById('additional-cash-needed');
         if (additionalCashElement) {
             additionalCashElement.textContent = `€${additionalCashNeeded.toFixed(2)}`;
-            additionalCashElement.classList.remove('negative-value', 'positive-value');
-            if (additionalCashNeeded < 0) {
-                additionalCashElement.classList.add('negative-value');
-            } else if (additionalCashNeeded > 0) {
-                additionalCashElement.classList.add('positive-value');
-            }
+            // No añadimos clases de resaltado
         }
         const datasets = [];
         if (realValues.length > 0) {
@@ -487,8 +569,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.real,
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
         if (expectedValues.length > 0) {
@@ -499,8 +581,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderDash: [5, 5],
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
         if (bestValues.length > 0) {
@@ -511,8 +593,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderDash: [5, 5],
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
         if (worstValues.length > 0) {
@@ -523,8 +605,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderDash: [5, 5],
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
         portfolioChartData = { labels, datasets };
@@ -543,8 +625,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: performanceColors.real,
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         }
         weights.forEach(fund => {
@@ -558,8 +640,8 @@ async function fetchPortfolioData(token, accountId) {
                 borderColor: color,
                 tension: 0.1,
                 fill: false,
-                pointRadius: 5,
-                pointHoverRadius: 7
+                pointRadius: 4,
+                pointHoverRadius: 6
             });
         });
         componentsChartData = { labels, datasets: componentDatasets };
@@ -596,7 +678,7 @@ async function fetchPortfolioData(token, accountId) {
 
 function renderPortfolioChart() {
     if (portfolioChartData) {
-        createPortfolioChart(portfolioChartData.labels, portfolioChartData.datasets);
+        createPortfolioChart(portfolioChartData.labels, portfolioChartData.datasets, portfolioScale);
     } else {
         setWarning('No hay datos disponibles para el gráfico total.');
     }
@@ -604,7 +686,7 @@ function renderPortfolioChart() {
 
 function renderComponentsChart() {
     if (componentsChartData) {
-        createComponentsChart(componentsChartData.labels, componentsChartData.datasets);
+        createComponentsChart(componentsChartData.labels, componentsChartData.datasets, componentsScale);
     } else {
         setWarning('No hay datos disponibles para el gráfico de componentes.');
     }
@@ -747,4 +829,25 @@ document.addEventListener('DOMContentLoaded', () => {
             togglePasswordButton.innerHTML = isPassword ? '<i class="fas fa-eye-slash"></i>' : '<i class="fas fa-eye"></i>';
         });
     }
+
+    // Listeners para los botones de alternancia de escala
+    document.querySelectorAll('.scale-toggle').forEach(button => {
+        button.addEventListener('click', () => {
+            const chart = button.getAttribute('data-chart');
+            const scale = button.getAttribute('data-scale');
+
+            // Actualizar la escala activa
+            if (chart === 'portfolio') {
+                portfolioScale = scale;
+                document.getElementById('portfolio-euros').classList.toggle('active', scale === 'euros');
+                document.getElementById('portfolio-percentage').classList.toggle('active', scale === 'percentage');
+                renderPortfolioChart();
+            } else if (chart === 'components') {
+                componentsScale = scale;
+                document.getElementById('components-euros').classList.toggle('active', scale === 'euros');
+                document.getElementById('components-percentage').classList.toggle('active', scale === 'percentage');
+                renderComponentsChart();
+            }
+        });
+    });
 });
