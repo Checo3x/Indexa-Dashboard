@@ -341,8 +341,7 @@ async function fetchAccounts(token) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const historyData = await historyResponse.json();
-            const positions = portfolioData.instrument_accounts?.flatMap(account => account.positions || []) || [];
-            const accountValue = positions.reduce((sum, position) => sum + (position.amount || 0), 0) || 0;
+            const accountValue = portfolioData.portfolio?.total_amount || 0;
             const accountReturn = (historyData.return?.time_return_annual || 0) * 100;
             const accountContributions = portfolioData.extra?.amount_to_trade || 0;
             totalValue += accountValue;
@@ -405,7 +404,8 @@ async function fetchPortfolioData(token, accountId) {
         }
         const historyData = await historyResponse.json();
         const components = portfolioData.instrument_accounts?.flatMap(account => account.positions || []) || [];
-        let totalValue = components.reduce((sum, component) => sum + (component.amount || 0), 0);
+        let totalValue = portfolioData.portfolio?.total_amount || 0;
+        const cashAmount = portfolioData.portfolio?.cash_amount || 0;
         const additionalCashNeeded = portfolioData.extra?.additional_cash_needed_to_trade ?? 0;
         console.log("Dinero Adicional Necesario (desde API):", additionalCashNeeded);
         const annualReturn = (historyData.return?.time_return_annual || historyData.plan_expected_return || 0) * 100;
@@ -587,6 +587,10 @@ async function fetchPortfolioData(token, accountId) {
                 volatilityElement.classList.add('positive-value');
             }
         }
+        const cashAmountElement = document.getElementById('cash-amount');
+        if (cashAmountElement) {
+            cashAmountElement.textContent = `€${cashAmount.toFixed(2)}`;
+        }
         const datasets = [];
         if (realValues.length > 0) {
             datasets.push({
@@ -751,6 +755,35 @@ function renderCompositionTable() {
     }
 }
 
+function renderHistoryTable() {
+    const tableBody = document.getElementById('history-table');
+    if (tableBody && historyTableData) {
+        tableBody.innerHTML = '';
+        if (historyTableData.length === 0) {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>`;
+            tableBody.appendChild(row);
+        } else {
+            const recentData = historyTableData.slice(-10);
+            recentData.forEach(item => {
+                const row = document.createElement('tr');
+                const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
+                row.innerHTML = `
+                    <td class="p-2">${item.date}</td>
+                    <td class="p-2">${item.value !== null ? `€${item.value.toFixed(2)}` : '-'}</td>
+                    <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+            if (historyTableData.length > 10) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="3" class="p-2 text-center text-gray-500">Mostrando las últimas 10 entradas de ${historyTableData.length} disponibles</td>`;
+                tableBody.appendChild(row);
+            }
+        }
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     const fetchAccountsButton = document.getElementById('fetch-accounts');
     if (fetchAccountsButton) {
@@ -812,6 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const toggleHistoryButton = document.getElementById('toggle-history');
     if (toggleHistoryButton) {
         toggleHistoryButton.addEventListener('click', () => {
             const historySection = document.getElementById('history-section');
