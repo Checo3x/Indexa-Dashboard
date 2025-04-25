@@ -297,14 +297,14 @@ async function fetchAccounts(token) {
     setLoading(true);
     clearMessages();
     try {
-        // Simulamos la respuesta de la API con los datos correctos
-        const userData = {
-            accounts: [
-                { account_number: 'LDHK6U7Z', type: 'pension' },
-                { account_number: 'AB1B3D1T', type: 'mutual' },
-                { account_number: 'LKX459.J7', type: 'mutual' }
-            ]
-        };
+        const response = await fetch('/api/users/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Error HTTP: ${response.status} ${errorData.details || response.statusText}`);
+        }
+        const userData = await response.json();
         const accounts = userData.accounts || [];
         if (!Array.isArray(accounts)) {
             throw new Error('La respuesta no contiene una lista de cuentas válida');
@@ -333,34 +333,28 @@ async function fetchAccounts(token) {
         let totalReturn = 0;
         let totalContributions = 0;
         const accountPromises = accounts.map(async account => {
-            // Simulamos la respuesta de la API para cada cuenta
-            let portfolioData, historyData;
-            if (account.account_number === 'LDHK6U7Z') {
-                portfolioData = {
-                    portfolio: { total_amount: 4127.73, cash_amount: 0.00 },
-                    extra: { amount_to_trade: 0.00, additional_cash_needed_to_trade: 20.00 }
-                };
-                historyData = { return: { time_return_annual: -0.0063 }, volatility: 0.00 };
-            } else if (account.account_number === 'AB1B3D1T') {
-                portfolioData = {
-                    portfolio: { total_amount: 4127.73, cash_amount: 75.86 },
-                    extra: { amount_to_trade: 0.00, additional_cash_needed_to_trade: 0.00 }
-                };
-                historyData = { return: { time_return_annual: 0.00 }, volatility: 0.00 };
-            } else if (account.account_number === 'LKX459.J7') {
-                portfolioData = {
-                    portfolio: { total_amount: 2302.31, cash_amount: 0.00 },
-                    extra: { amount_to_trade: 0.00, additional_cash_needed_to_trade: 0.00 }
-                };
-                historyData = { return: { time_return_annual: 0.00 }, volatility: 0.00 };
+            const portfolioResponse = await fetch(`/api/accounts/${account.account_number}/portfolio`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!portfolioResponse.ok) {
+                const errorData = await portfolioResponse.json();
+                throw new Error(`Error HTTP (portfolio): ${portfolioResponse.status} ${errorData.details || portfolioResponse.statusText}`);
             }
+            const portfolioData = await portfolioResponse.json();
+            const historyResponse = await fetch(`/api/accounts/${account.account_number}/performance`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (!historyResponse.ok) {
+                const errorData = await historyResponse.json();
+                throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
+            }
+            const historyData = await historyResponse.json();
             const accountValue = portfolioData.portfolio?.total_amount || 0;
             const accountReturn = (historyData.return?.time_return_annual || 0) * 100;
             const accountContributions = portfolioData.extra?.amount_to_trade || 0;
             totalValue += accountValue;
             totalReturn += accountReturn;
             totalContributions += accountContributions;
-            return { accountValue, accountReturn, accountContributions };
         });
         await Promise.all(accountPromises);
         totalReturn = accounts.length > 0 ? totalReturn / accounts.length : 0;
@@ -401,62 +395,22 @@ async function fetchPortfolioData(token, accountId) {
             accountInfo.classList.remove('fade-hidden');
             accountInfo.classList.add('fade-visible');
         }
-
-        // Simulamos la respuesta de la API para la cuenta seleccionada
-        let portfolioData, historyData;
-        if (accountId === 'LDHK6U7Z') {
-            portfolioData = {
-                portfolio: { total_amount: 4127.73, cash_amount: 0.00 },
-                extra: { additional_cash_needed_to_trade: 20.00 },
-                instrument_accounts: [{ positions: [] }]
-            };
-            historyData = {
-                return: { time_return_annual: -0.0063 },
-                volatility: 0.00,
-                performance: {
-                    period: [[0, '2025-04-24']],
-                    real: [[0, 4127.73]],
-                    expected: [],
-                    best: [],
-                    worst: []
-                }
-            };
-        } else if (accountId === 'AB1B3D1T') {
-            portfolioData = {
-                portfolio: { total_amount: 4127.73, cash_amount: 75.86 },
-                extra: { additional_cash_needed_to_trade: 0.00 },
-                instrument_accounts: [{ positions: [] }]
-            };
-            historyData = {
-                return: { time_return_annual: 0.00 },
-                volatility: 0.00,
-                performance: {
-                    period: [[0, '2025-04-24']],
-                    real: [[0, 4127.73]],
-                    expected: [],
-                    best: [],
-                    worst: []
-                }
-            };
-        } else if (accountId === 'LKX459.J7') {
-            portfolioData = {
-                portfolio: { total_amount: 2302.31, cash_amount: 0.00 },
-                extra: { additional_cash_needed_to_trade: 0.00 },
-                instrument_accounts: [{ positions: [] }]
-            };
-            historyData = {
-                return: { time_return_annual: 0.00 },
-                volatility: 0.00,
-                performance: {
-                    period: [[0, '2025-04-24']],
-                    real: [[0, 2302.31]],
-                    expected: [],
-                    best: [],
-                    worst: []
-                }
-            };
+        const portfolioResponse = await fetch(`/api/accounts/${accountId}/portfolio`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!portfolioResponse.ok) {
+            const errorData = await portfolioResponse.json();
+            throw new Error(`Error HTTP (portfolio): ${portfolioResponse.status} ${errorData.details || portfolioResponse.statusText}`);
         }
-
+        const portfolioData = await portfolioResponse.json();
+        const historyResponse = await fetch(`/api/accounts/${accountId}/performance`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!historyResponse.ok) {
+            const errorData = await historyResponse.json();
+            throw new Error(`Error HTTP (performance): ${historyResponse.status} ${errorData.details || historyResponse.statusText}`);
+        }
+        const historyData = await historyResponse.json();
         const components = portfolioData.instrument_accounts?.flatMap(account => account.positions || []) || [];
         let totalValue = portfolioData.portfolio?.total_amount || 0;
         const cashAmount = portfolioData.portfolio?.cash_amount || 0;
@@ -552,8 +506,7 @@ async function fetchPortfolioData(token, accountId) {
                 const lastRealValue = realValues[lastRealIndex];
                 const lastRealPeriodIndex = periodIndices[lastRealIndex];
 
-                // Eliminamos el ajuste de totalValue para usar directamente el valor de la API
-                // totalValue = lastRealValue * (totalValue / initialValue);
+                // Usamos directamente el totalValue de la API sin ajuste
                 const scalingFactor = totalValue / lastRealValue;
 
                 realValues = realValues.map(value => value !== null ? value * scalingFactor : null);
