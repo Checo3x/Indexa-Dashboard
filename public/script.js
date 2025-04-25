@@ -97,7 +97,7 @@ function createPortfolioChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#1a1a2e',
+                            color: '#ffffff', // Leyendas en blanco para mejor contraste
                             padding: 8
                         }
                     },
@@ -205,7 +205,7 @@ function createComponentsChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#1a1a2e',
+                            color: '#ffffff', // Leyendas en blanco para mejor contraste
                             padding: 8
                         }
                     },
@@ -506,7 +506,6 @@ async function fetchPortfolioData(token, accountId) {
                 const lastRealValue = realValues[lastRealIndex];
                 const lastRealPeriodIndex = periodIndices[lastRealIndex];
 
-                // Usamos directamente el totalValue de la API sin ajuste
                 const scalingFactor = totalValue / lastRealValue;
 
                 realValues = realValues.map(value => value !== null ? value * scalingFactor : null);
@@ -665,16 +664,19 @@ async function fetchPortfolioData(token, accountId) {
             const weight = fund.weight || 0;
             const name = fund.name;
             const color = fund.color;
+            // Aseguramos que las curvas de los componentes se calculen correctamente
             const componentValues = realValues.map(value => value !== null ? value * weight : null);
-            componentDatasets.push({
-                label: `${name} (€)`,
-                data: componentValues,
-                borderColor: color,
-                tension: 0.1,
-                fill: false,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            });
+            if (componentValues.some(val => val !== null)) { // Solo añadimos si hay datos válidos
+                componentDatasets.push({
+                    label: `${name} (€)`,
+                    data: componentValues,
+                    borderColor: color,
+                    tension: 0.1,
+                    fill: false,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                });
+            }
         });
         componentsChartData = { labels, datasets: componentDatasets };
         const tableData = realValues.map((value, index) => {
@@ -739,13 +741,12 @@ function renderCompositionTable() {
         compositionTable.innerHTML = '';
         if (compositionTableData.length === 0) {
             const row = document.createElement('tr');
-            row.innerHTML = `<td colspan="6" class="p-2 text-center">No hay datos de composición disponibles</td>`;
+            row.innerHTML = `<td colspan="5" class="p-2 text-center">No hay datos de composición disponibles</td>`;
             compositionTable.appendChild(row);
         } else {
             compositionTableData.forEach(fund => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td class="p-2"><div class="w-6 h-6 rounded-full" style="background-color: ${fund.color};"></div></td>
                     <td class="p-2">${fund.name}</td>
                     <td class="p-2">€${fund.amount.toFixed(2)}</td>
                     <td class="p-2">
