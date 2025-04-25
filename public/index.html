@@ -8,7 +8,6 @@
     <title>Panel de Gestión de Carteras - Futuristic Dashboard</title>
     <!-- Dependencias externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <!-- Estilos CSS integrados -->
     <style>
         /* Reset básico */
@@ -178,6 +177,9 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         button:hover {
@@ -209,6 +211,13 @@
         #toggle-password:hover {
             color: #00ddeb;
             transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Iconos SVG */
+        .icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            fill: currentColor;
         }
 
         /* Grids */
@@ -269,10 +278,6 @@
             font-size: 1rem;
         }
 
-        .nav-buttons button i {
-            margin-right: 0.5rem;
-        }
-
         /* Tablas */
         table {
             width: 100%;
@@ -330,6 +335,9 @@
             color: #00ddeb;
             text-decoration: none;
             margin: 0 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
             transition: color 0.3s ease;
         }
 
@@ -400,7 +408,10 @@
                 <div class="sm:col-span-2 relative">
                     <input type="password" id="api-token" placeholder="Introduce tu token de API" aria-label="Token de API">
                     <button id="toggle-password" aria-label="Mostrar/Ocultar token">
-                        <i class="fas fa-eye"></i>
+                        <!-- Icono de ojo (fa-eye) como SVG -->
+                        <svg class="icon" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                        </svg>
                     </button>
                 </div>
                 <button id="fetch-accounts">Cargar Cuentas</button>
@@ -477,13 +488,25 @@
         <!-- Botones de navegación -->
         <div class="nav-buttons">
             <button id="toggle-charts" class="active">
-                <i class="fas fa-chart-line"></i> Ocultar Gráficos
+                <!-- Icono de gráfico (fa-chart-line) como SVG -->
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M3 3v18h18V3H3zm4 16H5v-6h2v6zm4 0H9v-8h2v8zm4 0h-2v-4h2v4zm4 0h-2v-2h2v2z"/>
+                </svg>
+                Ocultar Gráficos
             </button>
             <button id="toggle-composition">
-                <i class="fas fa-table"></i> Mostrar Composición
+                <!-- Icono de tabla (fa-table) como SVG -->
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M4 3h16c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 4v4h6V7H4zm8 0v4h6V7h-6zm8 0v4h-6V7h6zm-16 6v4h6v-4H4zm8 0v4h6v-4h-6zm8 0v4h-6v-4h6zm-16 6v2h6v-2H4zm8 0v2h6v-2h-6zm8 0v2h-6v-2h6z"/>
+                </svg>
+                Mostrar Composición
             </button>
             <button id="toggle-history">
-                <i class="fas fa-history"></i> Mostrar Histórico
+                <!-- Icono de histórico (fa-history) como SVG -->
+                <svg class="icon" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M13 3c-4.97 0-9 4.03-9 9H1l4 4 4-4H6c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+                </svg>
+                Mostrar Histórico
             </button>
         </div>
 
@@ -687,9 +710,27 @@
             <p>© 2025 Panel de Gestión de Carteras. Todos los derechos reservados.</p>
             <p class="mt-2">Diseñado por Grok 3 by xAI</p>
             <div class="mt-4">
-                <a href="#"><i class="fab fa-github"></i> GitHub</a>
-                <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
-                <a href="#"><i class="fas fa-envelope"></i> Contacto</a>
+                <a href="#">
+                    <!-- Icono de GitHub -->
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12c0 4.41 2.87 8.14 6.84 9.49.5.09.68-.22.68-.48v-1.71c-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.29.1-2.68 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85.004 1.71.115 2.52.337 1.9-1.29 2.74-1.02 2.74-1.02.55 1.39.2 2.43.1 2.68.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.56.94.56 1.9v2.82c0 .27.18.58.69.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/>
+                    </svg>
+                    GitHub
+                </a>
+                <a href="#">
+                    <!-- Icono de LinkedIn -->
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zm-1.5 15.5v-5.5a3.5 3.5 0 00-3.5-3.5h-1.5a3.5 3.5 0 00-3.5 3.5v5.5h-2v-9h2v1.09c.72-1.12 1.96-1.84 3.5-1.84 2.48 0 4.5 2.02 4.5 4.5v5.25h-2zM7.5 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2h2v7h-2v-7z"/>
+                    </svg>
+                    LinkedIn
+                </a>
+                <a href="#">
+                    <!-- Icono de correo -->
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    Contacto
+                </a>
             </div>
         </footer>
     </div>
