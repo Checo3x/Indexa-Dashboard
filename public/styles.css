@@ -1,0 +1,339 @@
+:root {
+    --background-start: #1a1a2e;
+    --background-end: #16213e;
+    --text-primary: #ffffff;
+    --accent: #00ddeb;
+    --accent-hover: #00b7c3;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --input-bg: rgba(255, 255, 255, 0.1);
+    --select-bg: rgba(255, 255, 255, 0.25);
+    --option-bg: #1a1a2e;
+    --border: rgba(255, 255, 255, 0.2);
+    --grid-line: #e2e8f0;
+    --positive: #2ecc71;
+    --negative: #e74c3c;
+    --error-bg: rgba(231, 76, 60, 0.2);
+    --warning-bg: rgba(255, 206, 86, 0.2);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, var(--background-start) 0%, var(--background-end) 100%);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+h1, h2, h3 {
+    color: var(--accent);
+    margin-bottom: 1rem;
+}
+
+.container {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.token-input-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.token-input-container input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.token-input-container input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.token-input-container input.valid {
+    border-color: var(--positive);
+}
+
+.token-input-container input.invalid {
+    border-color: var(--negative);
+}
+
+.token-input-container button {
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    border: none;
+    border-radius: 5px;
+    color: var(--background-start);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.token-input-container button:hover {
+    background: var(--accent-hover);
+}
+
+.token-input-container button:disabled {
+    background: #4a4a6a;
+    cursor: not-allowed;
+}
+
+.toggle-password {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.account-selector select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    background: var(--select-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.5rem;
+    transition: border-color 0.3s ease;
+}
+
+.account-selector select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.account-selector select option {
+    background: var(--option-bg);
+    color: var(--text-primary);
+    font-size: 16px;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.overview-item {
+    background: var(--input-bg);
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.overview-item p {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.overview-item span {
+    font-size: 0.9rem;
+    color: #b0b0c5;
+}
+
+.positive-value {
+    color: var(--positive);
+}
+
+.negative-value {
+    color: var(--negative);
+}
+
+.account-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.account-info-item {
+    background: var(--input-bg);
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.account-info-item p {
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.account-info-item span {
+    font-size: 0.9rem;
+    color: #b0b0c5;
+}
+
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-section {
+    flex: 1;
+}
+
+.chart-section canvas {
+    max-height: 300px;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.chart-controls button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    background: var(--input-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.chart-controls button.active, .chart-controls button:hover {
+    background: var(--accent);
+    color: var(--background-start);
+}
+
+.composition-table, .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.composition-table th, .composition-table td,
+.history-table th, .history-table td {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.composition-table th, .history-table th {
+    background: var(--input-bg);
+    font-weight: 600;
+}
+
+.weight-bar {
+    width: 100px;
+    height: 10px;
+    background: #4a4a6a;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.weight-bar-fill {
+    height: 100%;
+    background: var(--accent);
+}
+
+.toggle-section {
+    margin-top: 1rem;
+    padding: 0.75rem 1.5rem;
+    background: var(--accent);
+    border: none;
+    border-radius: 5px;
+    color: var(--background-start);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-section:hover, .toggle-section.active {
+    background: var(--accent-hover);
+}
+
+.fade-hidden {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fade-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.height-hidden {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.3s ease;
+}
+
+.height-visible {
+    max-height: 1000px;
+    opacity: 1;
+    transition: max-height 0.5s ease, opacity 0.3s ease;
+}
+
+#error-message, #warning-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#error-message {
+    background: var(--error-bg);
+    border: 1px solid var(--negative);
+}
+
+#warning-message {
+    background: var(--warning-bg);
+    border: 1px solid #ffce56;
+}
+
+@media (min-width: 768px) {
+    .charts-container {
+        flex-direction: row;
+    }
+    .chart-section {
+        flex: 1;
+    }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
