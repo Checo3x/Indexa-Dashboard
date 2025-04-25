@@ -1,8 +1,27 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "/api/proxy"
+    "builds": [
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": {
+                "distDir": "dist"
+            }
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/api/proxy.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/dist/$1",
+            "headers": {
+                "cache-control": "public, max-age=0, must-revalidate"
+            }
+        }
+    ],
+    "engines": {
+        "node": "18.x"
     }
-  ]
 }
