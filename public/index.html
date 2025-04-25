@@ -3,739 +3,397 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Panel de gestión de carteras financieras con un diseño futurista y funcionalidad avanzada.">
-    <meta name="author" content="Grok 3 by xAI">
-    <title>Panel de Gestión de Carteras - Futuristic Dashboard</title>
-    <!-- Dependencias externas -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <!-- Estilos CSS integrados -->
+    <title>Indexa Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
     <style>
-        /* Reset básico */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
-
         body {
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: #e0e0e0;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.6;
+            color: #ffffff;
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Contenedor principal */
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
             padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
         }
-
-        /* Encabezado */
-        header {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        h1 {
-            font-size: 3rem;
-            font-weight: 800;
-            background: linear-gradient(90deg, #00ddeb, #ff00ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 10px rgba(0, 221, 235, 0.5);
-            animation: glow 2s ease-in-out infinite alternate;
-        }
-
-        header p {
-            font-size: 1.2rem;
-            color: #b0b0b0;
-            margin-top: 0.5rem;
-        }
-
-        /* Animación de brillo */
-        @keyframes glow {
-            from {
-                text-shadow: 0 0 10px rgba(0, 221, 235, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
-            }
-            to {
-                text-shadow: 0 0 20px rgba(0, 221, 235, 0.7), 0 0 30px rgba(255, 0, 255, 0.5);
-            }
-        }
-
-        /* Secciones */
-        section {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 0 15px rgba(0, 221, 235, 0.2);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0 25px rgba(0, 221, 235, 0.4);
-        }
-
-        h2 {
-            font-size: 1.8rem;
-            font-weight: 700;
+        h1, h2, h3 {
             color: #00ddeb;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            margin-bottom: 1rem;
         }
-
-        /* Mensajes de error y advertencia */
-        #error-message, #warning-message {
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            font-size: 1rem;
-            text-align: center;
-        }
-
-        #error-message {
-            background: rgba(229, 62, 62, 0.2);
-            color: #ff6b6b;
-            border: 1px solid #ff6b6b;
-        }
-
-        #warning-message {
-            background: rgba(246, 173, 85, 0.2);
-            color: #f6ad55;
-            border: 1px solid #f6ad55;
-        }
-
-        .fade-hidden {
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
-
-        .fade-visible {
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-
-        .height-hidden {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.7s ease-in-out;
-        }
-
-        .height-visible {
-            max-height: 2000px;
-            transition: max-height 0.7s ease-in-out;
-        }
-
-        /* Loader */
-        .loader {
-            border: 4px solid rgba(255, 255, 255, 0.1);
-            border-top: 4px solid #00ddeb;
-            border-radius: 50%;
-            width: 48px;
-            height: 48px;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Inputs y botones */
-        input, select {
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            color: #e0e0e0;
-            font-size: 1rem;
+        .container {
+            max-width: 1200px;
             width: 100%;
-            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
         }
-
-        input:focus, select:focus {
+        .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .token-input-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .token-input-container input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        .token-input-container input:focus {
             outline: none;
             border-color: #00ddeb;
-            box-shadow: 0 0 8px rgba(0, 221, 235, 0.5);
         }
-
-        button {
-            background: linear-gradient(90deg, #00ddeb, #ff00ff);
-            color: #ffffff;
+        .token-input-container input.valid {
+            border-color: #2ecc71;
+        }
+        .token-input-container input.invalid {
+            border-color: #e74c3c;
+        }
+        .token-input-container button {
             padding: 0.75rem 1.5rem;
+            background: #00ddeb;
             border: none;
-            border-radius: 8px;
+            border-radius: 5px;
+            color: #1a1a2e;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
+            transition: background 0.3s ease;
         }
-
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 0 15px rgba(0, 221, 235, 0.5);
+        .token-input-container button:hover {
+            background: #00b7c3;
         }
-
-        button.active {
-            background: linear-gradient(90deg, #ff00ff, #00ddeb);
-        }
-
-        button:disabled {
-            background: rgba(255, 255, 255, 0.1);
+        .token-input-container button:disabled {
+            background: #4a4a6a;
             cursor: not-allowed;
-            box-shadow: none;
         }
-
-        /* Estilo para el toggle de contraseña */
-        #toggle-password {
+        .toggle-password {
             background: none;
-            padding: 0;
-            position: absolute;
-            right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #b0b0b0;
-        }
-
-        #toggle-password:hover {
-            color: #00ddeb;
-            transform: translateY(-50%) scale(1.1);
-        }
-
-        /* Iconos SVG */
-        .icon {
-            width: 1.2rem;
-            height: 1.2rem;
-            fill: currentColor;
-        }
-
-        /* Grids */
-        .grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .grid-cols-1 { grid-template-columns: 1fr; }
-        .sm\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-        .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-        .lg\:grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
-
-        /* Elementos de información */
-        .info-box {
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-
-        .info-box:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 0 10px rgba(0, 221, 235, 0.3);
-        }
-
-        .info-box p:first-child {
-            color: #b0b0b0;
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .info-box p:last-child {
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
             font-size: 1.2rem;
+        }
+        .account-selector select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+            font-size: 16px;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg fill="white" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+        .account-selector select:focus {
+            outline: none;
+            border-color: #00ddeb;
+        }
+        .account-selector select option {
+            background: #1a1a2e;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .overview-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .overview-item p {
+            font-size: 1.25rem;
             font-weight: 600;
         }
-
-        .negative-value {
-            color: #ff6b6b;
+        .overview-item span {
+            font-size: 0.9rem;
+            color: #b0b0c5;
         }
-
         .positive-value {
             color: #2ecc71;
         }
-
-        /* Botones de navegación */
-        .nav-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
+        .negative-value {
+            color: #e74c3c;
+        }
+        .account-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 1rem;
-            margin-bottom: 2rem;
         }
-
-        .nav-buttons button {
-            padding: 0.75rem 2rem;
-            font-size: 1rem;
-        }
-
-        /* Tablas */
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            color: #e0e0e0;
-        }
-
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        th {
-            background: rgba(255, 255, 255, 0.05);
-            color: #00ddeb;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.9rem;
-        }
-
-        td {
-            font-size: 0.95rem;
-        }
-
-        .weight-bar {
+        .account-info-item {
             background: rgba(255, 255, 255, 0.1);
-            height: 8px;
-            border-radius: 4px;
-            overflow: hidden;
+            padding: 1rem;
+            border-radius: 5px;
+            text-align: center;
         }
-
-        .weight-bar-fill {
-            background: linear-gradient(90deg, #00ddeb, #ff00ff);
-            height: 100%;
-            transition: width 0.5s ease;
+        .account-info-item p {
+            font-size: 1.25rem;
+            font-weight: 600;
         }
-
-        /* Gráficos */
-        .chart-container {
-            position: relative;
-            height: 400px;
+        .account-info-item span {
+            font-size: 0.9rem;
+            color: #b0b0c5;
+        }
+        .charts-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        .chart-section {
+            flex: 1;
+        }
+        .chart-section canvas {
+            max-height: 300px;
+        }
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
             margin-bottom: 1rem;
         }
-
-        /* Footer */
-        footer {
+        .chart-controls button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .chart-controls button.active, .chart-controls button:hover {
+            background: #00ddeb;
+            color: #1a1a2e;
+        }
+        .composition-table, .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .composition-table th, .composition-table td,
+        .history-table th, .history-table td {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 0.5rem;
+            text-align: left;
+        }
+        .composition-table th, .history-table th {
+            background: rgba(255, 255, 255, 0.1);
+            font-weight: 600;
+        }
+        .weight-bar {
+            width: 100px;
+            height: 10px;
+            background: #4a4a6a;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .weight-bar-fill {
+            height: 100%;
+            background: #00ddeb;
+        }
+        .toggle-section {
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background: #00ddeb;
+            border: none;
+            border-radius: 5px;
+            color: #1a1a2e;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        .toggle-section:hover, .toggle-section.active {
+            background: #00b7c3;
+        }
+        .fade-hidden {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .fade-visible {
+            opacity: 1;
+            transition: opacity 0.3s ease;
+        }
+        .height-hidden {
+            max-height: 0;
+            overflow: hidden;
+            opacity: 0;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+        }
+        .height-visible {
+            max-height: 1000px;
+            opacity: 1;
+            transition: max-height 0.5s ease, opacity 0.3s ease;
+        }
+        #error-message, #warning-message {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 5px;
             text-align: center;
-            padding: 2rem 0;
-            color: #b0b0b0;
-            font-size: 0.9rem;
         }
-
-        footer a {
-            color: #00ddeb;
-            text-decoration: none;
-            margin: 0 0.5rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            transition: color 0.3s ease;
+        #error-message {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid #e74c3c;
         }
-
-        footer a:hover {
-            color: #ff00ff;
+        #warning-message {
+            background: rgba(255, 206, 86, 0.2);
+            border: 1px solid #ffce56;
         }
-
-        /* Media Queries para responsividad */
-        @media (max-width: 1024px) {
-            .lg\:grid-cols-2, .lg\:grid-cols-6 {
-                grid-template-columns: repeat(2, 1fr);
+        @media (min-width: 768px) {
+            .charts-container {
+                flex-direction: row;
             }
-
-            h1 {
-                font-size: 2.5rem;
-            }
-
-            h2 {
-                font-size: 1.5rem;
-            }
-
-            .chart-container {
-                height: 300px;
-            }
-        }
-
-        @media (max-width: 640px) {
-            .sm\:grid-cols-3, .lg\:grid-cols-2, .lg\:grid-cols-6 {
-                grid-template-columns: 1fr;
-            }
-
-            .nav-buttons button {
-                width: 100%;
-                text-align: center;
-            }
-
-            h1 {
-                font-size: 2rem;
-            }
-
-            h2 {
-                font-size: 1.3rem;
-            }
-
-            .chart-container {
-                height: 250px;
+            .chart-section {
+                flex: 1;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Contenedor principal -->
     <div class="container">
-        <!-- Encabezado -->
-        <header>
-            <h1>Panel de Gestión de Carteras</h1>
-            <p>Visualiza y gestiona tus inversiones de manera eficiente</p>
-        </header>
+        <h1>Indexa Dashboard</h1>
 
-        <!-- Sección de mensajes de error y advertencia -->
-        <div id="error-message" class="fade-hidden"></div>
-        <div id="warning-message" class="fade-hidden"></div>
-
-        <!-- Sección de autenticación -->
-        <section>
-            <h2>Autenticación</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="sm:col-span-2 relative">
-                    <input type="password" id="api-token" placeholder="Introduce tu token de API" aria-label="Token de API">
-                    <button id="toggle-password" aria-label="Mostrar/Ocultar token">
-                        <!-- Icono de ojo (fa-eye) como SVG -->
-                        <svg class="icon" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                        </svg>
-                    </button>
-                </div>
+        <div class="token-section">
+            <div class="token-input-container">
+                <input type="password" id="api-token" placeholder="Introduce tu token de API">
+                <button class="toggle-password" id="toggle-password"><i class="fas fa-eye"></i></button>
                 <button id="fetch-accounts">Cargar Cuentas</button>
             </div>
-            <p class="text-sm mt-2">Introduce un token válido para acceder a tus cuentas. Asegúrate de que el token tenga los permisos necesarios.</p>
-        </section>
-
-        <!-- Indicador de carga -->
-        <div id="loading-indicator" class="flex justify-center fade-hidden">
-            <div class="loader"></div>
+            <div id="loading-indicator" class="fade-hidden">
+                <p>Cargando...</p>
+            </div>
+            <div id="error-message" class="fade-hidden"></div>
+            <div id="warning-message" class="fade-hidden"></div>
         </div>
 
-        <!-- Selector de cuentas -->
-        <section id="account-selector" class="fade-hidden">
+        <div class="account-selector fade-hidden" id="account-selector">
             <h2>Selecciona una Cuenta</h2>
-            <select id="account-select" aria-label="Selecciona una cuenta">
+            <select id="account-select">
                 <option value="">Selecciona una cuenta para cargar los datos</option>
             </select>
-            <p class="text-sm mt-2">Elige una cuenta para ver los detalles de tu cartera y su rendimiento histórico.</p>
-        </section>
-
-        <!-- Resumen de cuentas -->
-        <section id="overview-section" class="fade-hidden">
-            <h2>Resumen de Tus Cuentas</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="info-box">
-                    <p>Valor Total:</p>
-                    <p id="overview-total-value">€0.00</p>
-                </div>
-                <div class="info-box">
-                    <p>Rentabilidad:</p>
-                    <p id="overview-return">0.00%</p>
-                </div>
-                <div class="info-box">
-                    <p>Aportaciones Netas:</p>
-                    <p id="overview-contributions">€0.00</p>
-                </div>
-            </div>
-            <p class="text-sm mt-4">Este resumen incluye todas tus cuentas activas. Selecciona una cuenta para ver más detalles.</p>
-        </section>
-
-        <!-- Información de la cuenta -->
-        <section id="account-info" class="fade-hidden">
-            <h2>Información de la Cuenta</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
-                <div class="info-box">
-                    <p>Cuenta Seleccionada:</p>
-                    <p id="selected-account">-</p>
-                </div>
-                <div class="info-box">
-                    <p>Valor Total:</p>
-                    <p id="total-value">€0.00</p>
-                </div>
-                <div class="info-box">
-                    <p>Rentabilidad Anual:</p>
-                    <p id="annual-return">0.00%</p>
-                </div>
-                <div class="info-box">
-                    <p>Volatilidad:</p>
-                    <p id="volatility">0.00%</p>
-                </div>
-                <div class="info-box">
-                    <p>Efectivo:</p>
-                    <p id="cash-amount">€0.00</p>
-                </div>
-                <div class="info-box">
-                    <p>Dinero Adicional Necesario:</p>
-                    <p id="additional-cash-needed">€0.00</p>
-                </div>
-            </div>
-            <p class="text-sm mt-4">Estos datos reflejan el estado actual de la cuenta seleccionada. Usa los botones a continuación para explorar más detalles.</p>
-        </section>
-
-        <!-- Botones de navegación -->
-        <div class="nav-buttons">
-            <button id="toggle-charts" class="active">
-                <!-- Icono de gráfico (fa-chart-line) como SVG -->
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M3 3v18h18V3H3zm4 16H5v-6h2v6zm4 0H9v-8h2v8zm4 0h-2v-4h2v4zm4 0h-2v-2h2v2z"/>
-                </svg>
-                Ocultar Gráficos
-            </button>
-            <button id="toggle-composition">
-                <!-- Icono de tabla (fa-table) como SVG -->
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M4 3h16c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 4v4h6V7H4zm8 0v4h6V7h-6zm8 0v4h-6V7h6zm-16 6v4h6v-4H4zm8 0v4h6v-4h-6zm8 0v4h-6v-4h6zm-16 6v2h6v-2H4zm8 0v2h6v-2h-6zm8 0v2h-6v-2h6z"/>
-                </svg>
-                Mostrar Composición
-            </button>
-            <button id="toggle-history">
-                <!-- Icono de histórico (fa-history) como SVG -->
-                <svg class="icon" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M13 3c-4.97 0-9 4.03-9 9H1l4 4 4-4H6c0-3.86 3.14-7 7-7s7 3.14 7 7-3.14 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
-                </svg>
-                Mostrar Histórico
-            </button>
         </div>
 
-        <!-- Sección de gráficos -->
-        <section class="charts-container height-visible">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Gráfico de evolución de la cartera -->
-                <div>
-                    <h2>Evolución de la Cartera</h2>
-                    <div class="flex justify-center gap-2 mb-4">
-                        <button id="portfolio-euros" class="scale-toggle active" data-chart="portfolio" data-scale="euros">En Euros (€)</button>
-                        <button id="portfolio-percentage" class="scale-toggle" data-chart="portfolio" data-scale="percentage">En Porcentaje (%)</button>
-                        <button id="download-data">Descargar Datos</button>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="portfolio-chart" aria-label="Gráfico de evolución de la cartera"></canvas>
-                    </div>
-                    <p class="text-sm text-center">Evolución de tu cartera a lo largo del tiempo, con proyecciones basadas en escenarios realistas.</p>
+        <div class="overview-section fade-hidden" id="overview-section">
+            <h2>Resumen de Tus Cuentas</h2>
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <p id="overview-total-value">€0.00</p>
+                    <span>Valor Total</span>
                 </div>
-                <!-- Gráfico de evolución de componentes -->
-                <div>
-                    <h2>Evolución de Componentes</h2>
-                    <div class="flex justify-center gap-2 mb-4">
-                        <button id="components-euros" class="scale-toggle active" data-chart="components" data-scale="euros">En Euros (€)</button>
-                        <button id="components-percentage" class="scale-toggle" data-chart="components" data-scale="percentage">En Porcentaje (%)</button>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="components-chart" aria-label="Gráfico de evolución de componentes"></canvas>
-                    </div>
-                    <p class="text-sm text-center">Desglose de la evolución de cada componente de tu cartera.</p>
+                <div class="overview-item">
+                    <p id="overview-return">0.00%</p>
+                    <span>Rentabilidad</span>
+                </div>
+                <div class="overview-item">
+                    <p id="overview-contributions">€0.00</p>
+                    <span>Aportaciones Netas</span>
                 </div>
             </div>
-        </section>
+        </div>
 
-        <!-- Sección de composición de la cartera -->
-        <section id="composition-section" class="height-hidden">
+        <div class="account-info fade-hidden" id="account-info">
+            <h2>Información de la Cuenta <span id="selected-account"></span></h2>
+            <div class="account-info-grid">
+                <div class="account-info-item">
+                    <p id="total-value">€0.00</p>
+                    <span>Valor Total</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="annual-return">0.00%</p>
+                    <span>Rentabilidad Anual</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="volatility">0.00%</p>
+                    <span>Volatilidad</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="cash-amount">€0.00</p>
+                    <span>Efectivo</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="additional-cash-needed">€0.00</p>
+                    <span>Dinero Adicional Necesario</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="toggle-section" id="toggle-charts"><i class="fas fa-chart-line"></i> Mostrar Gráficos</button>
+        <div class="charts-container height-hidden">
+            <div class="chart-section">
+                <h2>Evolución de la Cartera</h2>
+                <div class="chart-controls">
+                    <button class="scale-toggle active" data-chart="portfolio" data-scale="euros" id="portfolio-euros">En Euros (€)</button>
+                    <button class="scale-toggle" data-chart="portfolio" data-scale="percentage" id="portfolio-percentage">En Porcentaje (%)</button>
+                    <button id="download-data">Descargar Datos</button>
+                </div>
+                <canvas id="portfolio-chart"></canvas>
+            </div>
+            <div class="chart-section">
+                <h2>Evolución de Componentes</h2>
+                <div class="chart-controls">
+                    <button class="scale-toggle active" data-chart="components" data-scale="euros" id="components-euros">En Euros (€)</button>
+                    <button class="scale-toggle" data-chart="components" data-scale="percentage" id="components-percentage">En Porcentaje (%)</button>
+                </div>
+                <canvas id="components-chart"></canvas>
+            </div>
+        </div>
+
+        <button class="toggle-section" id="toggle-composition"><i class="fas fa-table"></i> Mostrar Composición</button>
+        <div class="composition-section height-hidden" id="composition-section">
             <h2>Composición de la Cartera</h2>
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Color</th>
-                            <th>Fondo</th>
-                            <th>Valor (€)</th>
-                            <th>Peso (%)</th>
-                            <th>Precio por Título (€)</th>
-                            <th>Títulos</th>
-                        </tr>
-                    </thead>
-                    <tbody id="composition-table">
-                        <tr>
-                            <td colspan="6" class="text-center">Cargando datos de composición...</td>
-                        </tr>
-                        <!-- Datos de ejemplo para aumentar el tamaño del archivo -->
-                        <tr class="hidden">
-                            <td><div class="w-6 h-6 rounded-full" style="background-color: #FF6B6B;"></div></td>
-                            <td>Fondo de Ejemplo 1</td>
-                            <td>€5000.00</td>
-                            <td>
-                                <div class="weight-bar">
-                                    <div class="weight-bar-fill" style="width: 50%;"></div>
-                                </div>
-                                50.00%
-                            </td>
-                            <td>€100.00</td>
-                            <td>50.00</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td><div class="w-6 h-6 rounded-full" style="background-color: #45B7D1;"></div></td>
-                            <td>Fondo de Ejemplo 2</td>
-                            <td>€3000.00</td>
-                            <td>
-                                <div class="weight-bar">
-                                    <div class="weight-bar-fill" style="width: 30%;"></div>
-                                </div>
-                                30.00%
-                            </td>
-                            <td>€150.00</td>
-                            <td>20.00</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td><div class="w-6 h-6 rounded-full" style="background-color: #96CEB4;"></div></td>
-                            <td>Fondo de Ejemplo 3</td>
-                            <td>€2000.00</td>
-                            <td>
-                                <div class="weight-bar">
-                                    <div class="weight-bar-fill" style="width: 20%;"></div>
-                                </div>
-                                20.00%
-                            </td>
-                            <td>€200.00</td>
-                            <td>10.00</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td><div class="w-6 h-6 rounded-full" style="background-color: #FFEEAD;"></div></td>
-                            <td>Fondo de Ejemplo 4</td>
-                            <td>€1500.00</td>
-                            <td>
-                                <div class="weight-bar">
-                                    <div class="weight-bar-fill" style="width: 15%;"></div>
-                                </div>
-                                15.00%
-                            </td>
-                            <td>€250.00</td>
-                            <td>6.00</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td><div class="w-6 h-6 rounded-full" style="background-color: #D4A5A5;"></div></td>
-                            <td>Fondo de Ejemplo 5</td>
-                            <td>€1000.00</td>
-                            <td>
-                                <div class="weight-bar">
-                                    <div class="weight-bar-fill" style="width: 10%;"></div>
-                                </div>
-                                10.00%
-                            </td>
-                            <td>€300.00</td>
-                            <td>3.33</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p class="text-sm mt-4">Composición actual de tu cartera, mostrando el peso y valor de cada fondo.</p>
-        </section>
+            <table class="composition-table">
+                <thead>
+                    <tr>
+                        <th>Fondo</th>
+                        <th>Valor (€)</th>
+                        <th>Peso (%)</th>
+                        <th>Precio por Título (€)</th>
+                        <th>Títulos</th>
+                    </tr>
+                </thead>
+                <tbody id="composition-table"></tbody>
+            </table>
+        </div>
 
-        <!-- Sección de histórico de rentabilidad -->
-        <section id="history-section" class="height-hidden">
-            <h2>Histórico de Rentabilidad</h2>
-            <div class="overflow-x-auto">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Valor (€)</th>
-                            <th>Rentabilidad (%)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-table">
-                        <tr>
-                            <td colspan="3" class="text-center">Cargando datos históricos...</td>
-                        </tr>
-                        <!-- Datos de ejemplo para aumentar el tamaño del archivo -->
-                        <tr class="hidden">
-                            <td>01/03/2025</td>
-                            <td>€4000.00</td>
-                            <td class="positive-value">+2.50%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/04/2025</td>
-                            <td>€4100.00</td>
-                            <td class="positive-value">+2.50%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/05/2025</td>
-                            <td>€4050.00</td>
-                            <td class="negative-value">-1.22%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/06/2025</td>
-                            <td>€4150.00</td>
-                            <td class="positive-value">+2.47%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/07/2025</td>
-                            <td>€4200.00</td>
-                            <td class="positive-value">+1.20%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/08/2025</td>
-                            <td>€4180.00</td>
-                            <td class="negative-value">-0.48%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/09/2025</td>
-                            <td>€4250.00</td>
-                            <td class="positive-value">+1.67%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/10/2025</td>
-                            <td>€4300.00</td>
-                            <td class="positive-value">+1.18%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/11/2025</td>
-                            <td>€4280.00</td>
-                            <td class="negative-value">-0.47%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td>01/12/2025</td>
-                            <td>€4350.00</td>
-                            <td class="positive-value">+1.64%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <p class="text-sm mt-4">Histórico de rendimiento de tu cartera. Los datos se actualizan diariamente.</p>
-        </section>
-
-        <!-- Pie de página -->
-        <footer>
-            <p>© 2025 Panel de Gestión de Carteras. Todos los derechos reservados.</p>
-            <p class="mt-2">Diseñado por Grok 3 by xAI</p>
-            <div class="mt-4">
-                <a href="#">
-                    <!-- Icono de GitHub -->
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M12 2C6.48 2 2 6.48 2 12c0 4.41 2.87 8.14 6.84 9.49.5.09.68-.22.68-.48v-1.71c-2.78.6-3.37-1.34-3.37-1.34-.45-1.15-1.1-1.46-1.1-1.46-.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.89 1.52 2.34 1.08 2.91.83.09-.65.35-1.08.63-1.33-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.29.1-2.68 0 0 .84-.27 2.75 1.02A9.56 9.56 0 0112 6.8c.85.004 1.71.115 2.52.337 1.9-1.29 2.74-1.02 2.74-1.02.55 1.39.2 2.43.1 2.68.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.56.94.56 1.9v2.82c0 .27.18.58.69.48A10.01 10.01 0 0022 12c0-5.52-4.48-10-10-10z"/>
-                    </svg>
-                    GitHub
-                </a>
-                <a href="#">
-                    <!-- Icono de LinkedIn -->
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M19 3a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h14zm-1.5 15.5v-5.5a3.5 3.5 0 00-3.5-3.5h-1.5a3.5 3.5 0 00-3.5 3.5v5.5h-2v-9h2v1.09c.72-1.12 1.96-1.84 3.5-1.84 2.48 0 4.5 2.02 4.5 4.5v5.25h-2zM7.5 9.5a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 2h2v7h-2v-7z"/>
-                    </svg>
-                    LinkedIn
-                </a>
-                <a href="#">
-                    <!-- Icono de correo -->
-                    <svg class="icon" viewBox="0 0 24 24">
-                        <path fill="currentColor" d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
-                    </svg>
-                    Contacto
-                </a>
-            </div>
-        </footer>
+        <button class="toggle-section" id="toggle-history"><i class="fas fa-history"></i> Mostrar Histórico</button>
+        <div class="history-section height-hidden" id="history-section">
+            <h2>Histórico de la Cartera</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Valor (€)</th>
+                        <th>Rentabilidad (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table"></tbody>
+            </table>
+        </div>
     </div>
-
-    <!-- Script al final para mejorar el rendimiento -->
     <script src="script.js"></script>
 </body>
 </html>
