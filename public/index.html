@@ -3,394 +3,698 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Panel de gestión de carteras financieras con visualización de datos y gráficos interactivos.">
-    <meta name="author" content="Tu Nombre o Empresa">
-    <title>Panel de Gestión de Carteras</title>
+    <meta name="description" content="Panel de gestión de carteras financieras con un diseño futurista y funcionalidad avanzada.">
+    <meta name="author" content="Grok 3 by xAI">
+    <title>Panel de Gestión de Carteras - Futuristic Dashboard</title>
     <!-- Dependencias externas -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-    <link rel="stylesheet" href="styles.css">
-    <!-- Favicon (opcional) -->
-    <link rel="icon" type="image/png" href="favicon.ico">
-    <!-- Estilos adicionales inline (para demostración y para aumentar el tamaño del archivo) -->
+    <!-- Estilos CSS integrados -->
     <style>
+        /* Reset básico */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            background-color: #f7fafc;
-            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
+
+        /* Contenedor principal */
         .container {
-            max-width: 1280px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
         }
+
+        /* Encabezado */
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, #00ddeb, #ff00ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 10px rgba(0, 221, 235, 0.5);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        header p {
+            font-size: 1.2rem;
+            color: #b0b0b0;
+            margin-top: 0.5rem;
+        }
+
+        /* Animación de brillo */
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(0, 221, 235, 0.5), 0 0 20px rgba(255, 0, 255, 0.3);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(0, 221, 235, 0.7), 0 0 30px rgba(255, 0, 255, 0.5);
+            }
+        }
+
+        /* Secciones */
+        section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 15px rgba(0, 221, 235, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px rgba(0, 221, 235, 0.4);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #00ddeb;
+            margin-bottom: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Mensajes de error y advertencia */
+        #error-message, #warning-message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            text-align: center;
+        }
+
+        #error-message {
+            background: rgba(229, 62, 62, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        #warning-message {
+            background: rgba(246, 173, 85, 0.2);
+            color: #f6ad55;
+            border: 1px solid #f6ad55;
+        }
+
         .fade-hidden {
             opacity: 0;
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.5s ease;
         }
+
         .fade-visible {
             opacity: 1;
-            transition: opacity 0.3s ease-in-out;
+            transition: opacity 0.5s ease;
         }
+
         .height-hidden {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.5s ease-in-out;
+            transition: max-height 0.7s ease-in-out;
         }
+
         .height-visible {
-            max-height: 1000px;
-            transition: max-height 0.5s ease-in-out;
+            max-height: 2000px;
+            transition: max-height 0.7s ease-in-out;
         }
+
+        /* Loader */
         .loader {
-            border-top-color: #3498db;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #00ddeb;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
             animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .negative-value {
-            color: #e53e3e;
+
+        /* Inputs y botones */
+        input, select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            color: #e0e0e0;
+            font-size: 1rem;
+            width: 100%;
+            transition: all 0.3s ease;
         }
-        .positive-value {
-            color: #38a169;
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #00ddeb;
+            box-shadow: 0 0 8px rgba(0, 221, 235, 0.5);
         }
-        .weight-bar {
-            background-color: #e2e8f0;
-            height: 10px;
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative;
-        }
-        .weight-bar-fill {
-            background-color: #4a5568;
-            height: 100%;
-            transition: width 0.3s ease-in-out;
-        }
-        button.active {
-            background-color: #3182ce;
+
+        button {
+            background: linear-gradient(90deg, #00ddeb, #ff00ff);
             color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .shadow-md {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 221, 235, 0.5);
         }
-        .hover\:bg-gray-300:hover {
-            background-color: #e2e8f0;
+
+        button.active {
+            background: linear-gradient(90deg, #ff00ff, #00ddeb);
         }
-        .transition {
-            transition: all 0.3s ease-in-out;
+
+        button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Estilo para el toggle de contraseña */
+        #toggle-password {
+            background: none;
+            padding: 0;
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #b0b0b0;
+        }
+
+        #toggle-password:hover {
+            color: #00ddeb;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        /* Grids */
+        .grid {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .sm\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .lg\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .lg\:grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+
+        /* Elementos de información */
+        .info-box {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .info-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 10px rgba(0, 221, 235, 0.3);
+        }
+
+        .info-box p:first-child {
+            color: #b0b0b0;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-box p:last-child {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .negative-value {
+            color: #ff6b6b;
+        }
+
+        .positive-value {
+            color: #2ecc71;
+        }
+
+        /* Botones de navegación */
+        .nav-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-buttons button {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+        }
+
+        .nav-buttons button i {
+            margin-right: 0.5rem;
+        }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: #e0e0e0;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            color: #00ddeb;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        .weight-bar {
+            background: rgba(255, 255, 255, 0.1);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .weight-bar-fill {
+            background: linear-gradient(90deg, #00ddeb, #ff00ff);
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+
+        /* Gráficos */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 1rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #b0b0b0;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: #00ddeb;
+            text-decoration: none;
+            margin: 0 0.5rem;
+            transition: color 0.3s ease;
+        }
+
+        footer a:hover {
+            color: #ff00ff;
+        }
+
+        /* Media Queries para responsividad */
+        @media (max-width: 1024px) {
+            .lg\:grid-cols-2, .lg\:grid-cols-6 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .sm\:grid-cols-3, .lg\:grid-cols-2, .lg\:grid-cols-6 {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons button {
+                width: 100%;
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .chart-container {
+                height: 250px;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-100 font-sans text-gray-800">
+<body>
     <!-- Contenedor principal -->
-    <div class="container mx-auto p-6">
+    <div class="container">
         <!-- Encabezado -->
-        <header class="mb-8 text-center">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">Panel de Gestión de Carteras</h1>
-            <p class="text-lg text-gray-600">Visualiza y gestiona tus inversiones de manera eficiente</p>
+        <header>
+            <h1>Panel de Gestión de Carteras</h1>
+            <p>Visualiza y gestiona tus inversiones de manera eficiente</p>
         </header>
 
         <!-- Sección de mensajes de error y advertencia -->
-        <div id="error-message" class="bg-red-100 text-red-700 p-4 mb-6 rounded-lg shadow-md fade-hidden transition-opacity duration-300"></div>
-        <div id="warning-message" class="bg-yellow-100 text-yellow-700 p-4 mb-6 rounded-lg shadow-md fade-hidden transition-opacity duration-300"></div>
+        <div id="error-message" class="fade-hidden"></div>
+        <div id="warning-message" class="fade-hidden"></div>
 
         <!-- Sección de autenticación -->
-        <section class="bg-white shadow-md rounded-lg p-6 mb-8">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Autenticación</h2>
-            <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                <div class="relative flex-grow w-full">
-                    <input type="password" id="api-token" placeholder="Introduce tu token de API" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" aria-label="Token de API">
-                    <button id="toggle-password" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-600 hover:text-gray-800 transition-colors duration-200" aria-label="Mostrar/Ocultar contraseña">
+        <section>
+            <h2>Autenticación</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="sm:col-span-2 relative">
+                    <input type="password" id="api-token" placeholder="Introduce tu token de API" aria-label="Token de API">
+                    <button id="toggle-password" aria-label="Mostrar/Ocultar token">
                         <i class="fas fa-eye"></i>
                     </button>
                 </div>
-                <button id="fetch-accounts" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 w-full sm:w-auto">
-                    Cargar Cuentas
-                </button>
+                <button id="fetch-accounts">Cargar Cuentas</button>
             </div>
-            <p class="text-sm text-gray-500 mt-2">Introduce un token válido para acceder a tus cuentas. Asegúrate de que el token tenga los permisos necesarios.</p>
+            <p class="text-sm mt-2">Introduce un token válido para acceder a tus cuentas. Asegúrate de que el token tenga los permisos necesarios.</p>
         </section>
 
         <!-- Indicador de carga -->
-        <div id="loading-indicator" class="flex justify-center mb-8 fade-hidden">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
+        <div id="loading-indicator" class="flex justify-center fade-hidden">
+            <div class="loader"></div>
         </div>
 
         <!-- Selector de cuentas -->
-        <section id="account-selector" class="bg-white shadow-md rounded-lg p-6 mb-8 fade-hidden transition-opacity duration-300">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Selecciona una Cuenta</h2>
-            <select id="account-select" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" aria-label="Selecciona una cuenta">
+        <section id="account-selector" class="fade-hidden">
+            <h2>Selecciona una Cuenta</h2>
+            <select id="account-select" aria-label="Selecciona una cuenta">
                 <option value="">Selecciona una cuenta para cargar los datos</option>
             </select>
-            <p class="text-sm text-gray-500 mt-2">Elige una cuenta para ver los detalles de tu cartera y su rendimiento histórico.</p>
+            <p class="text-sm mt-2">Elige una cuenta para ver los detalles de tu cartera y su rendimiento histórico.</p>
         </section>
 
         <!-- Resumen de cuentas -->
-        <section id="overview-section" class="bg-white shadow-md rounded-lg p-6 mb-8 fade-hidden transition-opacity duration-300">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Resumen de Tus Cuentas</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Valor Total:</p>
-                    <p id="overview-total-value" class="text-3xl font-bold text-gray-900 mt-2">€0.00</p>
+        <section id="overview-section" class="fade-hidden">
+            <h2>Resumen de Tus Cuentas</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="info-box">
+                    <p>Valor Total:</p>
+                    <p id="overview-total-value">€0.00</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Rentabilidad:</p>
-                    <p id="overview-return" class="text-3xl font-bold text-gray-900 mt-2">0.00%</p>
+                <div class="info-box">
+                    <p>Rentabilidad:</p>
+                    <p id="overview-return">0.00%</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Aportaciones Netas:</p>
-                    <p id="overview-contributions" class="text-3xl font-bold text-gray-900 mt-2">€0.00</p>
+                <div class="info-box">
+                    <p>Aportaciones Netas:</p>
+                    <p id="overview-contributions">€0.00</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Este resumen incluye todas tus cuentas activas. Selecciona una cuenta para ver más detalles.</p>
+            <p class="text-sm mt-4">Este resumen incluye todas tus cuentas activas. Selecciona una cuenta para ver más detalles.</p>
         </section>
 
         <!-- Información de la cuenta -->
-        <section id="account-info" class="bg-white shadow-md rounded-lg p-6 mb-8 fade-hidden transition-opacity duration-300">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Información de la Cuenta</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-6 gap-6">
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Cuenta Seleccionada:</p>
-                    <p id="selected-account" class="text-lg font-medium text-gray-900 mt-2">-</p>
+        <section id="account-info" class="fade-hidden">
+            <h2>Información de la Cuenta</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-6 gap-4">
+                <div class="info-box">
+                    <p>Cuenta Seleccionada:</p>
+                    <p id="selected-account">-</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Valor Total:</p>
-                    <p id="total-value" class="text-lg font-medium text-gray-900 mt-2">€0.00</p>
+                <div class="info-box">
+                    <p>Valor Total:</p>
+                    <p id="total-value">€0.00</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Rentabilidad Anual:</p>
-                    <p id="annual-return" class="text-lg font-medium text-gray-900 mt-2">0.00%</p>
+                <div class="info-box">
+                    <p>Rentabilidad Anual:</p>
+                    <p id="annual-return">0.00%</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Volatilidad:</p>
-                    <p id="volatility" class="text-lg font-medium text-gray-900 mt-2">0.00%</p>
+                <div class="info-box">
+                    <p>Volatilidad:</p>
+                    <p id="volatility">0.00%</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Efectivo:</p>
-                    <p id="cash-amount" class="text-lg font-medium text-gray-900 mt-2">€0.00</p>
+                <div class="info-box">
+                    <p>Efectivo:</p>
+                    <p id="cash-amount">€0.00</p>
                 </div>
-                <div class="text-center p-4 bg-gray-50 rounded-lg">
-                    <p class="text-gray-600 font-medium">Dinero Adicional Necesario:</p>
-                    <p id="additional-cash-needed" class="text-lg font-medium text-gray-900 mt-2">€0.00</p>
+                <div class="info-box">
+                    <p>Dinero Adicional Necesario:</p>
+                    <p id="additional-cash-needed">€0.00</p>
                 </div>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Estos datos reflejan el estado actual de la cuenta seleccionada. Usa los botones a continuación para explorar más detalles.</p>
+            <p class="text-sm mt-4">Estos datos reflejan el estado actual de la cuenta seleccionada. Usa los botones a continuación para explorar más detalles.</p>
         </section>
 
         <!-- Botones de navegación -->
-        <div class="flex flex-wrap justify-center space-x-4 mb-8">
-            <button id="toggle-charts" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 active">
-                <i class="fas fa-chart-line mr-2"></i> Ocultar Gráficos
+        <div class="nav-buttons">
+            <button id="toggle-charts" class="active">
+                <i class="fas fa-chart-line"></i> Ocultar Gráficos
             </button>
-            <button id="toggle-composition" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200">
-                <i class="fas fa-table mr-2"></i> Mostrar Composición
+            <button id="toggle-composition">
+                <i class="fas fa-table"></i> Mostrar Composición
             </button>
-            <button id="toggle-history" class="bg-gray-200 text-gray-800 px-6 py-3 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200">
-                <i class="fas fa-history mr-2"></i> Mostrar Histórico
+            <button id="toggle-history">
+                <i class="fas fa-history"></i> Mostrar Histórico
             </button>
         </div>
 
         <!-- Sección de gráficos -->
-        <section class="charts-container height-visible mb-8 transition-all duration-500">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <section class="charts-container height-visible">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <!-- Gráfico de evolución de la cartera -->
-                <div class="bg-white shadow-md rounded-lg p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-gray-900">Evolución de la Cartera</h2>
-                    <div class="flex flex-wrap justify-center space-x-2 mb-6">
-                        <button id="portfolio-euros" class="scale-toggle bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 active" data-chart="portfolio" data-scale="euros">
-                            En Euros (€)
-                        </button>
-                        <button id="portfolio-percentage" class="scale-toggle bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" data-chart="portfolio" data-scale="percentage">
-                            En Porcentaje (%)
-                        </button>
-                        <button id="download-data" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 transition-all duration-200">
-                            Descargar Datos
-                        </button>
+                <div>
+                    <h2>Evolución de la Cartera</h2>
+                    <div class="flex justify-center gap-2 mb-4">
+                        <button id="portfolio-euros" class="scale-toggle active" data-chart="portfolio" data-scale="euros">En Euros (€)</button>
+                        <button id="portfolio-percentage" class="scale-toggle" data-chart="portfolio" data-scale="percentage">En Porcentaje (%)</button>
+                        <button id="download-data">Descargar Datos</button>
                     </div>
-                    <div class="relative h-96">
+                    <div class="chart-container">
                         <canvas id="portfolio-chart" aria-label="Gráfico de evolución de la cartera"></canvas>
                     </div>
-                    <p class="text-sm text-gray-500 mt-4 text-center">Este gráfico muestra la evolución de tu cartera a lo largo del tiempo, con proyecciones basadas en escenarios realistas.</p>
+                    <p class="text-sm text-center">Evolución de tu cartera a lo largo del tiempo, con proyecciones basadas en escenarios realistas.</p>
                 </div>
                 <!-- Gráfico de evolución de componentes -->
-                <div class="bg-white shadow-md rounded-lg p-6">
-                    <h2 class="text-2xl font-semibold mb-4 text-gray-900">Evolución de Componentes</h2>
-                    <div class="flex flex-wrap justify-center space-x-2 mb-6">
-                        <button id="components-euros" class="scale-toggle bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200 active" data-chart="components" data-scale="euros">
-                            En Euros (€)
-                        </button>
-                        <button id="components-percentage" class="scale-toggle bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-all duration-200" data-chart="components" data-scale="percentage">
-                            En Porcentaje (%)
-                        </button>
+                <div>
+                    <h2>Evolución de Componentes</h2>
+                    <div class="flex justify-center gap-2 mb-4">
+                        <button id="components-euros" class="scale-toggle active" data-chart="components" data-scale="euros">En Euros (€)</button>
+                        <button id="components-percentage" class="scale-toggle" data-chart="components" data-scale="percentage">En Porcentaje (%)</button>
                     </div>
-                    <div class="relative h-96">
+                    <div class="chart-container">
                         <canvas id="components-chart" aria-label="Gráfico de evolución de componentes"></canvas>
                     </div>
-                    <p class="text-sm text-gray-500 mt-4 text-center">Este gráfico desglosa la evolución de cada componente de tu cartera, permitiéndote analizar su rendimiento individual.</p>
+                    <p class="text-sm text-center">Desglose de la evolución de cada componente de tu cartera.</p>
                 </div>
             </div>
         </section>
 
         <!-- Sección de composición de la cartera -->
-        <section id="composition-section" class="bg-white shadow-md rounded-lg p-6 mb-8 height-hidden transition-all duration-500">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Composición de la Cartera</h2>
+        <section id="composition-section" class="height-hidden">
+            <h2>Composición de la Cartera</h2>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table>
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="p-3 text-gray-700 font-semibold border-b">Color</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Fondo</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Valor (€)</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Peso (%)</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Precio por Título (€)</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Títulos</th>
+                        <tr>
+                            <th>Color</th>
+                            <th>Fondo</th>
+                            <th>Valor (€)</th>
+                            <th>Peso (%)</th>
+                            <th>Precio por Título (€)</th>
+                            <th>Títulos</th>
                         </tr>
                     </thead>
                     <tbody id="composition-table">
-                        <!-- Placeholder inicial -->
                         <tr>
-                            <td colspan="6" class="p-3 text-center text-gray-500 border-b">Cargando datos de composición...</td>
+                            <td colspan="6" class="text-center">Cargando datos de composición...</td>
                         </tr>
-                        <!-- Ejemplo de datos estáticos para aumentar el tamaño del archivo -->
+                        <!-- Datos de ejemplo para aumentar el tamaño del archivo -->
                         <tr class="hidden">
-                            <td class="p-3 border-b"><div class="w-6 h-6 rounded-full" style="background-color: #FF6B6B;"></div></td>
-                            <td class="p-3 border-b">Fondo de Ejemplo 1</td>
-                            <td class="p-3 border-b">€5000.00</td>
-                            <td class="p-3 border-b">
+                            <td><div class="w-6 h-6 rounded-full" style="background-color: #FF6B6B;"></div></td>
+                            <td>Fondo de Ejemplo 1</td>
+                            <td>€5000.00</td>
+                            <td>
                                 <div class="weight-bar">
                                     <div class="weight-bar-fill" style="width: 50%;"></div>
                                 </div>
                                 50.00%
                             </td>
-                            <td class="p-3 border-b">€100.00</td>
-                            <td class="p-3 border-b">50.00</td>
+                            <td>€100.00</td>
+                            <td>50.00</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b"><div class="w-6 h-6 rounded-full" style="background-color: #45B7D1;"></div></td>
-                            <td class="p-3 border-b">Fondo de Ejemplo 2</td>
-                            <td class="p-3 border-b">€3000.00</td>
-                            <td class="p-3 border-b">
+                            <td><div class="w-6 h-6 rounded-full" style="background-color: #45B7D1;"></div></td>
+                            <td>Fondo de Ejemplo 2</td>
+                            <td>€3000.00</td>
+                            <td>
                                 <div class="weight-bar">
                                     <div class="weight-bar-fill" style="width: 30%;"></div>
                                 </div>
                                 30.00%
                             </td>
-                            <td class="p-3 border-b">€150.00</td>
-                            <td class="p-3 border-b">20.00</td>
+                            <td>€150.00</td>
+                            <td>20.00</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b"><div class="w-6 h-6 rounded-full" style="background-color: #96CEB4;"></div></td>
-                            <td class="p-3 border-b">Fondo de Ejemplo 3</td>
-                            <td class="p-3 border-b">€2000.00</td>
-                            <td class="p-3 border-b">
+                            <td><div class="w-6 h-6 rounded-full" style="background-color: #96CEB4;"></div></td>
+                            <td>Fondo de Ejemplo 3</td>
+                            <td>€2000.00</td>
+                            <td>
                                 <div class="weight-bar">
                                     <div class="weight-bar-fill" style="width: 20%;"></div>
                                 </div>
                                 20.00%
                             </td>
-                            <td class="p-3 border-b">€200.00</td>
-                            <td class="p-3 border-b">10.00</td>
+                            <td>€200.00</td>
+                            <td>10.00</td>
+                        </tr>
+                        <tr class="hidden">
+                            <td><div class="w-6 h-6 rounded-full" style="background-color: #FFEEAD;"></div></td>
+                            <td>Fondo de Ejemplo 4</td>
+                            <td>€1500.00</td>
+                            <td>
+                                <div class="weight-bar">
+                                    <div class="weight-bar-fill" style="width: 15%;"></div>
+                                </div>
+                                15.00%
+                            </td>
+                            <td>€250.00</td>
+                            <td>6.00</td>
+                        </tr>
+                        <tr class="hidden">
+                            <td><div class="w-6 h-6 rounded-full" style="background-color: #D4A5A5;"></div></td>
+                            <td>Fondo de Ejemplo 5</td>
+                            <td>€1000.00</td>
+                            <td>
+                                <div class="weight-bar">
+                                    <div class="weight-bar-fill" style="width: 10%;"></div>
+                                </div>
+                                10.00%
+                            </td>
+                            <td>€300.00</td>
+                            <td>3.33</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Esta tabla muestra la composición actual de tu cartera, incluyendo el peso de cada fondo y su valor en euros.</p>
+            <p class="text-sm mt-4">Composición actual de tu cartera, mostrando el peso y valor de cada fondo.</p>
         </section>
 
         <!-- Sección de histórico de rentabilidad -->
-        <section id="history-section" class="bg-white shadow-md rounded-lg p-6 height-hidden transition-all duration-500">
-            <h2 class="text-2xl font-semibold mb-4 text-gray-900">Histórico de Rentabilidad</h2>
+        <section id="history-section" class="height-hidden">
+            <h2>Histórico de Rentabilidad</h2>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
+                <table>
                     <thead>
-                        <tr class="bg-gray-100">
-                            <th class="p-3 text-gray-700 font-semibold border-b">Fecha</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Valor (€)</th>
-                            <th class="p-3 text-gray-700 font-semibold border-b">Rentabilidad (%)</th>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Valor (€)</th>
+                            <th>Rentabilidad (%)</th>
                         </tr>
                     </thead>
                     <tbody id="history-table">
-                        <!-- Placeholder inicial -->
                         <tr>
-                            <td colspan="3" class="p-3 text-center text-gray-500 border-b">Cargando datos históricos...</td>
+                            <td colspan="3" class="text-center">Cargando datos históricos...</td>
                         </tr>
-                        <!-- Ejemplo de datos estáticos para aumentar el tamaño del archivo -->
+                        <!-- Datos de ejemplo para aumentar el tamaño del archivo -->
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/03/2025</td>
-                            <td class="p-3 border-b">€4000.00</td>
-                            <td class="p-3 border-b positive-value">+2.50%</td>
-                        </tr>
-                        <tr class="hidden">
-                            <td class="p-3 border-b">01/04/2025</td>
-                            <td class="p-3 border-b">€4100.00</td>
-                            <td class="p-3 border-b positive-value">+2.50%</td>
+                            <td>01/03/2025</td>
+                            <td>€4000.00</td>
+                            <td class="positive-value">+2.50%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/05/2025</td>
-                            <td class="p-3 border-b">€4050.00</td>
-                            <td class="p-3 border-b negative-value">-1.22%</td>
+                            <td>01/04/2025</td>
+                            <td>€4100.00</td>
+                            <td class="positive-value">+2.50%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/06/2025</td>
-                            <td class="p-3 border-b">€4150.00</td>
-                            <td class="p-3 border-b positive-value">+2.47%</td>
+                            <td>01/05/2025</td>
+                            <td>€4050.00</td>
+                            <td class="negative-value">-1.22%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/07/2025</td>
-                            <td class="p-3 border-b">€4200.00</td>
-                            <td class="p-3 border-b positive-value">+1.20%</td>
+                            <td>01/06/2025</td>
+                            <td>€4150.00</td>
+                            <td class="positive-value">+2.47%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/08/2025</td>
-                            <td class="p-3 border-b">€4180.00</td>
-                            <td class="p-3 border-b negative-value">-0.48%</td>
+                            <td>01/07/2025</td>
+                            <td>€4200.00</td>
+                            <td class="positive-value">+1.20%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/09/2025</td>
-                            <td class="p-3 border-b">€4250.00</td>
-                            <td class="p-3 border-b positive-value">+1.67%</td>
+                            <td>01/08/2025</td>
+                            <td>€4180.00</td>
+                            <td class="negative-value">-0.48%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/10/2025</td>
-                            <td class="p-3 border-b">€4300.00</td>
-                            <td class="p-3 border-b positive-value">+1.18%</td>
+                            <td>01/09/2025</td>
+                            <td>€4250.00</td>
+                            <td class="positive-value">+1.67%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/11/2025</td>
-                            <td class="p-3 border-b">€4280.00</td>
-                            <td class="p-3 border-b negative-value">-0.47%</td>
+                            <td>01/10/2025</td>
+                            <td>€4300.00</td>
+                            <td class="positive-value">+1.18%</td>
                         </tr>
                         <tr class="hidden">
-                            <td class="p-3 border-b">01/12/2025</td>
-                            <td class="p-3 border-b">€4350.00</td>
-                            <td class="p-3 border-b positive-value">+1.64%</td>
+                            <td>01/11/2025</td>
+                            <td>€4280.00</td>
+                            <td class="negative-value">-0.47%</td>
+                        </tr>
+                        <tr class="hidden">
+                            <td>01/12/2025</td>
+                            <td>€4350.00</td>
+                            <td class="positive-value">+1.64%</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            <p class="text-sm text-gray-500 mt-4">Este histórico muestra el rendimiento de tu cartera a lo largo del tiempo. Los datos se actualizan diariamente.</p>
+            <p class="text-sm mt-4">Histórico de rendimiento de tu cartera. Los datos se actualizan diariamente.</p>
         </section>
 
         <!-- Pie de página -->
-        <footer class="text-center text-gray-500 mt-12">
-            <p>&copy; 2025 Panel de Gestión de Carteras. Todos los derechos reservados.</p>
-            <p class="mt-2">Desarrollado por <a href="#" class="text-blue-600 hover:underline">Tu Nombre o Empresa</a></p>
-            <div class="mt-4 space-x-4">
-                <a href="#" class="text-gray-600 hover:text-gray-800 transition-colors duration-200">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-                <a href="#" class="text-gray-600 hover:text-gray-800 transition-colors duration-200">
-                    <i class="fab fa-linkedin"></i> LinkedIn
-                </a>
-                <a href="#" class="text-gray-600 hover:text-gray-800 transition-colors duration-200">
-                    <i class="fas fa-envelope"></i> Contacto
-                </a>
+        <footer>
+            <p>© 2025 Panel de Gestión de Carteras. Todos los derechos reservados.</p>
+            <p class="mt-2">Diseñado por Grok 3 by xAI</p>
+            <div class="mt-4">
+                <a href="#"><i class="fab fa-github"></i> GitHub</a>
+                <a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                <a href="#"><i class="fas fa-envelope"></i> Contacto</a>
             </div>
         </footer>
     </div>
 
-    <!-- Carga del script al final para mejorar el rendimiento -->
+    <!-- Script al final para mejorar el rendimiento -->
     <script src="script.js"></script>
 </body>
 </html>
