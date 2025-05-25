@@ -16,16 +16,13 @@ if (typeof Chart === 'undefined') {
     setError('Error: No se pudo cargar la librería de gráficos. Por favor, revisa tu conexión o la configuración.');
 }
 
-const colorPalette = [
-    '#FF6B6B', '#45B7D1', '#96CEB4', '#FFEEAD',
-    '#D4A5A5', '#9B59B6', '#3498DB', '#E74C3C', '#2ECC71'
-];
+const colorPalette = ['#007bff', '#28a745', '#6c757d', '#17a2b8', '#ffc107', '#fd7e14', '#20c997', '#6610f2'];
 
 const performanceColors = {
-    real: '#4ECDC4',
-    expected: '#3498DB',
-    best: '#2ECC71',
-    worst: '#E74C3C'
+    real: '#007bff', // Blue
+    expected: '#6c757d', // Gray
+    best: '#28a745', // Green
+    worst: '#dc3545'  // Red
 };
 
 function formatDateToDayMonthYear(dateStr) {
@@ -74,14 +71,15 @@ function createPortfolioChart(labels, datasets, scale) {
                 scales: {
                     x: {
                         type: 'category',
-                        title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 5, autoSkip: true },
+                        title: { display: true, text: 'Fecha', color: '#333333' }, // Axis title color
+                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' }, // Tick color
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: yAxisTitle },
-                        grid: { color: '#e2e8f0' },
+                        title: { display: true, text: yAxisTitle, color: '#333333' }, // Axis title color
+                        grid: { color: '#dddddd' }, // Grid line color
                         ticks: {
+                            color: '#555555', // Tick color
                             callback: function(value) {
                                 if (scale === 'percentage') {
                                     return value.toFixed(2) + '%';
@@ -97,15 +95,15 @@ function createPortfolioChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#ffffff', // Leyendas en blanco para mejor contraste
+                            color: '#333333', // Legend label color
                             padding: 8
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#1a1a2e',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#00ddeb',
+                        backgroundColor: '#f8f9fa', // Tooltip background color
+                        titleColor: '#333333', // Tooltip title color
+                        bodyColor: '#333333', // Tooltip body color
+                        borderColor: '#007bff', // Tooltip border color
                         borderWidth: 1,
                         callbacks: {
                             title: context => {
@@ -182,14 +180,15 @@ function createComponentsChart(labels, datasets, scale) {
                 scales: {
                     x: {
                         type: 'category',
-                        title: { display: true, text: 'Fecha' },
-                        ticks: { maxTicksLimit: 5, autoSkip: true },
+                        title: { display: true, text: 'Fecha', color: '#333333' }, // Axis title color
+                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' }, // Tick color
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: yAxisTitle },
-                        grid: { color: '#e2e8f0' },
+                        title: { display: true, text: yAxisTitle, color: '#333333' }, // Axis title color
+                        grid: { color: '#dddddd' }, // Grid line color
                         ticks: {
+                            color: '#555555', // Tick color
                             callback: function(value) {
                                 if (scale === 'percentage') {
                                     return value.toFixed(2) + '%';
@@ -205,15 +204,15 @@ function createComponentsChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#ffffff', // Leyendas en blanco para mejor contraste
+                            color: '#333333', // Legend label color
                             padding: 8
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#1a1a2e',
-                        titleColor: '#ffffff',
-                        bodyColor: '#ffffff',
-                        borderColor: '#00ddeb',
+                        backgroundColor: '#f8f9fa', // Tooltip background color
+                        titleColor: '#333333', // Tooltip title color
+                        bodyColor: '#333333', // Tooltip body color
+                        borderColor: '#007bff', // Tooltip border color
                         borderWidth: 1,
                         callbacks: {
                             title: context => {
