@@ -281,3 +281,74 @@
                 flex: 1;
             }
         }
+
+        @media (max-width: 576px) {
+            body {
+                padding: 1rem; /* Reduced body padding for mobile */
+            }
+            h1 {
+                font-size: 1.75rem; /* Smaller h1 for mobile */
+            }
+            h2 {
+                font-size: 1.4rem;  /* Smaller h2 for mobile */
+            }
+            h3 {
+                font-size: 1.1rem;  /* Smaller h3 for mobile */
+            }
+            .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+                padding: 1rem; /* Reduced padding for mobile */
+            }
+            .token-input-container {
+                flex-direction: column;
+                align-items: stretch; /* Make items take full width */
+                position: relative; /* Ensure the parent container is relative for absolute positioning of the icon */
+            }
+            .token-input-container input,
+            .token-input-container button {
+                width: 100%; /* Full width for input and button */
+                margin-bottom: 0.5rem; /* Add some space between stacked items */
+            }
+            .token-input-container button:last-child {
+                margin-bottom: 0; /* No margin for the last button */
+            }
+            .toggle-password {
+                width: auto; /* Override full width for the toggle password icon button */
+                position: absolute;
+                right: 2rem; /* Adjust based on new padding, may need fine-tuning */
+                top: 50%; /* Position in the middle of the input field */
+                transform: translateY(-50%);
+                 /* Ensure it's on top of the input field if there's overlap */
+                z-index: 2;
+            }
+            /* Adjust the input field padding to prevent text from going under the icon */
+            .token-input-container input#api-token {
+                 padding-right: 3rem; /* Space for the icon */
+            }
+            .overview-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Smaller min for overview items */
+            }
+            .account-info-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Smaller min for account items */
+            }
+            .chart-controls {
+                flex-direction: column; /* Stack buttons vertically */
+                align-items: stretch; /* Stretch buttons to full width */
+            }
+            .chart-controls button {
+                width: 100%;
+                margin-bottom: 0.5rem; /* Add space between buttons */
+            }
+            .chart-controls button:last-child {
+                margin-bottom: 0;
+            }
+
+            .composition-section,
+            .history-section {
+                overflow-x: auto; /* Allow horizontal scrolling for these sections */
+            }
+
+            .composition-table,
+            .history-table {
+                min-width: 100%; /* Ensure they try to fill the container before scrolling kicks in */
+            }
+        }
