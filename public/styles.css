@@ -299,6 +299,7 @@
                 padding: 1rem; /* Reduced padding for mobile */
             }
             .token-input-container {
+
                 display: flex; /* Use flex for better control over children */
                 flex-direction: column; /* Stack children vertically */
                 gap: 0.75rem; /* Add space between children (input and button) */
@@ -338,6 +339,32 @@
             .token-input-container input,
             .token-input-container button {
                 margin-bottom: 0; /* Remove individual margins */
+
+                flex-direction: column;
+                align-items: stretch; /* Make items take full width */
+                position: relative; /* Ensure the parent container is relative for absolute positioning of the icon */
+            }
+            .token-input-container input,
+            .token-input-container button {
+                width: 100%; /* Full width for input and button */
+                margin-bottom: 0.5rem; /* Add some space between stacked items */
+            }
+            .token-input-container button:last-child {
+                margin-bottom: 0; /* No margin for the last button */
+            }
+            .toggle-password {
+                width: auto; /* Override full width for the toggle password icon button */
+                position: absolute;
+                right: 2rem; /* Adjust based on new padding, may need fine-tuning */
+                top: 50%; /* Position in the middle of the input field */
+                transform: translateY(-50%);
+                 /* Ensure it's on top of the input field if there's overlap */
+                z-index: 2;
+            }
+            /* Adjust the input field padding to prevent text from going under the icon */
+            .token-input-container input#api-token {
+                 padding-right: 3rem; /* Space for the icon */
+
             }
             .overview-grid {
                 grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Smaller min for overview items */
