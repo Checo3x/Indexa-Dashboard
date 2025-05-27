@@ -1,396 +1,417 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif; /* Ensure this is consistently applied */
-        }
-        body {
-            background: #f4f7f9; /* New background */
-            color: #333333; /* New default color */
-            min-height: 100vh;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            line-height: 1.6; /* Added base line-height */
-        }
-        h1 {
-            color: #007bff; /* Professional blue */
-            font-size: 2.25rem; 
-            margin-bottom: 1.5rem;
-        }
-        h2 {
-            color: #007bff; /* Professional blue */
-            font-size: 1.75rem;
-            margin-bottom: 1.25rem;
-        }
-        h3 {
-            color: #007bff; /* Professional blue */
-            font-size: 1.25rem; 
-            margin-bottom: 1rem;
-        }
-        .container {
-            max-width: 1200px;
-            width: 100%;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
-            background: #ffffff; /* New background */
-            border-radius: 10px;
-            padding: 2rem; /* Increased padding */
-            /* box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); Removed box-shadow */
-            /* backdrop-filter: blur(10px); Removed backdrop-filter */
-            border: 1px solid #dddddd; /* New border */
-            color: inherit; /* Ensure text is readable */
-        }
-        .token-input-container {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-        .token-input-container input {
-            flex: 1;
-            padding: 0.75rem;
-            border: 1px solid #cccccc; /* New border */
-            border-radius: 5px;
-            background: #ffffff; /* New background */
-            color: #333333; /* New color */
-            font-size: 16px;
-            transition: border-color 0.3s ease;
-        }
-        .token-input-container input:focus {
-            outline: none;
-            border-color: #007bff; /* New focus border color */
-        }
-        .token-input-container input.valid {
-            border-color: #28a745; /* New valid border color */
-        }
-        .token-input-container input.invalid {
-            border-color: #dc3545; /* New invalid border color */
-        }
-        .token-input-container button {
-            padding: 0.75rem 1.5rem;
-            background: #007bff; /* New background */
-            border: none;
-            border-radius: 5px;
-            color: #ffffff; /* New color */
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .token-input-container button:hover {
-            background: #0056b3; /* New hover background */
-        }
-        .token-input-container button:disabled {
-            background: #cccccc; /* New disabled background */
-            cursor: not-allowed;
-        }
-        .toggle-password {
-            background: none;
-            border: none;
-            color: #333333; /* New color */
-            cursor: pointer;
-            font-size: 1.2rem;
-        }
-        .account-selector select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #cccccc; /* New border */
-            border-radius: 5px;
-            background: #ffffff; /* New background */
-            color: #333333; /* New color */
-            font-size: 16px;
-            appearance: none;
-            background-image: url('data:image/svg+xml;utf8,<svg fill="%23333333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>'); /* Updated SVG fill */
-            background-repeat: no-repeat;
-            background-position: right 0.75rem center;
-            background-size: 1.5rem;
-            transition: border-color 0.3s ease;
-        }
-        .account-selector select:focus {
-            outline: none;
-            border-color: #007bff; /* New focus border color */
-        }
-        .account-selector select option {
-            background: #ffffff; /* New background */
-            color: #333333; /* New color */
-            font-size: 16px;
-        }
-        .overview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem; 
-        }
-        .overview-item {
-            background: #e9ecef; 
-            padding: 1.5rem; 
-            border-radius: 5px;
-            text-align: center;
-        }
-        .overview-item p {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem; /* Added margin for spacing */
-        }
-        .overview-item span {
-            font-size: 0.9rem;
-            color: #555555; 
-        }
-        .positive-value {
-            color: #28a745; 
-        }
-        .negative-value {
-            color: #dc3545; 
-        }
-        .account-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1.5rem; 
-        }
-        .account-info-item {
-            background: #e9ecef; 
-            padding: 1.5rem; 
-            border-radius: 5px;
-            text-align: center;
-        }
-        .account-info-item p {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem; /* Added margin for spacing */
-        }
-        .account-info-item span {
-            font-size: 0.9rem;
-            color: #555555; 
-        }
-        .charts-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-        }
-        .chart-section {
-            flex: 1;
-        }
-        .chart-section canvas {
-            max-height: 300px;
-            margin-top: 1rem; /* Added margin for spacing */
-        }
-        .chart-controls {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem; 
-        }
-        .chart-controls button {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 5px;
-            background: #e9ecef; 
-            color: #333333; 
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .chart-controls button.active, .chart-controls button:hover {
-            background: #007bff; 
-            color: #ffffff; 
-        }
-        .composition-table, .history-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-        .composition-table th, .composition-table td,
-        .history-table th, .history-table td {
-            border: 1px solid #dddddd; 
-            padding: 0.75rem; 
-            text-align: left;
-        }
-        .composition-table th, .history-table th {
-            background: #e9ecef; 
-            font-weight: 600;
-        }
-        .weight-bar {
-            width: 100px;
-            height: 10px;
-            background: #dddddd; 
-            border-radius: 5px;
-            overflow: hidden;
-            margin-top: 0.25rem; /* Added for alignment */
-        }
-        .weight-bar-fill {
-            height: 100%;
-            background: #007bff; 
-        }
-        .toggle-section {
-            margin-top: 1.5rem; 
-            padding: 0.75rem 1.5rem;
-            background: #007bff; 
-            border: none;
-            border-radius: 5px;
-            color: #ffffff; 
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        .toggle-section:hover, .toggle-section.active {
-            background: #0056b3; 
-        }
-        .fade-hidden {
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .fade-visible {
-            opacity: 1;
-            transition: opacity 0.3s ease;
-        }
-        .height-hidden {
-            max-height: 0;
-            overflow: hidden;
-            opacity: 0;
-            transition: max-height 0.5s ease, opacity 0.3s ease;
-        }
-        .height-visible {
-            max-height: 1000px;
-            opacity: 1;
-            transition: max-height 0.5s ease, opacity 0.3s ease;
-        }
-        #error-message, #warning-message {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 5px;
-            text-align: center;
-        }
-        #error-message {
-            background: rgba(220, 53, 69, 0.1); /* Lighter red background */
-            border: 1px solid #dc3545;
-            color: #dc3545;
-        }
-        #warning-message {
-            background: rgba(255, 193, 7, 0.1); /* Lighter yellow background */
-            border: 1px solid #ffc107;
-            color: #856404; /* Darker yellow for text */
-        }
-        @media (min-width: 768px) {
-            .charts-container {
-                flex-direction: row;
-            }
-            .chart-section {
-                flex: 1;
-            }
-        }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
 
-        @media (max-width: 576px) {
-            body {
-                padding: 1rem; /* Reduced body padding for mobile */
-            }
-            h1 {
-                font-size: 1.75rem; /* Smaller h1 for mobile */
-            }
-            h2 {
-                font-size: 1.4rem;  /* Smaller h2 for mobile */
-            }
-            h3 {
-                font-size: 1.1rem;  /* Smaller h3 for mobile */
-            }
-            .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
-                padding: 1rem; /* Reduced padding for mobile */
-            }
-            .token-input-container {
+body {
+    background: #f4f7f9;
+    color: #333333;
+    min-height: 100vh;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    line-height: 1.6;
+    overflow-x: hidden; /* Evita desbordamiento horizontal */
+}
 
-                display: flex; /* Use flex for better control over children */
-                flex-direction: column; /* Stack children vertically */
-                gap: 0.75rem; /* Add space between children (input and button) */
-                position: relative; /* Keep for general structure if needed, but primary positioning of toggle will be simpler */
-            }
+h1 {
+    color: #007bff;
+    font-size: 2.25rem;
+    margin-bottom: 1.5rem;
+}
 
-            .token-input-container .token-input-wrapper {
-                position: relative; /* New wrapper for input and its icon */
-                width: 100%; /* Wrapper takes full width */
-            }
+h2 {
+    color: #007bff;
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+}
 
-            .token-input-container input#api-token {
-                width: 100%; /* Input takes full width of its wrapper */
-                padding-right: 3.5rem; /* Ensure enough space for the icon. Adjusted from 3rem. */
-                /* margin-bottom is removed as gap on parent handles spacing */
-            }
+h3 {
+    color: #007bff;
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
 
-            .token-input-container button#fetch-accounts {
-                width: 100%; /* Button takes full width */
-                 /* margin-bottom is removed as gap on parent handles spacing */
-            }
+.container {
+    max-width: 1200px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
 
-            .toggle-password {
-                position: absolute;
-                right: 0.75rem; /* Position from the right edge of the wrapper */
-                top: 50%;       /* Center vertically within the wrapper */
-                transform: translateY(-50%);
-                z-index: 2;     /* Keep it above the input field */
-                padding: 0.5rem; /* Add some padding to make it easier to tap */
-                /* width: auto; is fine */
-                /* background: transparent; ensure it has no conflicting background */
-                /* border: none; ensure no conflicting border */
-            }
+.token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 2rem;
+    border: 1px solid #dddddd;
+    color: inherit;
+}
 
-            /* Remove the specific margin-bottom for .token-input-container input and button,
-               as the parent .token-input-container now uses 'gap' for spacing. */
-            .token-input-container input,
-            .token-input-container button {
-                margin-bottom: 0; /* Remove individual margins */
+.token-input-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
 
-                flex-direction: column;
-                align-items: stretch; /* Make items take full width */
-                position: relative; /* Ensure the parent container is relative for absolute positioning of the icon */
-            }
-            .token-input-container input,
-            .token-input-container button {
-                width: 100%; /* Full width for input and button */
-                margin-bottom: 0.5rem; /* Add some space between stacked items */
-            }
-            .token-input-container button:last-child {
-                margin-bottom: 0; /* No margin for the last button */
-            }
-            .toggle-password {
-                width: auto; /* Override full width for the toggle password icon button */
-                position: absolute;
-                right: 2rem; /* Adjust based on new padding, may need fine-tuning */
-                top: 50%; /* Position in the middle of the input field */
-                transform: translateY(-50%);
-                 /* Ensure it's on top of the input field if there's overlap */
-                z-index: 2;
-            }
-            /* Adjust the input field padding to prevent text from going under the icon */
-            .token-input-container input#api-token {
-                 padding-right: 3rem; /* Space for the icon */
+.token-input-container input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    background: #ffffff;
+    color: #333333;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
 
-            }
-            .overview-grid {
-                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); /* Smaller min for overview items */
-            }
-            .account-info-grid {
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Smaller min for account items */
-            }
-            .chart-controls {
-                flex-direction: column; /* Stack buttons vertically */
-                align-items: stretch; /* Stretch buttons to full width */
-            }
-            .chart-controls button {
-                width: 100%;
-                margin-bottom: 0.5rem; /* Add space between buttons */
-            }
-            .chart-controls button:last-child {
-                margin-bottom: 0;
-            }
+.token-input-container input:focus {
+    outline: none;
+    border-color: #007bff;
+}
 
-            .composition-section,
-            .history-section {
-                overflow-x: auto; /* Allow horizontal scrolling for these sections */
-            }
+.token-input-container input.valid {
+    border-color: #28a745;
+}
 
-            .composition-table,
-            .history-table {
-                min-width: 100%; /* Ensure they try to fill the container before scrolling kicks in */
-            }
-        }
+.token-input-container input.invalid {
+    border-color: #dc3545;
+}
+
+.token-input-container button {
+    padding: 0.75rem 1.5rem;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%; /* Ajuste para móviles */
+    max-width: 300px; /* Límite en pantallas grandes */
+}
+
+.token-input-container button:hover {
+    background: #0056b3;
+}
+
+.token-input-container button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.toggle-password {
+    background: none;
+    border: none;
+    color: #333333;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.account-selector select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    background: #ffffff;
+    color: #333333;
+    font-size: 16px;
+    appearance: none;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="%23333333" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1.5rem;
+    transition: border-color 0.3s ease;
+}
+
+.account-selector select:focus {
+    outline: none;
+    border-color: #007bff;
+}
+
+.account-selector select option {
+    background: #ffffff;
+    color: #333333;
+    font-size: 16px;
+}
+
+.overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.overview-item {
+    background: #e9ecef;
+    padding: 1.5rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.overview-item p {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.overview-item span {
+    font-size: 0.9rem;
+    color: #555555;
+}
+
+.positive-value {
+    color: #28a745;
+}
+
+.negative-value {
+    color: #dc3545;
+}
+
+.account-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.account-info-item {
+    background: #e9ecef;
+    padding: 1.5rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.account-info-item p {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.account-info-item span {
+    font-size: 0.9rem;
+    color: #555555;
+}
+
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.chart-section {
+    flex: 1;
+}
+
+.chart-section canvas {
+    max-height: 300px;
+    margin-top: 1rem;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.chart-controls button {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 5px;
+    background: #e9ecef;
+    color: #333333;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.chart-controls button.active, .chart-controls button:hover {
+    background: #007bff;
+    color: #ffffff;
+}
+
+.composition-table, .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.composition-table th, .composition-table td,
+.history-table th, .history-table td {
+    border: 1px solid #dddddd;
+    padding: 0.75rem;
+    text-align: left;
+}
+
+.composition-table th, .history-table th {
+    background: #e9ecef;
+    font-weight: 600;
+}
+
+.weight-bar {
+    width: 100px;
+    height: 10px;
+    background: #dddddd;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.weight-bar-fill {
+    height: 100%;
+    background: #007bff;
+}
+
+.toggle-section {
+    margin-top: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.toggle-section:hover, .toggle-section.active {
+    background: #0056b3;
+}
+
+.fade-hidden {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.fade-visible {
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.height-hidden {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.3s ease;
+}
+
+.height-visible {
+    max-height: 1000px;
+    opacity: 1;
+    transition: max-height 0.5s ease, opacity 0.3s ease;
+}
+
+#error-message, #warning-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#error-message {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid #dc3545;
+    color: #dc3545;
+}
+
+#warning-message {
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    color: #856404;
+}
+
+@media (min-width: 768px) {
+    .charts-container {
+        flex-direction: row;
+    }
+    .chart-section {
+        flex: 1;
+    }
+}
+
+@media (max-width: 576px) {
+    body {
+        padding: 1rem;
+    }
+    h1 {
+        font-size: 1.75rem;
+    }
+    h2 {
+        font-size: 1.4rem;
+    }
+    h3 {
+        font-size: 1.1rem;
+    }
+    .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+        padding: 1rem;
+    }
+    .token-input-container {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .token-input-container .token-input-wrapper {
+        position: relative;
+        width: 100%;
+    }
+    .token-input-container input#api-token {
+        width: 100%;
+        padding-right: 3.5rem;
+    }
+    .token-input-container button#fetch-accounts {
+        width: 100%;
+    }
+    .toggle-password {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 2;
+        padding: 0.5rem;
+    }
+    .overview-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    }
+    .account-info-grid {
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    }
+    .chart-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .chart-controls button {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+    .chart-controls button:last-child {
+        margin-bottom: 0;
+    }
+    .composition-section,
+    .history-section {
+        overflow-x: auto;
+    }
+    .composition-table,
+    .history-table {
+        min-width: 100%;
+    }
+}
+
+/* Nueva media query para pantallas muy pequeñas (ej. <400px) */
+@media (max-width: 400px) {
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+    .token-input-container button {
+        font-size: 0.9rem;
+        padding: 0.5rem 1rem;
+    }
+    .container {
+        gap: 1rem;
+    }
+    .token-section, .overview-section, .account-info, .charts-container, .composition-section, .history-section {
+        padding: 0.75rem;
+    }
+}
