@@ -41,6 +41,10 @@ h1 {
     padding: 2rem;
     border: 1px solid #dddddd;
     color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 150px; /* Mínimo para evitar colapso */
 }
 
 .token-input-container {
@@ -48,13 +52,14 @@ h1 {
     align-items: center;
     gap: 1rem;
     flex-wrap: wrap;
+    width: 100%;
 }
 
 .token-input-wrapper {
     position: relative;
     flex: 1;
-    min-width: 250px; /* Asegura que el input no se colapse demasiado */
-    max-width: 500px; /* Limita el ancho en pantallas grandes */
+    min-width: 250px;
+    max-width: 500px;
 }
 
 .token-input-container input#api-token {
@@ -105,8 +110,8 @@ h1 {
     cursor: pointer;
     transition: background 0.3s ease;
     white-space: nowrap;
-    min-width: 150px; /* Asegura un ancho mínimo */
-    max-width: 300px; /* Limita el ancho en pantallas grandes */
+    min-width: 150px;
+    max-width: 300px;
 }
 
 .token-input-container #fetch-accounts:hover {
@@ -144,6 +149,16 @@ h1 {
     border: 1px solid #dddddd;
     color: inherit;
     margin-top: 1rem;
+}
+
+/* Añadir mensaje cuando no hay datos en .overview-section */
+.overview-section.fade-hidden::before {
+    content: "Selecciona una cuenta para ver el resumen.";
+    display: block;
+    text-align: center;
+    color: #666666;
+    font-style: italic;
+    padding: 1rem;
 }
 
 .account-selector select {
@@ -354,22 +369,23 @@ h1 {
     }
     .token-section {
         padding: 1rem;
+        min-height: 120px; /* Ajuste para móviles */
     }
     .token-input-container {
         flex-direction: column;
         gap: 0.75rem;
-        align-items: stretch; /* Asegura que los elementos ocupen todo el ancho */
+        align-items: stretch;
     }
     .token-input-wrapper {
         width: 100%;
-        max-width: 100%; /* Ocupa todo el ancho disponible */
+        max-width: 100%;
     }
     .token-input-container input#api-token {
         padding-right: 2.5rem;
     }
     .token-input-container #fetch-accounts {
         width: 100%;
-        max-width: 100%; /* Ocupa todo el ancho disponible */
+        max-width: 100%;
     }
 }
 
@@ -380,6 +396,7 @@ h1 {
     }
     .token-section {
         padding: 0.75rem;
+        min-height: 100px; /* Ajuste para pantallas muy pequeñas */
     }
     .token-input-container input#api-token {
         font-size: 14px;
