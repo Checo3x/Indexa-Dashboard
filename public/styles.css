@@ -44,7 +44,7 @@ h1 {
     display: flex;
     flex-direction: column;
     gap: 1rem;
-    min-height: 150px; /* Mínimo para evitar colapso */
+    min-height: 150px;
 }
 
 .token-input-container {
@@ -280,8 +280,13 @@ h1 {
     color: #ffffff;
 }
 
+.composition-section, .history-section {
+    overflow-x: auto; /* Añadido para todas las pantallas */
+}
+
 .composition-table, .history-table {
     width: 100%;
+    min-width: 600px; /* Ancho mínimo para asegurar desplazamiento */
     border-collapse: collapse;
     margin-top: 1rem;
 }
@@ -291,6 +296,7 @@ h1 {
     border: 1px solid #dddddd;
     padding: 0.75rem;
     text-align: left;
+    white-space: nowrap; /* Evita que el texto se divida */
 }
 
 .composition-table th, .history-table th {
@@ -305,6 +311,7 @@ h1 {
     border-radius: 5px;
     overflow: hidden;
     margin-top: 0.25rem;
+    display: inline-block;
 }
 
 .weight-bar-fill {
@@ -369,7 +376,7 @@ h1 {
     }
     .token-section {
         padding: 1rem;
-        min-height: 120px; /* Ajuste para móviles */
+        min-height: 120px;
     }
     .token-input-container {
         flex-direction: column;
@@ -387,6 +394,12 @@ h1 {
         width: 100%;
         max-width: 100%;
     }
+    .composition-section, .history-section {
+        padding: 1rem; /* Reducir padding en móviles */
+    }
+    .composition-table, .history-table {
+        min-width: 500px; /* Ajuste para móviles */
+    }
 }
 
 @media (max-width: 400px) {
@@ -396,7 +409,7 @@ h1 {
     }
     .token-section {
         padding: 0.75rem;
-        min-height: 100px; /* Ajuste para pantallas muy pequeñas */
+        min-height: 100px;
     }
     .token-input-container input#api-token {
         font-size: 14px;
