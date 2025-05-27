@@ -19,10 +19,10 @@ if (typeof Chart === 'undefined') {
 const colorPalette = ['#007bff', '#28a745', '#6c757d', '#17a2b8', '#ffc107', '#fd7e14', '#20c997', '#6610f2'];
 
 const performanceColors = {
-    real: '#007bff', // Blue
-    expected: '#6c757d', // Gray
-    best: '#28a745', // Green
-    worst: '#dc3545'  // Red
+    real: '#007bff',
+    expected: '#6c757d',
+    best: '#28a745',
+    worst: '#dc3545'
 };
 
 function formatDateToDayMonthYear(dateStr) {
@@ -71,15 +71,15 @@ function createPortfolioChart(labels, datasets, scale) {
                 scales: {
                     x: {
                         type: 'category',
-                        title: { display: true, text: 'Fecha', color: '#333333' }, // Axis title color
-                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' }, // Tick color
+                        title: { display: true, text: 'Fecha', color: '#333333' },
+                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' },
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: yAxisTitle, color: '#333333' }, // Axis title color
-                        grid: { color: '#dddddd' }, // Grid line color
+                        title: { display: true, text: yAxisTitle, color: '#333333' },
+                        grid: { color: '#dddddd' },
                         ticks: {
-                            color: '#555555', // Tick color
+                            color: '#555555',
                             callback: function(value) {
                                 if (scale === 'percentage') {
                                     return value.toFixed(2) + '%';
@@ -95,20 +95,18 @@ function createPortfolioChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#333333', // Legend label color
+                            color: '#333333',
                             padding: 8
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#f8f9fa', // Tooltip background color
-                        titleColor: '#333333', // Tooltip title color
-                        bodyColor: '#333333', // Tooltip body color
-                        borderColor: '#007bff', // Tooltip border color
+                        backgroundColor: '#f8f9fa',
+                        titleColor: '#333333',
+                        bodyColor: '#333333',
+                        borderColor: '#007bff',
                         borderWidth: 1,
                         callbacks: {
-                            title: context => {
-                                return `Fecha: ${context[0].label}`;
-                            },
+                            title: context => `Fecha: ${context[0].label}`,
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
@@ -125,13 +123,8 @@ function createPortfolioChart(labels, datasets, scale) {
                     }
                 },
                 elements: {
-                    line: {
-                        borderWidth: 3
-                    },
-                    point: {
-                        radius: 4,
-                        hoverRadius: 6
-                    }
+                    line: { borderWidth: 3 },
+                    point: { radius: 4, hoverRadius: 6 }
                 }
             }
         });
@@ -154,21 +147,19 @@ function createComponentsChart(labels, datasets, scale) {
         if (componentsChart) componentsChart.destroy();
 
         let yAxisTitle = 'Valor (€)';
-        let dataToUse = datasets.map(dataset => ({
-            ...dataset,
-            data: dataset.data.map(value => value !== null ? value : null)
-        }));
+        let dataToUse = datasets.map(dataset => {
+            const initialValue = dataset.data.find(val => val !== null && val !== 0) || 100; // Usa el primer valor no nulo o 100 como fallback
+            return {
+                ...dataset,
+                data: dataset.data.map(value => {
+                    if (value === null || initialValue === 0) return null;
+                    return scale === 'percentage' ? ((value - initialValue) / initialValue) * 100 : value;
+                })
+            };
+        });
 
         if (scale === 'percentage') {
             yAxisTitle = 'Rentabilidad (%)';
-            dataToUse = datasets.map(dataset => {
-                const initialValue = dataset.data.find(val => val !== null);
-                if (!initialValue) return { ...dataset, data: dataset.data.map(() => null) };
-                return {
-                    ...dataset,
-                    data: dataset.data.map(value => value !== null ? ((value - initialValue) / initialValue) * 100 : null)
-                };
-            });
         }
 
         componentsChart = new Chart(ctxComponents, {
@@ -180,15 +171,15 @@ function createComponentsChart(labels, datasets, scale) {
                 scales: {
                     x: {
                         type: 'category',
-                        title: { display: true, text: 'Fecha', color: '#333333' }, // Axis title color
-                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' }, // Tick color
+                        title: { display: true, text: 'Fecha', color: '#333333' },
+                        ticks: { maxTicksLimit: 5, autoSkip: true, color: '#555555' },
                         grid: { display: false }
                     },
                     y: {
-                        title: { display: true, text: yAxisTitle, color: '#333333' }, // Axis title color
-                        grid: { color: '#dddddd' }, // Grid line color
+                        title: { display: true, text: yAxisTitle, color: '#333333' },
+                        grid: { color: '#dddddd' },
                         ticks: {
-                            color: '#555555', // Tick color
+                            color: '#555555',
                             callback: function(value) {
                                 if (scale === 'percentage') {
                                     return value.toFixed(2) + '%';
@@ -204,20 +195,18 @@ function createComponentsChart(labels, datasets, scale) {
                         position: 'bottom',
                         labels: {
                             font: { size: 12 },
-                            color: '#333333', // Legend label color
+                            color: '#333333',
                             padding: 8
                         }
                     },
                     tooltip: {
-                        backgroundColor: '#f8f9fa', // Tooltip background color
-                        titleColor: '#333333', // Tooltip title color
-                        bodyColor: '#333333', // Tooltip body color
-                        borderColor: '#007bff', // Tooltip border color
+                        backgroundColor: '#f8f9fa',
+                        titleColor: '#333333',
+                        bodyColor: '#333333',
+                        borderColor: '#007bff',
                         borderWidth: 1,
                         callbacks: {
-                            title: context => {
-                                return `Fecha: ${context[0].label}`;
-                            },
+                            title: context => `Fecha: ${context[0].label}`,
                             label: context => {
                                 let label = context.dataset.label || '';
                                 if (label) label += ': ';
@@ -234,13 +223,8 @@ function createComponentsChart(labels, datasets, scale) {
                     }
                 },
                 elements: {
-                    line: {
-                        borderWidth: 3
-                    },
-                    point: {
-                        radius: 4,
-                        hoverRadius: 6
-                    }
+                    line: { borderWidth: 3 },
+                    point: { radius: 4, hoverRadius: 6 }
                 }
             }
         });
@@ -577,21 +561,15 @@ async function fetchPortfolioData(token, accountId) {
         if (annualReturnElement) {
             annualReturnElement.textContent = `${annualReturn.toFixed(2)}%`;
             annualReturnElement.classList.remove('negative-value', 'positive-value');
-            if (annualReturn < 0) {
-                annualReturnElement.classList.add('negative-value');
-            } else if (annualReturn > 0) {
-                annualReturnElement.classList.add('positive-value');
-            }
+            if (annualReturn < 0) annualReturnElement.classList.add('negative-value');
+            else if (annualReturn > 0) annualReturnElement.classList.add('positive-value');
         }
         const volatilityElement = document.getElementById('volatility');
         if (volatilityElement) {
             volatilityElement.textContent = `${volatility.toFixed(2)}%`;
             volatilityElement.classList.remove('negative-value', 'positive-value');
-            if (volatility < 0) {
-                volatilityElement.classList.add('negative-value');
-            } else if (volatility > 0) {
-                volatilityElement.classList.add('positive-value');
-            }
+            if (volatility < 0) volatilityElement.classList.add('negative-value');
+            else if (volatility > 0) volatilityElement.classList.add('positive-value');
         }
         const cashAmountElement = document.getElementById('cash-amount');
         if (cashAmountElement) {
@@ -663,9 +641,8 @@ async function fetchPortfolioData(token, accountId) {
             const weight = fund.weight || 0;
             const name = fund.name;
             const color = fund.color;
-            // Aseguramos que las curvas de los componentes se calculen correctamente
             const componentValues = realValues.map(value => value !== null ? value * weight : null);
-            if (componentValues.some(val => val !== null)) { // Solo añadimos si hay datos válidos
+            if (componentValues.some(val => val !== null)) {
                 componentDatasets.push({
                     label: `${name} (€)`,
                     data: componentValues,
@@ -774,7 +751,6 @@ function renderHistoryTable() {
         } else {
             const recentData = historyTableData.slice(-10);
             recentData.forEach(item => {
-                const row = document.createElement('tr');
                 const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
                 row.innerHTML = `
                     <td class="p-2">${item.date}</td>
