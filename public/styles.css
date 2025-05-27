@@ -47,18 +47,19 @@ h1 {
     display: flex;
     align-items: center;
     gap: 1rem;
-    flex-wrap: wrap; /* Permite ajuste en pantallas pequeñas */
+    flex-wrap: wrap;
 }
 
 .token-input-wrapper {
     position: relative;
     flex: 1;
-    min-width: 200px;
+    min-width: 250px; /* Asegura que el input no se colapse demasiado */
+    max-width: 500px; /* Limita el ancho en pantallas grandes */
 }
 
 .token-input-container input#api-token {
     width: 100%;
-    padding: 0.75rem 2.5rem 0.75rem 0.75rem; /* Espacio para el ícono */
+    padding: 0.75rem 2.5rem 0.75rem 0.75rem;
     border: 1px solid #cccccc;
     border-radius: 5px;
     background: #ffffff;
@@ -104,6 +105,8 @@ h1 {
     cursor: pointer;
     transition: background 0.3s ease;
     white-space: nowrap;
+    min-width: 150px; /* Asegura un ancho mínimo */
+    max-width: 300px; /* Limita el ancho en pantallas grandes */
 }
 
 .token-input-container #fetch-accounts:hover {
@@ -355,15 +358,18 @@ h1 {
     .token-input-container {
         flex-direction: column;
         gap: 0.75rem;
+        align-items: stretch; /* Asegura que los elementos ocupen todo el ancho */
     }
     .token-input-wrapper {
         width: 100%;
+        max-width: 100%; /* Ocupa todo el ancho disponible */
     }
     .token-input-container input#api-token {
-        padding-right: 2.5rem; /* Ajuste para el ícono en móviles */
+        padding-right: 2.5rem;
     }
     .token-input-container #fetch-accounts {
         width: 100%;
+        max-width: 100%; /* Ocupa todo el ancho disponible */
     }
 }
 
