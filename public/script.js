@@ -727,6 +727,21 @@ function renderHistoryTable() {
     historyTable.appendChild(row);
   }
 }
+  function getRecentRealPoints(series, limit = 24) {
+  const points = series.labels
+    .map((label, index) => ({
+      label,
+      value: series.realValues[index],
+    }))
+    .filter(point => point.value !== null && point.value !== undefined);
+
+  const recent = points.slice(-limit);
+
+  return {
+    labels: recent.map(point => point.label),
+    realValues: recent.map(point => point.value),
+  };
+}
 function refreshVisibleSections() {
   if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
     renderPortfolioChart();
@@ -827,18 +842,27 @@ function refreshVisibleSections() {
       });
 
 const series = buildPortfolioSeries(performanceData, totalValue);
+const recentRealSeries = getRecentRealPoints(series, 24);
 
-const chartLimit = 24;
-const limitedSeries = {
-  labels: series.labels.slice(-chartLimit),
-  realValues: series.realValues.slice(-chartLimit),
-  expectedValues: series.expectedValues.slice(-chartLimit),
-  bestValues: series.bestValues.slice(-chartLimit),
-  worstValues: series.worstValues.slice(-chartLimit),
+state.portfolioChartData = {
+  labels: recentRealSeries.labels,
+  realValues: recentRealSeries.realValues,
+  expectedValues: [],
+  bestValues: [],
+  worstValues: [],
 };
 
-state.portfolioChartData = limitedSeries;
-state.historyTableData = buildHistoryTable(limitedSeries.labels, limitedSeries.realValues);
+state.historyTableData = buildHistoryTable(series.labels, series.realValues);
+state.compositionTableData = buildCompositionData(portfolioData, totalValue);
+
+state.componentsChartData = {
+  labels: recentRealSeries.labels,
+  datasets: buildComponentsSeries(
+    recentRealSeries.labels,
+    state.compositionTableData,
+    recentRealSeries.realValues
+  ),
+};
 
       refreshVisibleSections();
     } catch (error) {
