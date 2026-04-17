@@ -736,7 +736,7 @@ function renderHistoryTable() {
     row.innerHTML = `<td colspan="3" class="p-2 text-center text-slate-500">Mostrando las últimas 10 entradas de ${visibleHistory.length}</td>`;
     historyTable.appendChild(row);
   }
-}
+};
   const series = buildPortfolioSeries(performanceData, totalValue);
 
 const lastRealIndex = (() => {
