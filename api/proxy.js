@@ -1,82 +1,53 @@
 const url = require('url');
 
 module.exports = async (req, res) => {
-  // Parsear la URL para obtener solo la ruta, sin parámetros de consulta
   const parsedUrl = url.parse(req.url);
-  const cleanPath = parsedUrl.pathname;
-  const apiPath = cleanPath.replace('/api', '');
-
+  const apiPath = parsedUrl.pathname.replace('/api', '');
   const apiUrl = `https://api.indexacapital.com${apiPath}`;
-  
-  // Manejo de solicitudes CORS preflight (OPTIONS)
+
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
   if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     return res.status(204).end();
   }
 
   try {
-    console.log('Proxy request:', { method: req.method, url: apiUrl, headers: req.headers });
-    
-    const authorizationHeader = req.headers.authorization || '';
-    console.log('Authorization header received:', authorizationHeader);
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
-    // Extrae el token del header Authorization (elimina "Bearer " si está presente)
-    const token = authorizationHeader.replace(/^Bearer\s+/i, '').trim();
     if (!token) {
-      throw new Error('No authentication token provided');
+      return res.status(401).json({ error: 'Missing authentication token' });
     }
-
-    const fetchHeaders = {
-      'Content-Type': 'application/json',
-      'X-AUTH-TOKEN': token, // Usa el header correcto para la API de Indexa
-      'User-Agent': 'PostmanRuntime/7.42.0',
-      'Accept': '*/*',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Host': 'api.indexacapital.com',
-      'Connection': 'keep-alive',
-      'Referer': 'https://indexa-dashboard.vercel.app/',
-    };
-    console.log('Fetch headers:', fetchHeaders);
 
     const response = await fetch(apiUrl, {
       method: req.method,
-      headers: fetchHeaders,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
       body: req.method !== 'GET' && req.body ? JSON.stringify(req.body) : undefined,
     });
 
-    console.log('Fetch response status:', response.status, response.statusText);
+    const contentType = response.headers.get('content-type') || '';
+    const payload = contentType.includes('application/json')
+      ? await response.json()
+      : await response.text();
 
-    // Verificar si la solicitud fue exitosa
     if (!response.ok) {
-      const errorText = await response.text();
-      console.log('Non-OK response:', { status: response.status, statusText: response.statusText, body: errorText });
-      throw new Error(`API responded with ${response.status}: ${errorText}`);
+      return res.status(response.status).json({
+        error: 'Upstream API error',
+        details: payload,
+      });
     }
 
-    // Verificar si la respuesta es JSON
-    const contentType = response.headers.get('content-type');
-    let data;
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      data = await response.text();
-      console.log('Non-JSON response:', data);
-      throw new Error('Expected JSON response, but got: ' + data);
-    }
-
-    console.log('Proxy response:', { status: response.status, data });
-
-    // Configura encabezados CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-
-    // Devuelve la respuesta de la API
-    res.status(response.status).json(data);
+    return res.status(response.status).json(payload);
   } catch (error) {
-    console.error('Proxy error:', error.message, error.stack);
-    res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      details: error.message,
+    });
   }
 };
