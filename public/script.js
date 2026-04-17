@@ -737,26 +737,7 @@ function renderHistoryTable() {
     historyTable.appendChild(row);
   }
 };
-  const series = buildPortfolioSeries(performanceData, totalValue);
 
-const lastRealIndex = (() => {
-  for (let i = series.realValues.length - 1; i >= 0; i--) {
-    if (series.realValues[i] !== null && series.realValues[i] !== undefined) return i;
-  }
-  return -1;
-})();
-
-const startIndex = Math.max(0, lastRealIndex - 23);
-
-state.portfolioChartData = {
-  labels: series.labels.slice(startIndex),
-  realValues: series.realValues.slice(startIndex),
-  expectedValues: series.expectedValues.slice(startIndex),
-  bestValues: series.bestValues.slice(startIndex),
-  worstValues: series.worstValues.slice(startIndex),
-};
-
-state.historyTableData = buildHistoryTable(series.labels, series.realValues);
 function refreshVisibleSections() {
   if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
     renderPortfolioChart();
@@ -800,6 +781,26 @@ function refreshVisibleSections() {
             fetchPortfolio(account.account_number, token),
             fetchPerformance(account.account_number, token),
           ]);
+          const series = buildPortfolioSeries(performanceData, totalValue);
+
+const lastRealIndex = (() => {
+  for (let i = series.realValues.length - 1; i >= 0; i--) {
+    if (series.realValues[i] !== null && series.realValues[i] !== undefined) return i;
+  }
+  return -1;
+})();
+
+const startIndex = Math.max(0, lastRealIndex - 23);
+
+state.portfolioChartData = {
+  labels: series.labels.slice(startIndex),
+  realValues: series.realValues.slice(startIndex),
+  expectedValues: series.expectedValues.slice(startIndex),
+  bestValues: series.bestValues.slice(startIndex),
+  worstValues: series.worstValues.slice(startIndex),
+};
+
+state.historyTableData = buildHistoryTable(series.labels, series.realValues);
 
           return {
             totalValue: normalizeNumber(portfolioData?.portfolio?.total_amount, 0),
