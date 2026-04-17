@@ -140,9 +140,33 @@
 
   function parseDateParts(dateStr) {
     if (!dateStr) return null;
+
     const value = String(dateStr).split(' ')[0].trim();
+
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) {
+      const [day, month, year] = value.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+      const [year, month, day] = value.split('-').map(Number);
+      const date = new Date(year, month - 1, day);
+      return Number.isNaN(date.getTime()) ? null : date;
+    }
+
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function isPastOrToday(dateStr) {
+    const date = parseDateParts(dateStr);
+    if (!date) return false;
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    return date <= today;
   }
 
   function formatDateToDayMonthYear(dateStr) {
@@ -155,12 +179,11 @@
     const num = Number(value);
     return Number.isFinite(num) ? num : fallback;
   }
-function sortByDateAsc(data) {
-  return [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-}
 
-  function isPairsArray(arr) {
-    return Array.isArray(arr) && arr.length > 0 && Array.isArray(arr[0]) && arr[0].length >= 2;
+  function sortByDateAsc(data) {
+    return Array.isArray(data)
+      ? [...data].sort((a, b) => new Date(a.date) - new Date(b.date))
+      : [];
   }
 
   function normalizeIndexValuePairs(input) {
@@ -213,6 +236,7 @@ function sortByDateAsc(data) {
     for (const path of paths) {
       let current = object;
       let found = true;
+
       for (const key of path) {
         if (current && Object.prototype.hasOwnProperty.call(current, key)) {
           current = current[key];
@@ -221,9 +245,44 @@ function sortByDateAsc(data) {
           break;
         }
       }
+
       if (found) return normalizeNumber(current, fallback);
     }
+
     return fallback;
+  }
+
+  function getRecentRealPoints(series, limit = 24) {
+    const points = (series.labels || [])
+      .map((label, index) => ({
+        label,
+        value: series.realValues?.[index],
+      }))
+      .filter(point => point.value !== null && point.value !== undefined);
+
+    const recent = points.slice(-limit);
+
+    return {
+      labels: recent.map(point => point.label),
+      realValues: recent.map(point => point.value),
+    };
+  }
+
+  function getChartWindow(series, realPoints = 24) {
+    const realValues = series.realValues || [];
+    const lastRealIndex = realValues.reduce((last, value, index) => (
+      value !== null && value !== undefined ? index : last
+    ), -1);
+
+    const startIndex = Math.max(0, lastRealIndex - (realPoints - 1));
+
+    return {
+      labels: (series.labels || []).slice(startIndex),
+      realValues: (series.realValues || []).slice(startIndex),
+      expectedValues: (series.expectedValues || []).slice(startIndex),
+      bestValues: (series.bestValues || []).slice(startIndex),
+      worstValues: (series.worstValues || []).slice(startIndex),
+    };
   }
 
   async function apiFetch(path, token, options = {}) {
@@ -295,13 +354,16 @@ function sortByDateAsc(data) {
 
   function updateOverview({ totalValue, totalContributions, avgAnnualReturn }) {
     const { overviewSection, overviewTotalValue, overviewReturn, overviewContributions } = state.els;
+
     if (overviewTotalValue) overviewTotalValue.textContent = formatCurrency(totalValue);
+
     if (overviewReturn) {
       overviewReturn.textContent = formatPercentValue(avgAnnualReturn);
       overviewReturn.classList.remove('negative-value', 'positive-value');
       if (avgAnnualReturn < 0) overviewReturn.classList.add('negative-value');
       if (avgAnnualReturn > 0) overviewReturn.classList.add('positive-value');
     }
+
     if (overviewContributions) overviewContributions.textContent = formatCurrency(totalContributions);
     showSection(overviewSection);
   }
@@ -328,18 +390,21 @@ function sortByDateAsc(data) {
     showSection(accountInfo);
 
     if (totalValueEl) totalValueEl.textContent = formatCurrency(totalValue);
+
     if (annualReturnEl) {
       annualReturnEl.textContent = formatPercentValue(annualReturn);
       annualReturnEl.classList.remove('negative-value', 'positive-value');
       if (annualReturn < 0) annualReturnEl.classList.add('negative-value');
       if (annualReturn > 0) annualReturnEl.classList.add('positive-value');
     }
+
     if (volatilityEl) {
       volatilityEl.textContent = formatPercentValue(volatility);
       volatilityEl.classList.remove('negative-value', 'positive-value');
       if (volatility < 0) volatilityEl.classList.add('negative-value');
       if (volatility > 0) volatilityEl.classList.add('positive-value');
     }
+
     if (cashAmountEl) cashAmountEl.textContent = formatCurrency(cashAmount);
     if (additionalCashNeededEl) additionalCashNeededEl.textContent = formatCurrency(additionalCashNeeded);
   }
@@ -462,34 +527,24 @@ function sortByDateAsc(data) {
     }));
   }
 
-function isPastOrToday(dateStr) {
-  const date = parseDateParts(dateStr);
-  if (!date) return false;
+  function buildHistoryTable(labels, realValues) {
+    return labels
+      .map((label, index) => {
+        const value = realValues[index];
+        const previous = index > 0 ? realValues[index - 1] : null;
+        const change =
+          value !== null && previous !== null && previous !== 0
+            ? ((value - previous) / previous) * 100
+            : 0;
 
-  const today = new Date();
-  today.setHours(23, 59, 59, 999);
-
-  return date <= today;
-}
-
-function buildHistoryTable(labels, realValues) {
-  return labels
-    .map((label, index) => {
-      const value = realValues[index];
-      const previous = index > 0 ? realValues[index - 1] : null;
-      const change =
-        value !== null && previous !== null && previous !== 0
-          ? ((value - previous) / previous) * 100
-          : 0;
-
-      return {
-        date: label,
-        value,
-        return: change,
-      };
-    })
-    .filter(item => item.value !== null && item.value !== undefined && isPastOrToday(item.date));
-}
+        return {
+          date: label,
+          value,
+          return: change,
+        };
+      })
+      .filter(item => item.value !== null && item.value !== undefined && isPastOrToday(item.date));
+  }
 
   function createLineChart(ctx, labels, datasets, scale, yAxisTitle) {
     if (!ctx) return null;
@@ -608,6 +663,7 @@ function buildHistoryTable(labels, realValues) {
         pointHoverRadius: 6,
       });
     }
+
     if (expectedValues.length) {
       datasets.push({
         label: 'Esperado',
@@ -620,6 +676,7 @@ function buildHistoryTable(labels, realValues) {
         pointHoverRadius: 6,
       });
     }
+
     if (bestValues.length) {
       datasets.push({
         label: 'Mejor escenario',
@@ -632,6 +689,7 @@ function buildHistoryTable(labels, realValues) {
         pointHoverRadius: 6,
       });
     }
+
     if (worstValues.length) {
       datasets.push({
         label: 'Peor escenario',
@@ -698,60 +756,57 @@ function buildHistoryTable(labels, realValues) {
     });
   }
 
-function sortByDateAsc(data) {
-  return [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
-}
+  function renderHistoryTable() {
+    const { historyTable } = state.els;
+    if (!historyTable) return;
 
-function renderHistoryTable() {
-  const { historyTable } = state.els;
-  if (!historyTable) return;
+    historyTable.innerHTML = '';
 
-  historyTable.innerHTML = '';
+    const sortedHistory = sortByDateAsc(state.historyTableData)
+      .filter(item => item.value !== null && item.value !== undefined);
 
-  if (!state.historyTableData.length) {
-    const row = document.createElement('tr');
-    row.innerHTML = '<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>';
-    historyTable.appendChild(row);
-    return;
+    if (!sortedHistory.length) {
+      const row = document.createElement('tr');
+      row.innerHTML = '<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>';
+      historyTable.appendChild(row);
+      return;
+    }
+
+    const visibleHistory = sortedHistory.slice(-10).reverse();
+
+    visibleHistory.forEach(item => {
+      const row = document.createElement('tr');
+      const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
+      row.innerHTML = `
+        <td class="p-2">${item.date}</td>
+        <td class="p-2">${item.value !== null ? formatCurrency(item.value) : '-'}</td>
+        <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
+      `;
+      historyTable.appendChild(row);
+    });
+
+    if (sortedHistory.length > 10) {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td colspan="3" class="p-2 text-center text-slate-500">Mostrando las últimas 10 entradas de ${sortedHistory.length}</td>`;
+      historyTable.appendChild(row);
+    }
   }
 
-  const visibleHistory = sortByDateAsc(state.historyTableData)
-    .filter(item => item.value !== null && item.value !== undefined)
-    .slice(-10)
-    .reverse();
+  function refreshVisibleSections() {
+    if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
+      renderPortfolioChart();
+      renderComponentsChart();
+    }
 
-  visibleHistory.forEach(item => {
-    const row = document.createElement('tr');
-    const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
-    row.innerHTML = `
-      <td class="p-2">${item.date}</td>
-      <td class="p-2">${item.value !== null ? formatCurrency(item.value) : '-'}</td>
-      <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
-    `;
-    historyTable.appendChild(row);
-  });
+    if (state.els.compositionSection && !state.els.compositionSection.classList.contains('height-hidden')) {
+      renderCompositionTable();
+    }
 
-  if (visibleHistory.length > 10) {
-    const row = document.createElement('tr');
-    row.innerHTML = `<td colspan="3" class="p-2 text-center text-slate-500">Mostrando las últimas 10 entradas de ${visibleHistory.length}</td>`;
-    historyTable.appendChild(row);
-  }
-};
-
-function refreshVisibleSections() {
-  if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
-    renderPortfolioChart();
-    renderComponentsChart();
+    if (state.els.historySection && !state.els.historySection.classList.contains('height-hidden')) {
+      renderHistoryTable();
+    }
   }
 
-  if (state.els.compositionSection && !state.els.compositionSection.classList.contains('height-hidden')) {
-    renderCompositionTable();
-  }
-
-  if (state.els.historySection && !state.els.historySection.classList.contains('height-hidden')) {
-    renderHistoryTable();
-  }
-}
   async function loadAccounts() {
     const token = state.els.tokenInput?.value.trim();
     if (!token) {
@@ -781,26 +836,6 @@ function refreshVisibleSections() {
             fetchPortfolio(account.account_number, token),
             fetchPerformance(account.account_number, token),
           ]);
-          const series = buildPortfolioSeries(performanceData, totalValue);
-
-const lastRealIndex = (() => {
-  for (let i = series.realValues.length - 1; i >= 0; i--) {
-    if (series.realValues[i] !== null && series.realValues[i] !== undefined) return i;
-  }
-  return -1;
-})();
-
-const startIndex = Math.max(0, lastRealIndex - 23);
-
-state.portfolioChartData = {
-  labels: series.labels.slice(startIndex),
-  realValues: series.realValues.slice(startIndex),
-  expectedValues: series.expectedValues.slice(startIndex),
-  bestValues: series.bestValues.slice(startIndex),
-  worstValues: series.worstValues.slice(startIndex),
-};
-
-state.historyTableData = buildHistoryTable(series.labels, series.realValues);
 
           return {
             totalValue: normalizeNumber(portfolioData?.portfolio?.total_amount, 0),
@@ -857,28 +892,23 @@ state.historyTableData = buildHistoryTable(series.labels, series.realValues);
         additionalCashNeeded,
       });
 
-const series = buildPortfolioSeries(performanceData, totalValue);
-const recentRealSeries = getRecentRealPoints(series, 24);
+      const series = buildPortfolioSeries(performanceData, totalValue);
+      const chartWindow = getChartWindow(series, 24);
+      const recentRealPoints = getRecentRealPoints(series, 24);
 
-state.portfolioChartData = {
-  labels: recentRealSeries.labels,
-  realValues: recentRealSeries.realValues,
-  expectedValues: [],
-  bestValues: [],
-  worstValues: [],
-};
+      state.portfolioChartData = chartWindow;
 
-state.historyTableData = buildHistoryTable(series.labels, series.realValues);
-state.compositionTableData = buildCompositionData(portfolioData, totalValue);
+      state.historyTableData = buildHistoryTable(series.labels, series.realValues);
+      state.compositionTableData = buildCompositionData(portfolioData, totalValue);
 
-state.componentsChartData = {
-  labels: recentRealSeries.labels,
-  datasets: buildComponentsSeries(
-    recentRealSeries.labels,
-    state.compositionTableData,
-    recentRealSeries.realValues
-  ),
-};
+      state.componentsChartData = {
+        labels: recentRealPoints.labels,
+        datasets: buildComponentsSeries(
+          recentRealPoints.labels,
+          state.compositionTableData,
+          recentRealPoints.realValues
+        ),
+      };
 
       refreshVisibleSections();
     } catch (error) {
@@ -894,16 +924,25 @@ state.componentsChartData = {
       return;
     }
 
-    const { labels } = state.portfolioChartData;
-    const datasets = state.portfolioChartData.datasets || [];
-    let csv = 'Fecha,' + datasets.map(dataset => dataset.label).join(',') + '\n';
+    const {
+      labels = [],
+      realValues = [],
+      expectedValues = [],
+      bestValues = [],
+      worstValues = [],
+    } = state.portfolioChartData;
+
+    let csv = 'Fecha,Real,Esperado,Mejor escenario,Peor escenario\n';
 
     labels.forEach((label, index) => {
-      const row = [label];
-      datasets.forEach(dataset => {
-        const value = dataset.data[index];
-        row.push(value === null || value === undefined ? '' : Number(value).toFixed(2));
-      });
+      const row = [
+        label,
+        realValues[index],
+        expectedValues[index],
+        bestValues[index],
+        worstValues[index],
+      ].map(value => (value === null || value === undefined ? '' : Number(value).toFixed(2)));
+
       csv += `${row.join(',')}\n`;
     });
 
