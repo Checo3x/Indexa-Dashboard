@@ -155,6 +155,9 @@
     const num = Number(value);
     return Number.isFinite(num) ? num : fallback;
   }
+function sortByDateAsc(data) {
+  return [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+}
 
   function isPairsArray(arr) {
     return Array.isArray(arr) && arr.length > 0 && Array.isArray(arr[0]) && arr[0].length >= 2;
