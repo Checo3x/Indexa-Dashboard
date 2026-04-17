@@ -462,6 +462,16 @@ function sortByDateAsc(data) {
     }));
   }
 
+function isPastOrToday(dateStr) {
+  const date = parseDateParts(dateStr);
+  if (!date) return false;
+
+  const today = new Date();
+  today.setHours(23, 59, 59, 999);
+
+  return date <= today;
+}
+
 function buildHistoryTable(labels, realValues) {
   return labels
     .map((label, index) => {
@@ -478,7 +488,7 @@ function buildHistoryTable(labels, realValues) {
         return: change,
       };
     })
-    .filter(item => item.value !== null && item.value !== undefined);
+    .filter(item => item.value !== null && item.value !== undefined && isPastOrToday(item.date));
 }
 
   function createLineChart(ctx, labels, datasets, scale, yAxisTitle) {
@@ -727,21 +737,26 @@ function renderHistoryTable() {
     historyTable.appendChild(row);
   }
 }
-  function getRecentRealPoints(series, limit = 24) {
-  const points = series.labels
-    .map((label, index) => ({
-      label,
-      value: series.realValues[index],
-    }))
-    .filter(point => point.value !== null && point.value !== undefined);
+  const series = buildPortfolioSeries(performanceData, totalValue);
 
-  const recent = points.slice(-limit);
+const lastRealIndex = (() => {
+  for (let i = series.realValues.length - 1; i >= 0; i--) {
+    if (series.realValues[i] !== null && series.realValues[i] !== undefined) return i;
+  }
+  return -1;
+})();
 
-  return {
-    labels: recent.map(point => point.label),
-    realValues: recent.map(point => point.value),
-  };
-}
+const startIndex = Math.max(0, lastRealIndex - 23);
+
+state.portfolioChartData = {
+  labels: series.labels.slice(startIndex),
+  realValues: series.realValues.slice(startIndex),
+  expectedValues: series.expectedValues.slice(startIndex),
+  bestValues: series.bestValues.slice(startIndex),
+  worstValues: series.worstValues.slice(startIndex),
+};
+
+state.historyTableData = buildHistoryTable(series.labels, series.realValues);
 function refreshVisibleSections() {
   if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
     renderPortfolioChart();
