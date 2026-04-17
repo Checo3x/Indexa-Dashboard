@@ -826,16 +826,19 @@ function refreshVisibleSections() {
         additionalCashNeeded,
       });
 
-      const series = buildPortfolioSeries(performanceData, totalValue);
-      state.portfolioChartData = series;
+const series = buildPortfolioSeries(performanceData, totalValue);
 
-      state.compositionTableData = buildCompositionData(portfolioData, totalValue);
-      state.componentsChartData = {
-        labels: series.labels,
-        datasets: buildComponentsSeries(series.labels, state.compositionTableData, series.realValues),
-      };
+const chartLimit = 24;
+const limitedSeries = {
+  labels: series.labels.slice(-chartLimit),
+  realValues: series.realValues.slice(-chartLimit),
+  expectedValues: series.expectedValues.slice(-chartLimit),
+  bestValues: series.bestValues.slice(-chartLimit),
+  worstValues: series.worstValues.slice(-chartLimit),
+};
 
-      state.historyTableData = buildHistoryTable(series.labels, series.realValues);
+state.portfolioChartData = limitedSeries;
+state.historyTableData = buildHistoryTable(limitedSeries.labels, limitedSeries.realValues);
 
       refreshVisibleSections();
     } catch (error) {
