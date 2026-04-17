@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indexa Dashboard</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Indexa Dashboard</h1>
+
+        <div class="token-section">
+            <div class="token-input-container">
+                <div class="token-input-wrapper"> <!-- New wrapper -->
+                    <input type="password" id="api-token" placeholder="Introduce tu token de API">
+                    <button class="toggle-password" id="toggle-password"><i class="fas fa-eye"></i></button>
+                </div>
+                <button id="fetch-accounts">Cargar Cuentas</button>
+            </div>
+            <div id="loading-indicator" class="fade-hidden">
+                <p>Cargando...</p>
+            </div>
+            <div id="error-message" class="fade-hidden"></div>
+            <div id="warning-message" class="fade-hidden"></div>
+        </div>
+
+        <div class="account-selector fade-hidden" id="account-selector">
+            <h2>Selecciona una Cuenta</h2>
+            <select id="account-select">
+                <option value="">Selecciona una cuenta para cargar los datos</option>
+            </select>
+        </div>
+
+        <div class="overview-section fade-hidden" id="overview-section">
+            <h2>Resumen de Tus Cuentas</h2>
+            <div class="overview-grid">
+                <div class="overview-item">
+                    <p id="overview-total-value">€0.00</p>
+                    <span>Valor Total</span>
+                </div>
+                <div class="overview-item">
+                    <p id="overview-return">0.00%</p>
+                    <span>Rentabilidad</span>
+                </div>
+                <div class="overview-item">
+                    <p id="overview-contributions">€0.00</p>
+                    <span>Aportaciones Netas</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="account-info fade-hidden" id="account-info">
+            <h2>Información de la Cuenta <span id="selected-account"></span></h2>
+            <div class="account-info-grid">
+                <div class="account-info-item">
+                    <p id="total-value">€0.00</p>
+                    <span>Valor Total</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="annual-return">0.00%</p>
+                    <span>Rentabilidad Anual</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="volatility">0.00%</p>
+                    <span>Volatilidad</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="cash-amount">€0.00</p>
+                    <span>Efectivo</span>
+                </div>
+                <div class="account-info-item">
+                    <p id="additional-cash-needed">€0.00</p>
+                    <span>Dinero Adicional Necesario</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="toggle-section" id="toggle-charts"><i class="fas fa-chart-line"></i> Mostrar Gráficos</button>
+        <div class="charts-container height-hidden">
+            <div class="chart-section">
+                <h2>Evolución de la Cartera</h2>
+                <div class="chart-controls">
+                    <button class="scale-toggle active" data-chart="portfolio" data-scale="euros" id="portfolio-euros">En Euros (€)</button>
+                    <button class="scale-toggle" data-chart="portfolio" data-scale="percentage" id="portfolio-percentage">En Porcentaje (%)</button>
+                    <button id="download-data">Descargar Datos</button>
+                </div>
+                <canvas id="portfolio-chart"></canvas>
+            </div>
+            <div class="chart-section">
+                <h2>Evolución de Componentes</h2>
+                <div class="chart-controls">
+                    <button class="scale-toggle active" data-chart="components" data-scale="euros" id="components-euros">En Euros (€)</button>
+                    <button class="scale-toggle" data-chart="components" data-scale="percentage" id="components-percentage">En Porcentaje (%)</button>
+                </div>
+                <canvas id="components-chart"></canvas>
+            </div>
+        </div>
+
+        <button class="toggle-section" id="toggle-composition"><i class="fas fa-table"></i> Mostrar Composición</button>
+        <div class="composition-section height-hidden" id="composition-section">
+            <h2>Composición de la Cartera</h2>
+            <table class="composition-table">
+                <thead>
+                    <tr>
+                        <th>Fondo</th>
+                        <th>Valor (€)</th>
+                        <th>Peso (%)</th>
+                        <th>Precio por Título (€)</th>
+                        <th>Títulos</th>
+                    </tr>
+                </thead>
+                <tbody id="composition-table"></tbody>
+            </table>
+        </div>
+
+        <button class="toggle-section" id="toggle-history"><i class="fas fa-history"></i> Mostrar Histórico</button>
+        <div class="history-section height-hidden" id="history-section">
+            <h2>Histórico de la Cartera</h2>
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Valor (€)</th>
+                        <th>Rentabilidad (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="history-table"></tbody>
+            </table>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

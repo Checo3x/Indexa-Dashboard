@@ -4,11 +4,14 @@
   "private": true,
   "description": "Dashboard financiero para visualizar carteras de Indexa Capital.",
   "scripts": {
-    "start": "npx serve public",
     "dev": "vercel dev",
-    "lint": "echo \"No lint configured yet\""
+    "start": "vercel dev",
+    "build": "echo \"Static frontend served by Vercel rewrites\""
   },
   "dependencies": {
     "node-fetch": "^2.6.7"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }

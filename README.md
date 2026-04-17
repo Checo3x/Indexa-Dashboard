@@ -1,132 +1,64 @@
 # Indexa Dashboard
 
-Dashboard financiero para visualizar y analizar carteras de inversión de Indexa Capital de forma clara e interactiva.
+Dashboard financiero para analizar carteras de inversión de Indexa Capital con una interfaz clara, visual e interactiva.
 
-## 🚀 Demo
+## Demo
 
-👉 https://indexa-dashboard.vercel.app
+Añade aquí la URL pública del despliegue.
 
----
+## Qué hace
 
-## 📌 Overview
+- Autenticación mediante token de API
+- Selección de cuentas del usuario
+- Resumen global de cartera
+- Evolución histórica y escenarios proyectados
+- Composición por activos
+- Histórico reciente de rentabilidad
+- Exportación de datos a CSV
 
-Esta aplicación permite explorar de forma visual el rendimiento y la composición de una cartera de inversión utilizando la API de Indexa Capital.
+## Stack
 
-El usuario puede autenticarse con su token, seleccionar una cuenta y acceder a métricas clave junto con visualizaciones interactivas que facilitan el análisis financiero.
+- HTML5
+- JavaScript (ES6)
+- Chart.js
+- CSS personalizado
+- Vercel
 
----
+## Estructura del proyecto
 
-## ✨ Features
+- `public/index.html`: interfaz principal
+- `public/script.js`: lógica de datos, gráficos y estado
+- `public/styles.css`: estilos y responsive layout
+- `api/proxy.js`: proxy serverless hacia la API de Indexa Capital
+- `vercel.json`: rewrites y runtime
 
-* 🔐 Autenticación mediante token de API
-* 📊 Visualización del valor total de la cartera
-* 📈 Evolución histórica y proyecciones (real, esperado, mejor y peor escenario)
-* 🧩 Composición detallada de la cartera
-* 📅 Histórico de rentabilidad
-* ⚡ Carga progresiva de secciones para mejorar rendimiento
-* 📱 Diseño responsive con TailwindCSS
+## Seguridad
 
----
+El proyecto está planteado como demo/portfolio. El token se envía al proxy para acceder a la API, pero no existe todavía una capa de autenticación de usuario final ni almacenamiento seguro de credenciales.
 
-## 🧱 Tech Stack
+Para un entorno productivo conviene añadir:
 
-* **Frontend:** HTML5, JavaScript (ES6)
-* **Visualización:** Chart.js
-* **Estilos:** TailwindCSS
-* **Datos:** Fetch API + Indexa Capital API
-* **Deploy:** Vercel
+- backend intermedio con control de sesión
+- gestión segura de credenciales
+- validación y rate limiting
 
----
-
-## 🏗️ Arquitectura
-
-La aplicación es un frontend puro que consume directamente la API de Indexa Capital:
-
-* `/api/users/me` → listado de cuentas
-* `/api/accounts/{id}/portfolio` → datos de cartera
-* `/api/accounts/{id}/performance` → histórico y proyecciones
-
-El estado se gestiona en el cliente y los datos se transforman para alimentar gráficos y tablas.
-
----
-
-## ⚠️ Consideraciones de seguridad
-
-Actualmente el token de API se envía en la cabecera:
-
-Authorization: Bearer <token>
-
-Este proyecto está pensado como demo/portfolio.
-En un entorno productivo se recomienda:
-
-* Implementar un backend intermedio (proxy)
-* Evitar exponer tokens en el cliente
-* Añadir control de sesiones/autenticación segura
-
----
-
-## 📊 Funcionalidades principales
-
-### Dashboard
-
-* Valor total de la cartera
-* Rentabilidad anual
-* Volatilidad *(dependiente de la API)*
-
-### Visualizaciones
-
-* Evolución temporal de la cartera
-* Escenarios proyectados
-* Comparativa entre componentes
-
-### Tablas
-
-* Composición de activos
-* Histórico de rendimiento
-
----
-
-## 🛠️ Instalación local
+## Instalación local
 
 ```bash
 git clone https://github.com/Checo3x/Indexa-Dashboard.git
 cd Indexa-Dashboard
+npm install
+npm run dev
 ```
 
-Abre `index.html` en tu navegador o usa un servidor local.
+## Mejoras aplicadas
 
----
+- Proxies y headers simplificados
+- Lógica de datos separada en funciones reutilizables
+- Gráficos con fábrica común
+- Estados de carga, error y vacío más claros
+- CSS más limpio y consistente
 
-## 📈 Posibles mejoras
+## Licencia
 
-* Backend intermedio para gestionar autenticación
-* Tests y linting
-* Gestión de estado más estructurada
-* Mejora de UX (loading states, errores)
-* Exportación de datos
-
----
-
-## 🐛 Known Issues
-
-* La volatilidad depende de la API y actualmente puede ser 0
-* Las proyecciones están sujetas al formato de datos recibido
-
----
-
-## 📄 Licencia
-
-MIT *(o la que quieras, pero pon una real)*
-
----
-
-## 🤝 Contribuciones
-
-Las contribuciones son bienvenidas.
-Puedes abrir un issue o enviar un pull request.
-
----
-
-## 📬 Contacto
-
-Si tienes dudas o sugerencias, puedes abrir un issue en el repositorio.
+MIT
