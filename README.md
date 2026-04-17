@@ -4,7 +4,7 @@ Dashboard financiero para visualizar y analizar carteras de inversión de Indexa
 
 ## 🚀 Demo
 
-👉 https://indexa-dashboard.vercel.app *(añade tu URL real aquí)*
+👉 https://indexa-dashboard.vercel.app
 
 ---
 
