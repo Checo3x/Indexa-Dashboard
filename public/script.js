@@ -268,22 +268,33 @@
     };
   }
 
-  function getChartWindow(series, realPoints = 24) {
-    const realValues = series.realValues || [];
-    const lastRealIndex = realValues.reduce((last, value, index) => (
-      value !== null && value !== undefined ? index : last
-    ), -1);
+function getChartWindow(series, pastPoints = 24, futurePoints = 12) {
+  const realValues = series.realValues || [];
+  const lastRealIndex = realValues.reduce((last, value, index) => (
+    value !== null && value !== undefined ? index : last
+  ), -1);
 
-    const startIndex = Math.max(0, lastRealIndex - (realPoints - 1));
-
+  if (lastRealIndex === -1) {
     return {
-      labels: (series.labels || []).slice(startIndex),
-      realValues: (series.realValues || []).slice(startIndex),
-      expectedValues: (series.expectedValues || []).slice(startIndex),
-      bestValues: (series.bestValues || []).slice(startIndex),
-      worstValues: (series.worstValues || []).slice(startIndex),
+      labels: [],
+      realValues: [],
+      expectedValues: [],
+      bestValues: [],
+      worstValues: [],
     };
   }
+
+  const startIndex = Math.max(0, lastRealIndex - (pastPoints - 1));
+  const endIndex = Math.min((series.labels || []).length, lastRealIndex + futurePoints + 1);
+
+  return {
+    labels: (series.labels || []).slice(startIndex, endIndex),
+    realValues: (series.realValues || []).slice(startIndex, endIndex),
+    expectedValues: (series.expectedValues || []).slice(startIndex, endIndex),
+    bestValues: (series.bestValues || []).slice(startIndex, endIndex),
+    worstValues: (series.worstValues || []).slice(startIndex, endIndex),
+  };
+}
 
   async function apiFetch(path, token, options = {}) {
     const response = await fetch(path, {
