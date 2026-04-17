@@ -727,7 +727,20 @@ function renderHistoryTable() {
     historyTable.appendChild(row);
   }
 }
+function refreshVisibleSections() {
+  if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
+    renderPortfolioChart();
+    renderComponentsChart();
+  }
 
+  if (state.els.compositionSection && !state.els.compositionSection.classList.contains('height-hidden')) {
+    renderCompositionTable();
+  }
+
+  if (state.els.historySection && !state.els.historySection.classList.contains('height-hidden')) {
+    renderHistoryTable();
+  }
+}
   async function loadAccounts() {
     const token = state.els.tokenInput?.value.trim();
     if (!token) {
