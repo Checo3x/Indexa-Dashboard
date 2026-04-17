@@ -692,7 +692,11 @@
       return;
     }
 
-    state.historyTableData.slice(-10).forEach(item => {
+    function sortByDateAsc(data) {
+  return data.sort((a, b) => new Date(a.date) - new Date(b.date));
+}
+
+    sortByDateAsc(state.historyTableData).slice(-10).forEach(item => {
       const row = document.createElement('tr');
       const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
       row.innerHTML = `
