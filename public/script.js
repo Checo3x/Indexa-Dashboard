@@ -462,18 +462,24 @@ function sortByDateAsc(data) {
     }));
   }
 
-  function buildHistoryTable(labels, realValues) {
-    return labels.map((label, index) => {
+function buildHistoryTable(labels, realValues) {
+  return labels
+    .map((label, index) => {
       const value = realValues[index];
       const previous = index > 0 ? realValues[index - 1] : null;
-      const change = value !== null && previous !== null && previous !== 0 ? ((value - previous) / previous) * 100 : 0;
+      const change =
+        value !== null && previous !== null && previous !== 0
+          ? ((value - previous) / previous) * 100
+          : 0;
+
       return {
         date: label,
         value,
         return: change,
       };
-    });
-  }
+    })
+    .filter(item => item.value !== null && item.value !== undefined);
+}
 
   function createLineChart(ctx, labels, datasets, scale, yAxisTitle) {
     if (!ctx) return null;
@@ -682,53 +688,45 @@ function sortByDateAsc(data) {
     });
   }
 
-  function renderHistoryTable() {
-    const { historyTable } = state.els;
-    if (!historyTable) return;
-
-    historyTable.innerHTML = '';
-
-    if (!state.historyTableData.length) {
-      const row = document.createElement('tr');
-      row.innerHTML = '<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>';
-      historyTable.appendChild(row);
-      return;
-    }
-
-    function sortByDateAsc(data) {
-  return data.sort((a, b) => new Date(a.date) - new Date(b.date));
+function sortByDateAsc(data) {
+  return [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
 }
 
-    sortByDateAsc(state.historyTableData).slice(-10).forEach(item => {
-      const row = document.createElement('tr');
-      const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
-      row.innerHTML = `
-        <td class="p-2">${item.date}</td>
-        <td class="p-2">${item.value !== null ? formatCurrency(item.value) : '-'}</td>
-        <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
-      `;
-      historyTable.appendChild(row);
-    });
+function renderHistoryTable() {
+  const { historyTable } = state.els;
+  if (!historyTable) return;
 
-    if (state.historyTableData.length > 10) {
-      const row = document.createElement('tr');
-      row.innerHTML = `<td colspan="3" class="p-2 text-center text-slate-500">Mostrando las últimas 10 entradas de ${state.historyTableData.length}</td>`;
-      historyTable.appendChild(row);
-    }
+  historyTable.innerHTML = '';
+
+  if (!state.historyTableData.length) {
+    const row = document.createElement('tr');
+    row.innerHTML = '<td colspan="3" class="p-2 text-center">No hay datos históricos disponibles</td>';
+    historyTable.appendChild(row);
+    return;
   }
 
-  function refreshVisibleSections() {
-    if (state.els.chartsContainer && !state.els.chartsContainer.classList.contains('height-hidden')) {
-      renderPortfolioChart();
-      renderComponentsChart();
-    }
-    if (state.els.compositionSection && !state.els.compositionSection.classList.contains('height-hidden')) {
-      renderCompositionTable();
-    }
-    if (state.els.historySection && !state.els.historySection.classList.contains('height-hidden')) {
-      renderHistoryTable();
-    }
+  const visibleHistory = sortByDateAsc(state.historyTableData)
+    .filter(item => item.value !== null && item.value !== undefined)
+    .slice(-10)
+    .reverse();
+
+  visibleHistory.forEach(item => {
+    const row = document.createElement('tr');
+    const returnClass = item.return < 0 ? 'negative-value' : item.return > 0 ? 'positive-value' : '';
+    row.innerHTML = `
+      <td class="p-2">${item.date}</td>
+      <td class="p-2">${item.value !== null ? formatCurrency(item.value) : '-'}</td>
+      <td class="p-2 ${returnClass}">${item.value !== null && item.return !== 0 ? `${item.return.toFixed(2)}%` : '-'}</td>
+    `;
+    historyTable.appendChild(row);
+  });
+
+  if (visibleHistory.length > 10) {
+    const row = document.createElement('tr');
+    row.innerHTML = `<td colspan="3" class="p-2 text-center text-slate-500">Mostrando las últimas 10 entradas de ${visibleHistory.length}</td>`;
+    historyTable.appendChild(row);
   }
+}
 
   async function loadAccounts() {
     const token = state.els.tokenInput?.value.trim();
